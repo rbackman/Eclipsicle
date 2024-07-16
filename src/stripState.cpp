@@ -622,6 +622,26 @@ void StripState::update()
     }
     break;
 
+    case LED_STATE_DOUBLE_RAINBOW:
+    {
+        scrollPos += scrollSpeed;
+
+        for (int i = 0; i < numLEDS; i+=2)
+        {
+            int val = i + scrollPos;
+            colorFromHSV(color, float(val) / float(numLEDS), 1, 1);
+            setPixel(i, color);
+        }
+
+        //TODO: use a second slider to drive a second scrollSpeed and use that here
+        for (int i = 1; i < numLEDS; i+=2)
+        {
+            int val = i + scrollPos;
+            colorFromHSV(color, 1 - (float(val) / float(numLEDS)), 1, 1);
+            setPixel(i, color);
+        }
+    }
+
     // case LED_STATE_GRAVITY_WAVE:
     // {
 
@@ -710,8 +730,11 @@ bool StripState::respondToText(String command)
         }
         else if (menuName == "Rainbow")
         {
-
             ledState = LED_STATE_RAINBOW;
+        }
+        else if (menuName == "Double Rainbow")
+        {
+            ledState = LED_STATE_DOUBLE_RAINBOW;
         }
         else if (menuName == "Idle")
         {

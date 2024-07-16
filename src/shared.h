@@ -164,6 +164,7 @@ enum MenuID
     MENU_PARTICLES_SPEED_MODE,
     MENU_PARTICLES_LIFE_MODE,
     MENU_RAINBOW_MODE,
+    MENU_DOUBLE_RAINBOW_MODE,
     MENU_SLIDER_MODE,
     MENU_RANDOM_MODE,
     MENU_DEBUG,
@@ -182,6 +183,7 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_RANDOM_PARTICLES, {"RndParticles", MENU_PATTERNS}},
     {MENU_SAVE_PATTERN, {"Save", MENU_PATTERNS}},
     {MENU_RAINBOW_MODE, {"Rainbow", MENU_PATTERNS}},
+    {MENU_DOUBLE_RAINBOW_MODE, {"Double Rainbow", MENU_PATTERNS}},
     {MENU_SLIDER_MODE, {"Slider", MENU_PATTERNS}},
     {MENU_RANDOM_MODE, {"Random", MENU_PATTERNS}},
     
