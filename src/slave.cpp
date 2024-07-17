@@ -41,9 +41,9 @@ Adafruit_SSD1306 display = Adafruit_SSD1306(128, 32, &Wire);
 #endif
 
 SerialManager *serialManager = new SerialManager(120, "Slave");
-
+ParameterManager *parameterManager;
 #ifdef USE_LEDS
-LEDManager *ledManager = new LEDManager();
+LEDManager *ledManager;
 #endif
 
 MeshnetManager *meshManager;
@@ -101,17 +101,17 @@ ParameterHandler parameterHandler = [](parameter_message msg)
 {
   if (msg.paramID == PARAM_DISPLAY_ACCEL)
   {
-    showAccel = msg.value;
+    showAccel = msg.value != 0;
   }
-  if (isVerbose())
-  {
-    Serial.println("Parameter received: " + String(getParameterName(msg.paramID)) + " " + String(msg.value));
-  }
-  ledManager->respondToParameter(msg);
+  
+  parameterManager->respondToParameterMessage(msg);
 };
 
 void setup()
 {
+  Serial.begin(115200);
+  parameterManager = new ParameterManager("Slave");
+  ledManager = new LEDManager(parameterManager);
 
 #ifdef USE_DISPLAY
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
@@ -156,15 +156,6 @@ void setup()
   mpu.setMotionInterrupt(true);
 #endif
 
-#ifdef USE_LEDS
-  ledManager = new LEDManager();
-  ledManager->setCurrentStrip(0);
-
-#endif
-
-  Serial.println("Free memory after led manager: ");
-  Serial.println(ESP.getFreeHeap());
-
 #ifdef USE_MOTOR
   motorManager = new MotorManager();
 #endif
@@ -174,11 +165,12 @@ void setup()
   meshManager->setImageHandler(imageHandler);
   meshManager->setTextHandler(textHandler);
   meshManager->setParameterHandler(parameterHandler);
+
 #ifdef USE_SENSORS
   meshManager->setSensorHandler(sensorHandler);
 #endif
 
-  Serial.println("Free memory after mesh manager: ");
+  Serial.println("Free memory Setup: ");
   Serial.println(ESP.getFreeHeap());
 }
 

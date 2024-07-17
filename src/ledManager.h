@@ -3,7 +3,7 @@
 #include "stripState.h"
 
 
-class LEDManager
+class LEDManager 
 {
 
 private:
@@ -13,12 +13,12 @@ private:
     float gravityPosition = 0;
     // strip state array
     StripState* stripStates[NUM_STRIPS];
-    float brightness = 1;
+
     int lastUpdate = 0;
     int fps = 60;
-
+    ParameterManager *parameterManager;
 public:
-    LEDManager();
+    LEDManager( ParameterManager *parameterManager);
     void setCurrentStrip(int strip);
     void setGravityPosition(float position);
     void update();
@@ -26,8 +26,9 @@ public:
     void setBrightness(int brightness);
     void setAll(led color);
     bool handleLEDCommand(String command);
+ 
 
-        void respondToParameter(parameter_message msg);
+ 
     void toggleMode();
     String getStripState();
 };

@@ -16,14 +16,17 @@ int interpolate(int from, int to, float t)
 {
   return from + (to - from) * t;
 }
-const char *getParameterName(ParameterID type)
+std::vector<ParameterID> getParametersForMenu(MenuID menu)
 {
-  auto it = parameterMenuMap.find(type);
-  if (it != parameterMenuMap.end())
+  std::vector<ParameterID> menuParams = {};
+  for (auto it = parameterMenuList.begin(); it != parameterMenuList.end(); ++it)
   {
-    return it->second.name.c_str();
+    if (it->first == menu)
+    {
+      menuParams.push_back(it->second);
+    }
   }
-  return "UNKNOWN";
+  return menuParams;
 }
 const char *getMenuName(MenuID type)
 {
@@ -77,8 +80,6 @@ const MenuID getParentMenu(MenuID type)
   }
   return MENU_IDLE;
 }
-
-
 
 void printBytes(ByteRow data)
 {

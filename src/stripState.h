@@ -2,6 +2,7 @@
 #include "shared.h"
 #include "leds.h"
 #include <FastLED.h>
+#include "parameterManager.h"
 struct Particle
 {
     bool active = false;
@@ -28,35 +29,30 @@ struct SliderParams
     int repeat;
     bool useGravity;
 };
-class StripState
+class StripState  
 {
 private:
     CRGB *leds;
     int stripIndex;
     int gravityPosition = 0;
 
-    SliderParams sliderParams;
-    float timeScale = 1;
-    bool invert = false;
-    bool centered = false;
-    bool blackAndWhite = false;
-    bool loopAnim = true;
-    float multiplier = 1;
+ bool invertLEDs = false;
+
     int numLEDS = 128;
-    bool cycle = false;
-    RandomParams randomParams;
-    int scrollSpeed = 1;
-    int scrollPos = 0;
-    float soundScale = 1;
-    bool invertLEDs = false;
+
+    float scrollPos = 0;
+
     LED_STATE ledState = LED_STATE_IDLE;
     Particle particles[10];
-    Particle spawnType;
-    int spawnRate = 2;
-    bool accelMode = false;
-
+  
+    ParameterManager* parameterManager;
 public:
-    StripState(CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert);
+    StripState(ParameterManager* parameterManager,CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert);
+   
+    void setNumLEDS(int num)
+    {
+        numLEDS = num;
+    }
     int getNumLEDS()
     {
         return numLEDS;
@@ -95,14 +91,18 @@ public:
 
     void spawnParticle()
     {
-        spawnParticle(-spawnType.width, spawnType.velocity, spawnType.hueStart, spawnType.hueEnd, spawnType.brightness, spawnType.width, spawnType.life);
-    }
+            int width = parameterManager->getValue(PARAM_PARTICLE_WIDTH);
+            int velocity = parameterManager->getValue(PARAM_VELOCITY);
+            int hueStart = parameterManager->getValue(PARAM_HUE);
+            int hueEnd = parameterManager->getValue(PARAM_HUE_END);
+            int brightness = parameterManager->getValue(PARAM_BRIGHTNESS);
+            int life = parameterManager->getValue(PARAM_PARTICLE_LIFE);
+
+            spawnParticle(-width, velocity, hueStart, hueEnd, brightness, width, life);
+    };
     void updateRandomParticles();
     void updateParticles();
-    void setScrollSpeed(int speed)
-    {
-        scrollSpeed = speed;
-    }
+    
     void setLEDRow(LedRow ledRow)
     {
 
@@ -119,7 +119,7 @@ public:
         ledState = state;
     }
 
-    void respondToParameter(parameter_message parameter);
+   
     bool respondToText(String command);
 
     void clearPixels();
@@ -128,14 +128,7 @@ public:
     void setPixel(int index, int r, int g, int b);
 
     void toggleMode();
-    void setScale(float scale)
-    {
-        if (scale < 1)
-        {
-            scale = 1;
-        }
-        soundScale = scale;
-    }
+   
 
     void update();
     String getStripState();

@@ -14,9 +14,6 @@
 
 #define USE_DISPLAY 1
 
-
-
-
 // Master Pin Layout
 // 3v3               Vin
 // Gnd               Gnd
@@ -54,7 +51,8 @@ CRGB ledsStrip[1];
 JsonDocument doc;
 
 std::vector<std::string> menuText = {};
-std::map<ParameterID, Parameter> parameters = {};
+
+ParameterManager *parameterManager;
 
 enum Menu_Mode
 {
@@ -80,16 +78,7 @@ int numMenus()
     }
     else if (menuMode == MENU_MODE_EDIT_MODE)
     {
-        int num = 0;
-        for (auto &param : parameters)
-        {
-            if (param.second.menu == currentMenu)
-            {
-                num++;
-            }
-        }
-
-        return num;
+        return getParametersForMenu(currentMenu).size();
     }
     return 0;
 }
@@ -100,20 +89,6 @@ int lastDisplayUpdate = 0;
 int displayFrameRate = 10;
 std::string displayText = "";
 bool verticalAlignment = true; // Set this flag to true for vertical alignment, false for horizontal
-
-std::vector<std::pair<ParameterID, Parameter>> getParametersForMenu(MenuID menu)
-{
-    std::vector<std::pair<ParameterID, Parameter>> menuParams;
-    for (auto it = parameters.begin(); it != parameters.end(); ++it)
-    {
-        if (it->second.menu == menu)
-        {
-
-            menuParams.push_back(std::make_pair(it->first, it->second));
-        }
-    }
-    return menuParams;
-}
 
 void updateMenu()
 {
@@ -150,9 +125,7 @@ void updateMenu()
         // const menu_item cmenu = menu[menuIndex];
         for (auto &param : activeParams)
         {
-            auto paramID = param.first;
-            auto parameter = param.second;
-            auto menuName = parameter.name + ":" + std::to_string(parameter.value);
+            auto menuName = parameterManager->getParameterName(param) + ":" + std::to_string(parameterManager->getValue(param));
             menuText.push_back(menuName.c_str());
         }
 
@@ -217,18 +190,14 @@ void updateMenu()
 void setup()
 {
 
-    for (auto &param : parameterMenuMap)
-    {
-        parameters[param.first] = param.second;
-    }
-
     serialManager = new SerialManager(120, "Master");
     meshManager = new MeshnetManager();
     meshManager->connectSlaves(slaves);
+    parameterManager = new ParameterManager("Master");
 
     audioManager = new AudioManager();
 
-    leds = new StripState(ledsStrip, LED_STATE_RAINBOW, 1, MASTER_LED_PIN, 0, true);
+    leds = new StripState(parameterManager, ledsStrip, LED_STATE_RAINBOW, 1, MASTER_LED_PIN, 0, true);
     FastLED.addLeds<NEOPIXEL, MASTER_LED_PIN>(ledsStrip, LEDS_STRIP_1);
     FastLED.setBrightness(50);
 
@@ -265,14 +234,6 @@ void setup()
     updateMenu();
 }
 
-void setParameterValue(ParameterID paramID, int value)
-{
-    auto it = parameters.find(paramID);
-    if (it != parameters.end())
-    {
-        it->second.value = value;
-    }
-}
 bool processSensorMessage(sensor_message message)
 {
     bool used = false;
@@ -299,21 +260,23 @@ bool processSensorMessage(sensor_message message)
                         (message.sensorId == SLIDER4 && paramIndex == 3) ||
                         (message.sensorId == SLIDER5 && paramIndex == 4))
                     {
-                        auto param = activeparams[paramIndex].second;
-                        auto paramID = activeparams[paramIndex].first;
-                        // if (paramID < 0 || paramID > parameterMenuMap.size())
-                        // {
-                        //     Serial.printf("Parameter Index out of range %d  params: %d\n", paramID, parameterMenuMap.size());
-                        //     return false;
-                        // }
+             
+                        auto paramID = activeparams[paramIndex];
+                        auto param = parameterManager->getIntParameter(paramID);
 
                         int val = lerp(0, 255, param.min, param.max, message.value);
                         // Serial.printf("Param[%d]  Slider: %d %s => %d\n", paramID, message.value, param.name.c_str(), val);
 
                         if (val != param.value)
                         {
-
-                            setParameterValue(paramID, val);
+                            if (parameterManager->isBoolParameter(paramID))
+                            {
+                                parameterManager->setBool(paramID, val != 0);
+                            }
+                            else
+                            {
+                                parameterManager->setValue(paramID, val);
+                            }
 
                             meshManager->sendParametersToSlaves(paramID, val);
                             used = true;

@@ -7,16 +7,17 @@
 CRGB ledsStrip1[LEDS_STRIP_1];
 CRGB ledsStrip2[LEDS_STRIP_2];
 
-LEDManager::LEDManager()
+LEDManager::LEDManager(ParameterManager* parameterManager)  
 {
+    parameterManager = parameterManager;
     ledMatrix = new LedMatrix();
 
-    stripStates[0] = new StripState(ledsStrip1, LED_STATE_PARTICLES, LEDS_STRIP_1, LED_PIN_1, 0, true);
-    stripStates[1] = new StripState(ledsStrip2, LED_STATE_PARTICLES, LEDS_STRIP_2, LED_PIN_2, 1, false);
+    stripStates[0] = new StripState(parameterManager,ledsStrip1, LED_STATE_PARTICLES, LEDS_STRIP_1, LED_PIN_1, 0, true);
+    stripStates[1] = new StripState(parameterManager,ledsStrip2, LED_STATE_PARTICLES, LEDS_STRIP_2, LED_PIN_2, 1, false);
 
     FastLED.addLeds<NEOPIXEL, LED_PIN_1>(ledsStrip1, LEDS_STRIP_1);
     FastLED.addLeds<NEOPIXEL, LED_PIN_2>(ledsStrip2, LEDS_STRIP_2);
-    setBrightness(50);
+    // setValue(PARAM_BRIGHTNESS, 50);
 }
 void LEDManager::setCurrentStrip(int strip)
 {
@@ -107,24 +108,10 @@ bool LEDManager::handleLEDCommand(String command)
 }
 
 
-void LEDManager::respondToParameter(parameter_message parameter)
-{
-    if (currentStrip == 0)
-    {
-        for (int i = 0; i < NUM_STRIPS; i++)
-        {
-            stripStates[i]->respondToParameter(parameter);
-        }
-    }
-    else
-    {
-        stripStates[currentStrip - 1]->respondToParameter(parameter);
-    }
-}
 void LEDManager::setBrightness(int brightness)
 {
 
-    this->brightness = brightness;
+    // setValue(PARAM_BRIGHTNESS, brightness);
     FastLED.setBrightness(brightness);
 }
 void LEDManager::setAll(led color)
