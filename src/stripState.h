@@ -29,7 +29,7 @@ struct SliderParams
     int repeat;
     bool useGravity;
 };
-class StripState  
+class StripState :public ParameterManager
 {
 private:
     CRGB *leds;
@@ -45,9 +45,9 @@ private:
     LED_STATE ledState = LED_STATE_IDLE;
     Particle particles[10];
   
-    ParameterManager* parameterManager;
+
 public:
-    StripState(ParameterManager* parameterManager,CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert);
+    StripState(CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert);
    
     void setNumLEDS(int num)
     {
@@ -89,17 +89,7 @@ public:
         }
     }
 
-    void spawnParticle()
-    {
-            int width = parameterManager->getValue(PARAM_PARTICLE_WIDTH);
-            int velocity = parameterManager->getValue(PARAM_VELOCITY);
-            int hueStart = parameterManager->getValue(PARAM_HUE);
-            int hueEnd = parameterManager->getValue(PARAM_HUE_END);
-            int brightness = parameterManager->getValue(PARAM_BRIGHTNESS);
-            int life = parameterManager->getValue(PARAM_PARTICLE_LIFE);
-
-            spawnParticle(-width, velocity, hueStart, hueEnd, brightness, width, life);
-    };
+    void spawnParticle();
     void updateRandomParticles();
     void updateParticles();
     
@@ -119,7 +109,8 @@ public:
         ledState = state;
     }
 
-   
+    void setAll(CRGB color);
+    void setAll (led color);
     bool respondToText(String command);
 
     void clearPixels();
@@ -132,4 +123,5 @@ public:
 
     void update();
     String getStripState();
+    void  respondToParameterMessage(parameter_message parameter);
 };

@@ -103,15 +103,21 @@ ParameterHandler parameterHandler = [](parameter_message msg)
   {
     showAccel = msg.value != 0;
   }
-  
+
   parameterManager->respondToParameterMessage(msg);
+  ledManager->respondToParameterMessage(msg);
 };
 
 void setup()
 {
   Serial.begin(115200);
-  parameterManager = new ParameterManager("Slave");
-  ledManager = new LEDManager(parameterManager);
+  parameterManager = new ParameterManager("Slave", {PARAM_DISPLAY_ACCEL});
+
+  if (isVerbose())
+  {
+    sanityCheckParameters();
+  }
+  ledManager = new LEDManager();
 
 #ifdef USE_DISPLAY
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally

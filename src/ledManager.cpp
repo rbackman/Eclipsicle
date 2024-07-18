@@ -7,21 +7,17 @@
 CRGB ledsStrip1[LEDS_STRIP_1];
 CRGB ledsStrip2[LEDS_STRIP_2];
 
-LEDManager::LEDManager(ParameterManager* parameterManager)  
+LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP,PARAM_SEQUENCE})
 {
-    parameterManager = parameterManager;
+
     ledMatrix = new LedMatrix();
 
-    stripStates[0] = new StripState(parameterManager,ledsStrip1, LED_STATE_PARTICLES, LEDS_STRIP_1, LED_PIN_1, 0, true);
-    stripStates[1] = new StripState(parameterManager,ledsStrip2, LED_STATE_PARTICLES, LEDS_STRIP_2, LED_PIN_2, 1, false);
+    stripStates[0] = new StripState(ledsStrip1, LED_STATE_PARTICLES, LEDS_STRIP_1, LED_PIN_1, 0, true);
+    stripStates[1] = new StripState(ledsStrip2, LED_STATE_PARTICLES, LEDS_STRIP_2, LED_PIN_2, 1, false);
 
     FastLED.addLeds<NEOPIXEL, LED_PIN_1>(ledsStrip1, LEDS_STRIP_1);
     FastLED.addLeds<NEOPIXEL, LED_PIN_2>(ledsStrip2, LEDS_STRIP_2);
     // setValue(PARAM_BRIGHTNESS, 50);
-}
-void LEDManager::setCurrentStrip(int strip)
-{
-    currentStrip = strip;
 }
 
 void LEDManager::setLEDImage(image_message msg)
@@ -61,16 +57,22 @@ void LEDManager::setLEDImage(image_message msg)
 
     decodeRLE(rleRow, row);
 
-    // ledMatrix->at(msg.row) = row;
-
-    StripState *s = stripStates[currentStrip];
-    s->setLEDRow(row);
+    int currentStrip = getValue(PARAM_CURRENT_STRIP);
+    if (currentStrip == 0)
+    {
+        for (int i = 0; i < NUM_STRIPS; i++)
+        {
+            stripStates[i]->setLEDRow(row);
+        }
+    }
+    else
+    {
+        stripStates[currentStrip - 1]->setLEDRow(row);
+    }
 }
 
 bool LEDManager::handleLEDCommand(String command)
 {
-
-   
 
     if (command.startsWith("brightness"))
     {
@@ -85,12 +87,14 @@ bool LEDManager::handleLEDCommand(String command)
     else if (command.startsWith("strip:"))
     {
         int strip = command.substring(6).toInt();
-        setCurrentStrip(strip);
+
+        setValue(PARAM_CURRENT_STRIP, strip);
         return true;
     }
     else
     {
         bool res = false;
+        int currentStrip = getValue(PARAM_CURRENT_STRIP);
 
         for (int i = 0; i < NUM_STRIPS; i++)
         {
@@ -107,6 +111,27 @@ bool LEDManager::handleLEDCommand(String command)
     }
 }
 
+void LEDManager::respondToParameterMessage(parameter_message parameter)
+{
+    ParameterManager::respondToParameterMessage(parameter);
+    if (parameter.paramID == PARAM_BRIGHTNESS)
+    {
+        setBrightness(parameter.value);
+    }
+
+    else
+    {
+        int currentStrip = getValue(PARAM_CURRENT_STRIP);
+        Serial.println("update current strip " + String(currentStrip));
+        for (int i = 0; i < NUM_STRIPS; i++)
+        {
+            if (currentStrip == 0 || currentStrip == i + 1)
+            {
+                stripStates[i]->respondToParameterMessage(parameter);
+            }
+        }
+    }
+}
 
 void LEDManager::setBrightness(int brightness)
 {
@@ -116,14 +141,10 @@ void LEDManager::setBrightness(int brightness)
 }
 void LEDManager::setAll(led color)
 {
-    // You'll need to set all the pixels to val
+    // set all leds to a color
     for (int i = 0; i < NUM_STRIPS; i++)
     {
-        StripState *s = stripStates[i];
-        for (int j = 0; j < s->getNumLEDS(); j++)
-        {
-            stripStates[i]->setPixel(j, color);
-        }
+        stripStates[i]->setAll(color);
     }
 }
 
@@ -136,6 +157,7 @@ void LEDManager::update()
         return;
     }
     lastUpdate = currentTime;
+
     for (int i = 0; i < NUM_STRIPS; i++)
     {
         stripStates[i]->update();
@@ -146,7 +168,9 @@ void LEDManager::update()
 
 void LEDManager::setGravityPosition(float position)
 {
+    // gravity position is the LED index that is the bottom of the strip according to the accelerometer
     gravityPosition = position;
+    int currentStrip = getValue(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
         for (int i = 0; i < NUM_STRIPS; i++)
@@ -162,6 +186,7 @@ void LEDManager::setGravityPosition(float position)
 
 void LEDManager::toggleMode()
 {
+    int currentStrip = getValue(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
         for (int i = 0; i < NUM_STRIPS; i++)
@@ -176,6 +201,7 @@ void LEDManager::toggleMode()
 }
 String LEDManager::getStripState()
 {
+    int currentStrip = getValue(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
         return stripStates[0]->getStripState();

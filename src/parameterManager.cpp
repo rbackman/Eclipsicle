@@ -1,22 +1,44 @@
 
 #include "parameterManager.h"
 #include "shared.h"
-ParameterManager::ParameterManager(std::string name) : name(name)
-{
+
+ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> filterParams) : name(name) {
     auto intParameterList = getDefaultParameters();
     auto boolParameterList = getDefaultBoolParameters();
     intParams.reserve(intParameterList.size());
     boolParams.reserve(boolParameterList.size());
 
-    // set initial parameters. TODO: maybe save these to EEPROM
-    for (int i = 0; i < intParameterList.size(); i++)
-    {
-        intParams.push_back({intParameterList[i].id, intParameterList[i].name, intParameterList[i].value, intParameterList[i].min, intParameterList[i].max, intParameterList[i].scale});
+    // If filterParams is empty, copy all parameters
+    if (filterParams.empty()) {
+        filterParams.reserve(intParameterList.size() + boolParameterList.size());
+        for (const auto& param : intParameterList) {
+            filterParams.push_back(param.id);
+        }
+        for (const auto& param : boolParameterList) {
+            filterParams.push_back(param.id);
+        }
     }
 
-    for (int i = 0; i < boolParameterList.size(); i++)
-    {
-        boolParams.push_back({boolParameterList[i].id, boolParameterList[i].name, boolParameterList[i].value});
+    // Set initial parameters based on filterParams
+    for (const auto& param : intParameterList) {
+        if (std::find(filterParams.begin(), filterParams.end(), param.id) != filterParams.end()) {
+            intParams.push_back(param);
+        }
+    }
+
+    for (const auto& param : boolParameterList) {
+        if (std::find(filterParams.begin(), filterParams.end(), param.id) != filterParams.end()) {
+            boolParams.push_back(param);
+        }
+    }
+
+    Serial.printf("Parameter Manager Initialized %s intParams:%d boolParams:%d \n", name.c_str(), intParams.size(), boolParams.size());
+     
+    for (const auto& iParam : intParams) {
+        Serial.printf("Int Param %d %s %d\n", iParam.id, iParam.name.c_str(),iParam.value);
+    }
+    for (const auto& bParam : boolParams) {
+        Serial.printf("Bool Param %d %s %s \n", bParam.id, bParam.name.c_str(),bParam.value ? "true" : "false");
     }
 }
 
@@ -57,7 +79,7 @@ void ParameterManager::setValue(ParameterID id, int val)
             return;
         }
     }
-    Serial.printf("Cant set Int Parameter, not found %d %s for %s\n", id, getParameterName(id), name.c_str());
+    // Serial.printf("Cant set Int Parameter, not found %d %s for %s\n", id, getParameterName(id), name.c_str());
 }
 void ParameterManager::setBool(ParameterID id, bool val)
 {
@@ -70,7 +92,7 @@ void ParameterManager::setBool(ParameterID id, bool val)
             return;
         }
     }
-    Serial.printf("Cant set Bool Parameter, not found %d %s for %s\n", id, getParameterName(id), name.c_str());
+    // Serial.printf("Cant set Bool Parameter, not found %d %s for %s\n", id, getParameterName(id), name.c_str());
 }
 
 // float getFloat(ParameterID paramID);

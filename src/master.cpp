@@ -45,7 +45,8 @@ SensorManager *sensorManager;
 MeshnetManager *meshManager;
 AudioManager *audioManager;
 StripState *leds;
-CRGB ledsStrip[1];
+#define NUM_LEDS 16
+CRGB ledsStrip[NUM_LEDS];
 #define MASTER_LED_PIN 33
 // SoundManager *soundManager;
 JsonDocument doc;
@@ -62,7 +63,7 @@ enum Menu_Mode
 };
 
 // currentParent is the index of the current menu group
-MenuID currentMenu = MENU_AUDIO;
+MenuID currentMenu = MENU_IDLE;
 // selectedMenu is the index from 0 - length of activeMenus defined by menus that have the currentParent
 int selectedMenu = -1;
 int textOffset = 0;
@@ -112,7 +113,7 @@ void updateMenu()
         for (const auto &amenu : availableMenus)
         {
 
-            std::string name = getMenuName(amenu);
+            std::string name = getMenuName(amenu, 8);
 
             menuText.push_back(name);
         }
@@ -125,13 +126,36 @@ void updateMenu()
         // const menu_item cmenu = menu[menuIndex];
         for (auto &param : activeParams)
         {
-            auto menuName = parameterManager->getParameterName(param) + ":" + std::to_string(parameterManager->getValue(param));
-            menuText.push_back(menuName.c_str());
+            auto name = parameterManager->getParameterName(param);
+            if (name.size() > 6)
+            {
+                name = name.substr(0, 6);
+            }
+            else if (name.size() < 6)
+            {
+                name = name + std::string(6 - name.size(), ' ');
+            }
+            if (parameterManager->isBoolParameter(param))
+            {
+                auto menuName = name + ":" + (parameterManager->getBool(param) ? "ON" : "OFF");
+                menuText.push_back(menuName.c_str());
+            }
+            else
+            {
+                auto menuName = name + ":" + std::to_string(parameterManager->getValue(param));
+                menuText.push_back(menuName.c_str());
+            }
         }
 
         display.setCursor(0, 0);
         int parent = currentMenu;
-        display.println(getMenuPath(currentMenu, MENU_PATTERNS).c_str());
+        // make sure menu path is at most 6 characters
+        auto menupath = getMenuPath(currentMenu, MENU_PATTERNS);
+        if (menupath.size() > 16)
+        {
+            menupath = menupath.substr(0, 16);
+        }
+        display.println(menupath.c_str());
     }
 
     for (int i = 0; i <= 8 && i < menuText.size(); i++)
@@ -180,6 +204,7 @@ void updateMenu()
         // Serial.println(text.c_str());
 
         // display.setTextColor(WHITE);
+
         display.println(text.c_str());
     }
     display.display();
@@ -197,9 +222,11 @@ void setup()
 
     audioManager = new AudioManager();
 
-    leds = new StripState(parameterManager, ledsStrip, LED_STATE_RAINBOW, 1, MASTER_LED_PIN, 0, true);
-    FastLED.addLeds<NEOPIXEL, MASTER_LED_PIN>(ledsStrip, LEDS_STRIP_1);
+    // leds = new StripState(ledsStrip, LED_STATE_IDLE, 1, MASTER_LED_PIN, 0, false);
+    FastLED.addLeds<NEOPIXEL, MASTER_LED_PIN>(ledsStrip, NUM_LEDS);
     FastLED.setBrightness(50);
+
+    audioManager->playTone(1500, 100, 5);
 
 #ifdef USE_DISPLAY
     // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
@@ -260,7 +287,7 @@ bool processSensorMessage(sensor_message message)
                         (message.sensorId == SLIDER4 && paramIndex == 3) ||
                         (message.sensorId == SLIDER5 && paramIndex == 4))
                     {
-             
+
                         auto paramID = activeparams[paramIndex];
                         auto param = parameterManager->getIntParameter(paramID);
 
@@ -496,8 +523,24 @@ bool processSensorMessage(sensor_message message)
 
 void loop()
 {
+
+    if (parameterManager->parameterChanged())
+    {
+        int masterHUE = parameterManager->getValue(PARAM_MASTER_LED_HUE);
+        int masterBrightness = parameterManager->getValue(PARAM_MASTER_LED_BRIGHTNESS);
+        int saturation = parameterManager->getValue(PARAM_MASTER_LED_SATURATION);
+
+        // led color;
+        // colorFromHSV(color, masterHUE, saturation, masterBrightness);
+        // Serial.printf("Master Hue: %d Brightness: %d Saturation: %d => R %D G %d B %d\n", masterHUE, masterBrightness, saturation, color.r, color.g, color.b);
+        // leds->setAll(color);
+        // leds->update();
+        ledsStrip[0] = CHSV(masterHUE, saturation, masterBrightness);
+        Serial.printf("set led color %d %d %d\n", ledsStrip[0].r, ledsStrip[0].g, ledsStrip[0].b);
+        FastLED.show();
+    }
     audioManager->update();
-    leds->update();
+
     sensorManager->updateSensors();
     serialManager->updateSerial();
     // soundManager->update();

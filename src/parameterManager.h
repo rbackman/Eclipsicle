@@ -3,7 +3,7 @@
 class ParameterManager
 {
 public:
-    ParameterManager(std::string name);
+    ParameterManager(std::string name, std::vector<ParameterID> filterParams = {});
 
     int getValue(ParameterID paramID);
     float getFloat(ParameterID paramID);
@@ -43,9 +43,12 @@ public:
         }
         return false;
     }
-
+    const std::string getName()
+    {
+        return name;
+    }
 private:
-    bool paramChanged = false;
+    bool paramChanged = true;
     std::vector<BoolParameter> boolParams = {};
     std::vector<IntParameter> intParams = {};
     std::string name;

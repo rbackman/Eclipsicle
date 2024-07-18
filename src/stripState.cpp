@@ -9,10 +9,9 @@ int maxr = 0;
 
 led color;
 
-StripState::StripState(ParameterManager *parameterManager, CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert) : leds(row), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
+StripState::StripState(CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), leds(row), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
 
 {
-    this->parameterManager = parameterManager;
 
     leds = row;
 
@@ -30,9 +29,9 @@ void StripState::toggleMode()
 void StripState::updateRandomParticles()
 {
 
-    float startHue = parameterManager->getValue(PARAM_HUE);
-    float endHue = parameterManager->getValue(PARAM_HUE_END);
-    float velocity = parameterManager->getValue(PARAM_VELOCITY);
+    float startHue = getValue(PARAM_HUE);
+    float endHue = getValue(PARAM_HUE_END);
+    float velocity = getValue(PARAM_VELOCITY);
 
     if (random(0, 100) > 90)
     {
@@ -71,23 +70,23 @@ void StripState::fadeParticleTail(int position, int width, int hueStart, int hue
 void StripState::updateParticles()
 {
 
-    float timeScale = parameterManager->getFloat(PARAM_TIME_SCALE);
-    bool cycle = parameterManager->getBool(PARAM_CYCLE);
+    float timeScale = getFloat(PARAM_TIME_SCALE);
+    bool cycle = getBool(PARAM_CYCLE);
 
-    if (parameterManager->getBool(PARAM_PARTICLE_UPDATE_ALL) && parameterManager->parameterChanged())
+    if (getBool(PARAM_PARTICLE_UPDATE_ALL) && parameterChanged())
     {
 
-        int hueStart = parameterManager->getValue(PARAM_HUE);
-        int hueEnd = parameterManager->getValue(PARAM_HUE_END);
-        int brightness = parameterManager->getValue(PARAM_BRIGHTNESS);
-        int fade = parameterManager->getValue(PARAM_PARTICLE_FADE);
-        int width = parameterManager->getValue(PARAM_PARTICLE_WIDTH);
-        int life = parameterManager->getValue(PARAM_PARTICLE_LIFE);
-        int randomDrift = parameterManager->getValue(PARAM_RANDOM_DRIFT);
-        int acceleration = parameterManager->getValue(PARAM_ACCELERATION);
-        int maxSpeed = parameterManager->getValue(PARAM_MAX_SPEED);
-        int velocity = parameterManager->getValue(PARAM_VELOCITY);
-
+        int hueStart = getValue(PARAM_HUE);
+        int hueEnd = getValue(PARAM_HUE_END);
+        int brightness = getValue(PARAM_BRIGHTNESS);
+        int fade = getValue(PARAM_PARTICLE_FADE);
+        int width = getValue(PARAM_PARTICLE_WIDTH);
+        int life = getValue(PARAM_PARTICLE_LIFE);
+        int randomDrift = getValue(PARAM_RANDOM_DRIFT);
+        int acceleration = getValue(PARAM_ACCELERATION);
+        int maxSpeed = getValue(PARAM_MAX_SPEED);
+        int velocity = getValue(PARAM_VELOCITY);
+        Serial.printf("Update all particles %d %d %d %d %d %d %d %d %d %d\n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
         for (int i = 0; i < 10; i++)
         {
             auto particle = &particles[i];
@@ -114,15 +113,6 @@ void StripState::updateParticles()
         if (particle->active)
         {
 
-            if (particle->randomDrift != 0)
-            {
-                // roll the dice to see if it should switch direction of acceleration
-                if (random(0, 100) > particle->randomDrift)
-                {
-                    particle->acceleration = -particle->acceleration;
-                }
-            }
-
             particle->position += particle->velocity * timeScale;
             particle->velocity += particle->acceleration * timeScale;
             if (particle->velocity > particle->maxSpeed)
@@ -146,7 +136,7 @@ void StripState::updateParticles()
             int width = particle->width;
             if (particle->maxSpeed != 0)
             {
-                width = (int)(particle->width * abs(particle->velocity) / particle->maxSpeed);
+                width = (int)(particle->width * abs(particle->acceleration) / particle->maxSpeed);
             }
             if (width < 1)
             {
@@ -167,7 +157,7 @@ void StripState::updateParticles()
             }
             if (particle->randomDrift > 0)
             {
-                if (random(0, 100) < particle->randomDrift / 10.0)
+                if (random(0, 100) < particle->randomDrift)
                 {
                     particle->acceleration = -particle->acceleration;
                 }
@@ -197,6 +187,17 @@ void StripState::updateParticles()
         }
     }
 }
+void StripState::spawnParticle()
+{
+    int width = getValue(PARAM_PARTICLE_WIDTH);
+    int velocity = getValue(PARAM_VELOCITY);
+    int hueStart = getValue(PARAM_HUE);
+    int hueEnd = getValue(PARAM_HUE_END);
+    int brightness = getValue(PARAM_BRIGHTNESS);
+    int life = getValue(PARAM_PARTICLE_LIFE);
+
+    spawnParticle(-width, velocity, hueStart, hueEnd, brightness, width, life);
+};
 String StripState::getStripState()
 {
     return getLedStateName(ledState);
@@ -204,26 +205,22 @@ String StripState::getStripState()
 void StripState::update()
 {
 
-    // Depending on what ledState is, you'll update the LEDs accordingly
-    if (isVerbose())
-    {
-        // Serial.println("Updating LEDs" + String(getLedStateName(ledState)));
-    }
-
+    // Serial.printf("update strip %s %s \n", getName().c_str(), getLedStateName(ledState));
     switch (ledState)
     {
     case LED_STATE_IDLE:
-    {
-        clearPixels();
-    }
+    // {
+    //     // clearPixels();
+    // }
 
     break;
     case LED_STATE_PARTICLES:
     {
 
         clearPixels();
-        int spawnRate = parameterManager->getValue(PARAM_SPAWN_RATE);
-        float timeScale = parameterManager->getFloat(PARAM_TIME_SCALE);
+        int spawnRate = getValue(PARAM_SPAWN_RATE);
+        float timeScale = getFloat(PARAM_TIME_SCALE);
+
         if (spawnRate > 0 && timeScale != 0)
         {
             int ranVal = random(0, 100);
@@ -247,14 +244,14 @@ void StripState::update()
     {
 
         int centerPos = 0;
-        bool useGravity = parameterManager->getBool(PARAM_SLIDER_GRAVITY);
-        bool centered = parameterManager->getBool(PARAM_CENTERED);
-        int position = parameterManager->getValue(PARAM_SLIDER_POSITION);
+        bool useGravity = getBool(PARAM_SLIDER_GRAVITY);
+        bool centered = getBool(PARAM_CENTERED);
+        int position = getValue(PARAM_SLIDER_POSITION);
 
-        float multiplier = parameterManager->getFloat(PARAM_MULTIPLIER);
-        int width = parameterManager->getValue(PARAM_SLIDER_WIDTH);
-        int hueshift = parameterManager->getValue(PARAM_SLIDER_HUE);
-        float repeat = parameterManager->getValue(PARAM_SLIDER_REPEAT);
+        float multiplier = getFloat(PARAM_SLIDER_MULTIPLIER);
+        int width = getValue(PARAM_SLIDER_WIDTH);
+        int hueshift = getValue(PARAM_SLIDER_HUE);
+        float repeat = getValue(PARAM_SLIDER_REPEAT);
 
         if (useGravity)
             centerPos = (position + gravityPosition) % numLEDS;
@@ -300,7 +297,7 @@ void StripState::update()
 
     case LED_STATE_RAINBOW:
     {
-        float scrollSpeed = parameterManager->getFloat(PARAM_SCROLL_SPEED);
+        float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
         scrollPos += scrollSpeed;
 
         for (int i = 0; i < numLEDS; i++)
@@ -315,7 +312,7 @@ void StripState::update()
 
     case LED_STATE_DOUBLE_RAINBOW:
     {
-        float scrollSpeed = parameterManager->getFloat(PARAM_SCROLL_SPEED);
+        float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
         scrollPos += scrollSpeed;
 
         for (int i = 0; i < numLEDS; i += 2)
@@ -333,13 +330,14 @@ void StripState::update()
             setPixel(i, color);
         }
     }
+    break;
 
     case LED_STATE_RANDOM:
     {
-        int randomMin = parameterManager->getValue(PARAM_RANDOM_MIN);
-        int randomMax = parameterManager->getValue(PARAM_RANDOM_MAX);
-        int randomOn = parameterManager->getValue(PARAM_RANDOM_ON);
-        int randomOff = parameterManager->getValue(PARAM_RANDOM_OFF);
+        int randomMin = getValue(PARAM_RANDOM_MIN);
+        int randomMax = getValue(PARAM_RANDOM_MAX);
+        int randomOn = getValue(PARAM_RANDOM_ON);
+        int randomOff = getValue(PARAM_RANDOM_OFF);
 
         val = 0;
         minr = min(randomMin, randomMax);
@@ -368,6 +366,14 @@ void StripState::update()
     }
 }
 
+
+void StripState::setAll(led color)
+{
+    for (int i = 0; i < numLEDS; i++)
+    {
+        setPixel(i, color);
+    }
+}
 bool StripState::respondToText(String command)
 {
 
@@ -451,9 +457,15 @@ void StripState::setPixel(int index, int r, int g, int b)
 }
 void StripState::clearPixel(int index)
 {
-    bool invert = parameterManager->getBool(PARAM_INVERT);
+    bool invert = getBool(PARAM_INVERT);
     if (invert)
         leds[numLEDS - index - 1] = CRGB(0, 0, 0);
     else
         leds[index] = CRGB(0, 0, 0);
+}
+
+void StripState::respondToParameterMessage(parameter_message parameter)
+{
+    ParameterManager::respondToParameterMessage(parameter);
+    // don't need to do anything here
 }

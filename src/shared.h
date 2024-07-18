@@ -9,10 +9,48 @@
 #include <Arduino.h>
 #include <cstdint>
 
-enum LIGHT_TOWER_STATE
-{
+#define PARAMETER_LIST           \
+    X(PARAM_HUE)                 \
+    X(PARAM_HUE_END)             \
+    X(PARAM_BRIGHTNESS)          \
+    X(PARAM_PARTICLE_WIDTH)      \
+    X(PARAM_PARTICLE_FADE)       \
+    X(PARAM_PARTICLE_UPDATE_ALL) \
+    X(PARAM_SLIDER_WIDTH)        \
+    X(PARAM_SLIDER_GRAVITY)      \
+    X(PARAM_VELOCITY)            \
+    X(PARAM_MAX_SPEED)           \
+    X(PARAM_ACCELERATION)        \
+    X(PARAM_RANDOM_DRIFT)        \
+    X(PARAM_TIME_SCALE)          \
+    X(PARAM_SLIDER_REPEAT)       \
+    X(PARAM_SLIDER_POSITION)     \
+    X(PARAM_SLIDER_HUE)          \
+    X(PARAM_SPAWN_RATE)          \
+    X(PARAM_PARTICLE_LIFE)       \
+    X(PARAM_SOUND_SCALE)         \
+    X(PARAM_SCROLL_SPEED)        \
+    X(PARAM_SLIDER_MULTIPLIER)   \
+    X(PARAM_RANDOM_ON)           \
+    X(PARAM_RANDOM_OFF)          \
+    X(PARAM_RANDOM_MIN)          \
+    X(PARAM_RANDOM_MAX)          \
+    X(PARAM_INVERT)              \
+    X(PARAM_CENTERED)            \
+    X(PARAM_BLACK_AND_WHITE)     \
+    X(PARAM_LOOP_ANIM)           \
+    X(PARAM_CYCLE)               \
+    X(PARAM_SEQUENCE)            \
+    X(PARAM_SHOW_FPS)            \
+    X(PARAM_DISPLAY_ACCEL)       \
+    X(PARAM_RECORD_AUDIO)        \
+    X(PARAM_CURRENT_STRIP)       \
+    X(PARAM_MASTER_LED_HUE)       \
+    X(PARAM_MASTER_LED_BRIGHTNESS)       \
+    X(PARAM_MASTER_LED_SATURATION)       \
+    X(PARAM_MASTER_VOLUME)       \
 
-};
+ 
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
 #define ADC_MAX 2600
@@ -109,52 +147,13 @@ enum ParameterType
     PARAMETER_TYPE_BOOL,
     PARAMETER_TYPE_STRING,
 };
-
 enum ParameterID
 {
-    PARAM_HUE,
-    PARAM_HUE_END,
-    PARAM_BRIGHTNESS,
-    PARAM_PARTICLE_WIDTH,
-    PARAM_PARTICLE_FADE,
-    PARAM_PARTICLE_UPDATE_ALL,
-    PARAM_SLIDER_WIDTH,
-    PARAM_SLIDER_GRAVITY,
-    PARAM_VELOCITY,
-    PARAM_MAX_SPEED,
-    PARAM_ACCELERATION,
-    PARAM_RANDOM_DRIFT,
-    PARAM_TIME_SCALE,
-    PARAM_SLIDER_REPEAT,
-    PARAM_SLIDER_POSITION,
-    PARAM_SLIDER_HUE,
-    PARAM_SPAWN_RATE,
-    PARAM_SPEED,
-    PARAM_PARTICLE_LIFE,
-    PARAM_PARTICLE_RESET,
-    PARAM_GRAVITY,
-    PARAM_SOUND_SCALE,
-    PARAM_SCROLL_SPEED,
-    PARAM_MULTIPLIER,
-    PARAM_RANDOM_ON,
-    PARAM_RANDOM_OFF,
-    PARAM_RANDOM_MIN,
-    PARAM_RANDOM_MAX,
-    PARAM_INVERT,
-    PARAM_CENTERED,
-    PARAM_BLACK_AND_WHITE,
-    PARAM_LOOP_ANIM,
-    PARAM_CYCLE,
-    PARAM_ACCEL_MODE,
-    PARAM_SEQUENCE,
-    PARAM_TARGET,
-    PARAM_SHOW_FPS,
-    PARAM_SPREAD,
-    PARAM_COLOR_VARIATION,
-    PARAM_DEATH_RATE,
-    PARAM_DISPLAY_ACCEL,
-    PARAM_RECORD_AUDIO,
+#define X(name) name,
+    PARAMETER_LIST
+#undef X
 };
+std::vector<std::string> getParameterNames();
 
 enum MenuID
 {
@@ -170,9 +169,15 @@ enum MenuID
     MENU_PARTICLES_LIFE_MODE,
     MENU_RAINBOW_MODE,
     MENU_DOUBLE_RAINBOW_MODE,
-    MENU_SLIDER_MODE,
+    MENU_SLIDER,
+    MENU_SLIDER_COLOR_MODE,
+    MENU_SLIDER_SETTINGS_MODE,
     MENU_RANDOM_MODE,
     MENU_DEBUG,
+    MENU_DISPLAY_DEBUG_MODE,
+    MENU_SETTINGS_DEBUG_MODE,
+    MENU_MISC_DEBUG_MODE,
+    MENU_MASTER_LED_MODE,
     MENU_SETTINGS,
     MENU_AUDIO,
 };
@@ -189,16 +194,23 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_SAVE_PATTERN, {"Save", MENU_PATTERNS}},
     {MENU_RAINBOW_MODE, {"Rainbow", MENU_PATTERNS}},
     {MENU_DOUBLE_RAINBOW_MODE, {"Double Rainbow", MENU_PATTERNS}},
-    {MENU_SLIDER_MODE, {"Slider", MENU_PATTERNS}},
+    {MENU_SLIDER, {"Slider", MENU_PATTERNS}},
+    {MENU_SLIDER_COLOR_MODE, {"Color", MENU_SLIDER}},
+    {MENU_SLIDER_SETTINGS_MODE, {"Settings", MENU_SLIDER}},
     {MENU_RANDOM_MODE, {"Random", MENU_PATTERNS}},
+
+    {MENU_MASTER_LED_MODE, {"LED", MENU_MAIN}},
 
     {MENU_PARTICLES_COLOR_MODE, {"Color", MENU_PARTICLES}},
     {MENU_PARTICLES_LIFE_MODE, {"Life", MENU_PARTICLES}},
     {MENU_PARTICLES_SPEED_MODE, {"Speed", MENU_PARTICLES}},
     {MENU_AUDIO, {"Audio", MENU_MAIN}},
 
-    {MENU_DEBUG, {"Debug", MENU_MAIN}}};
-;
+    {MENU_DEBUG, {"Debug", MENU_MAIN}},
+    {MENU_DISPLAY_DEBUG_MODE, {"Display", MENU_DEBUG}},
+    {MENU_SETTINGS_DEBUG_MODE, {"Settings", MENU_DEBUG}},
+    {MENU_MISC_DEBUG_MODE, {"Misc", MENU_DEBUG}},
+};
 
 struct IntParameter
 {
@@ -225,38 +237,62 @@ const std::vector<std::pair<MenuID, ParameterID>> parameterMenuList = {
     {MENU_PARTICLES_COLOR_MODE, PARAM_TIME_SCALE},
     {MENU_PARTICLES_COLOR_MODE, PARAM_PARTICLE_FADE},
     {MENU_PARTICLES_LIFE_MODE, PARAM_PARTICLE_LIFE},
+    {MENU_PARTICLES_LIFE_MODE, PARAM_PARTICLE_UPDATE_ALL},
+
     {MENU_PARTICLES_SPEED_MODE, PARAM_VELOCITY},
     {MENU_PARTICLES_SPEED_MODE, PARAM_ACCELERATION},
     {MENU_PARTICLES_SPEED_MODE, PARAM_MAX_SPEED},
     {MENU_PARTICLES_SPEED_MODE, PARAM_RANDOM_DRIFT},
     {MENU_PARTICLES_LIFE_MODE, PARAM_SPAWN_RATE},
+    {MENU_PARTICLES_LIFE_MODE, PARAM_CYCLE},
+
     {MENU_RAINBOW_MODE, PARAM_SCROLL_SPEED},
     {MENU_RAINBOW_MODE, PARAM_BRIGHTNESS},
-    
-    {MENU_SLIDER_MODE, PARAM_SLIDER_WIDTH},
-    {MENU_SLIDER_MODE, PARAM_SLIDER_GRAVITY},
-    {MENU_SLIDER_MODE, PARAM_SLIDER_REPEAT},
-    {MENU_SLIDER_MODE, PARAM_SLIDER_POSITION},
-    {MENU_SLIDER_MODE, PARAM_SLIDER_HUE},
+    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_WIDTH},
+    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_REPEAT},
+    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_POSITION},
+    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_HUE},
+    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_MULTIPLIER},
+
+    {MENU_SLIDER_SETTINGS_MODE, PARAM_SLIDER_GRAVITY},
+    {MENU_SLIDER_SETTINGS_MODE, PARAM_INVERT},
+    {MENU_SLIDER_SETTINGS_MODE, PARAM_CENTERED},
+
+    {MENU_RANDOM_MODE, PARAM_RANDOM_ON},
+    {MENU_RANDOM_MODE, PARAM_RANDOM_OFF},
+    {MENU_RANDOM_MODE, PARAM_RANDOM_MIN},
+    {MENU_RANDOM_MODE, PARAM_RANDOM_MAX},
+
+    {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_HUE},
+    {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_BRIGHTNESS},
+    {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_SATURATION},
+
+
+    {MENU_DISPLAY_DEBUG_MODE, PARAM_SHOW_FPS},
+    {MENU_DISPLAY_DEBUG_MODE, PARAM_DISPLAY_ACCEL},
+    {MENU_DISPLAY_DEBUG_MODE, PARAM_BLACK_AND_WHITE},
+
+    {MENU_MISC_DEBUG_MODE, PARAM_SEQUENCE},
+    {MENU_MISC_DEBUG_MODE, PARAM_SOUND_SCALE},
+    {MENU_MISC_DEBUG_MODE, PARAM_RECORD_AUDIO},
+    {MENU_MISC_DEBUG_MODE, PARAM_LOOP_ANIM},
+    {MENU_MISC_DEBUG_MODE, PARAM_CURRENT_STRIP},
 
 };
-
-std::vector<ParameterID> getParametersForMenu(MenuID menu);
 
 static const std::vector<IntParameter> getDefaultParameters()
 {
 
-    Serial.println("getDefaultParameters");
     return {
-        {PARAM_HUE, "Hue", 0, 0, 360, 1.0},
-        {PARAM_HUE_END, "HueEnd", 0, 0, 360, 1.0},
-        {PARAM_PARTICLE_WIDTH, "Width", 1, 1, 60, 1.0},
+        {PARAM_HUE, "Hue", 60, 0, 360, 1.0},
+        {PARAM_HUE_END, "HueEnd", 120, 0, 360, 1.0},
+        {PARAM_PARTICLE_WIDTH, "Width", 10, 1, 60, 1.0},
         {PARAM_VELOCITY, "Vel", 10, 1, 100, 0.1},
         {PARAM_ACCELERATION, "Accel", 10, -10, 100, 0.1},
         {PARAM_MAX_SPEED, "MaxSpd", 100, 1, 100, 0.1},
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255, 1.0},
 
-        {PARAM_SPAWN_RATE, "Spawn", 20, 1, 40, 1.0},
+        {PARAM_SPAWN_RATE, "Spawn", 5, 1, 40, 1.0},
         {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
         {PARAM_PARTICLE_FADE, "Fade", 0, 0, 255, 1.0},
         {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100, 1.0},
@@ -264,7 +300,7 @@ static const std::vector<IntParameter> getDefaultParameters()
         {PARAM_SLIDER_REPEAT, "Repeat", 1, 1, 10, 1.0},
         {PARAM_SLIDER_POSITION, "Pos", 0, 0, 255, 1.0},
         {PARAM_SLIDER_WIDTH, "Width", 1, 1, 60, 1.0},
-
+        {PARAM_SLIDER_HUE, "Hue", 60, 0, 360, 1.0},
         {PARAM_RANDOM_ON, "On", 30, 0, 255, 1.0},
         {PARAM_RANDOM_OFF, "Off", 30, 0, 255, 1.0},
         {PARAM_RANDOM_MIN, "Min", 0, 0, 255, 1.0},
@@ -273,36 +309,40 @@ static const std::vector<IntParameter> getDefaultParameters()
 
         {PARAM_SOUND_SCALE, "Sound", 0, 0, 1, 1.0},
         {PARAM_SCROLL_SPEED, "Speed", 0, 0, 1, 1.0},
-        {PARAM_MULTIPLIER, "Mult", 0, 0, 1, 1.0},
-   
+        {PARAM_SLIDER_MULTIPLIER, "Mult", 0, 0, 1, 1.0},
+        {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3, 1.0},
+
+        {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360, 1.0},
+        {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
+        {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255, 1.0},
+
+
 
     };
 };
+
 static const std::vector<BoolParameter> getDefaultBoolParameters()
 {
-    Serial.println("getDefaultBoolParameters");
+
     return {
         {PARAM_INVERT, "Invert", false},
         {PARAM_CENTERED, "Centered", false},
         {PARAM_BLACK_AND_WHITE, "B&W", false},
         {PARAM_LOOP_ANIM, "Loop", false},
         {PARAM_CYCLE, "Cycle", false},
-        {PARAM_ACCEL_MODE, "Accel", false},
         {PARAM_SEQUENCE, "Seq", false},
-        {PARAM_TARGET, "Target", false},
         {PARAM_SHOW_FPS, "FPS", false},
-        {PARAM_SPREAD, "Spread", false},
-        {PARAM_COLOR_VARIATION, "ColorVar", false},
-        {PARAM_DEATH_RATE, "Death", false},
         {PARAM_SLIDER_GRAVITY, "Gravity", false},
         {PARAM_RECORD_AUDIO, "Record", false},
         {PARAM_PARTICLE_UPDATE_ALL, "UpdateAll", true},
     };
 }
 
+std::vector<ParameterID> getParametersForMenu(MenuID menu);
+
 std::vector<MenuID> getChildrenOfMenu(MenuID type);
 std::string getMenuPath(MenuID type, MenuID root);
-const char *getMenuName(MenuID type);
+const char *getMenuName(MenuID type, int MaxSize = 6);
 
 const MenuID getParentMenu(MenuID type);
 
@@ -387,3 +427,5 @@ void printBytes(ByteRow data);
 
 int lerp(int min, int max, int minIn, int maxIn, int value);
 int interpolate(int from, int to, float t);
+
+void sanityCheckParameters();

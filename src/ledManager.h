@@ -3,11 +3,11 @@
 #include "stripState.h"
 
 
-class LEDManager 
+class LEDManager : public ParameterManager
 {
 
 private:
-    int currentStrip = 0;
+    
     bool safeLight = false; // the last led in the strip points back so it can be seen
     LedMatrix *ledMatrix;
     float gravityPosition = 0;
@@ -16,10 +16,10 @@ private:
 
     int lastUpdate = 0;
     int fps = 60;
-    ParameterManager *parameterManager;
+
 public:
-    LEDManager( ParameterManager *parameterManager);
-    void setCurrentStrip(int strip);
+    LEDManager( );
+ 
     void setGravityPosition(float position);
     void update();
     void setLEDImage(image_message image);
@@ -31,4 +31,6 @@ public:
  
     void toggleMode();
     String getStripState();
+    int getCurrentStrip();
+    void respondToParameterMessage(parameter_message parameter);
 };

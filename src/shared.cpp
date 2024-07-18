@@ -28,12 +28,16 @@ std::vector<ParameterID> getParametersForMenu(MenuID menu)
   }
   return menuParams;
 }
-const char *getMenuName(MenuID type)
+const char *getMenuName(MenuID type,int MaxSize)
 {
   auto it = menuTypeMap.find(type);
   if (it != menuTypeMap.end())
   {
-    return it->second.first.c_str();
+    auto name = it->second.first;
+    if(name.size() >MaxSize){
+      return  name.substr(0,MaxSize).c_str();
+    }
+    return name.c_str();
   }
   return "UNKNOWN";
 }
@@ -152,4 +156,75 @@ void colorFromHSV(led &color, float h, float s, float v)
   // {
   //   printf("rgb :%d %d %d :", color.r, color.g, color.b);
   // }
+}
+
+std::vector<std::string> getParameterNames(){
+    std::vector<std::string> names = {
+#define X(name) #name,
+        PARAMETER_LIST
+#undef X
+    };
+    return names;
+}
+
+void sanityCheckParameters()
+{
+  auto names = getParameterNames();
+  auto intParams = getDefaultParameters();
+  auto boolParams = getDefaultBoolParameters();
+  int missingParams = 0;
+  for (int i = 0; i < names.size(); i++)
+  {
+    // i is equivilent to the parameter ID
+    // search for i as a ParameterID in the intParams and boolParams
+    bool found = false;
+    for (auto param : intParams)
+    {
+      if (param.id == i)
+      {
+        found = true;
+        break;
+      }
+    }
+    if (found)
+    {
+      continue;
+    }
+    for (auto param : boolParams)
+    {
+      if (param.id == i)
+      {
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+    {
+      missingParams++;
+      Serial.printf("Parameter %s not found in default parameters\n", names[i].c_str());
+    }
+  }
+  if (missingParams == 0)
+  {
+    Serial.println("All parameters accounted for");
+  }
+
+  auto menus = parameterMenuList;
+  // make sure each parameter is used in a menu
+  for (int i = 0; i < names.size(); i++)
+  {
+    bool found = false;
+    for (auto menu : menus)
+    {
+      if (menu.second == i)
+      {
+        found = true;
+        break;
+      }
+    }
+    if (!found)
+    {
+      Serial.printf("Parameter %s not found in a menu\n", names[i].c_str());
+    }
+  }
 }
