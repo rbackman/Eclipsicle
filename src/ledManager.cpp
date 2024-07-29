@@ -1,3 +1,5 @@
+#ifdef USE_LEDS
+
 #include "stripState.h"
 #include "ledManager.h"
 #include "leds.h"
@@ -22,22 +24,6 @@ LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PAR
 
 void LEDManager::setLEDImage(image_message msg)
 {
-
-    if (msg.size != msg.row >= ledMatrix->size())
-    {
-        Serial.println("Error: ledMatrix size does not match message size");
-
-        // ledMatrix->clear();          // Arrow operator again
-        // ledMatrix->resize(msg.size); // And again
-        // for (int i = 0; i < msg.size; i++)
-        // {
-        //     (*ledMatrix)[i].resize(MAX_LEDS_PER_STRIP); // Here, we dereference the pointer and then use the array index operator.
-        // }
-    }
-    else
-    {
-        // Serial.println("ledMatrix size matches " + String(msg.size));
-    }
 
     std::vector<led> row = (*ledMatrix)[msg.row]; // Dereference the pointer first
 
@@ -208,3 +194,5 @@ String LEDManager::getStripState()
     }
     return stripStates[currentStrip - 1]->getStripState();
 }
+
+#endif

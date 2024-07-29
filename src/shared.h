@@ -49,6 +49,7 @@
     X(PARAM_MASTER_LED_BRIGHTNESS)       \
     X(PARAM_MASTER_LED_SATURATION)       \
     X(PARAM_MASTER_VOLUME)       \
+    X(PARAM_UNKNOWN)       \
 
  
 
@@ -296,7 +297,7 @@ static const std::vector<IntParameter> getDefaultParameters()
         {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
         {PARAM_PARTICLE_FADE, "Fade", 0, 0, 255, 1.0},
         {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100, 1.0},
-        {PARAM_TIME_SCALE, "Time", 10, -10, 10, 0.1},
+        {PARAM_TIME_SCALE, "Time", 10, -100, 100, 0.01},
         {PARAM_SLIDER_REPEAT, "Repeat", 1, 1, 10, 1.0},
         {PARAM_SLIDER_POSITION, "Pos", 0, 0, 255, 1.0},
         {PARAM_SLIDER_WIDTH, "Width", 1, 1, 60, 1.0},

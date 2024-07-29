@@ -1,5 +1,5 @@
 
-
+#ifdef USE_LEDS
 #include "FastLED.h"
 #include "stripState.h"
 
@@ -303,7 +303,7 @@ void StripState::update()
         for (int i = 0; i < numLEDS; i++)
         {
 
-            int val = i + scrollPos;
+            int val =(int)(i + scrollPos) % numLEDS;
             colorFromHSV(color, float(val) / float(numLEDS), 1, 1);
             setPixel(i, color);
         }
@@ -469,3 +469,5 @@ void StripState::respondToParameterMessage(parameter_message parameter)
     ParameterManager::respondToParameterMessage(parameter);
     // don't need to do anything here
 }
+
+#endif

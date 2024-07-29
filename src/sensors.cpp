@@ -48,7 +48,7 @@ SensorManager::SensorManager(SensorGrid sensors) : sensorGrid(sensors)
 #ifdef USE_BUTTON_INTERRUPTS
         if (sensors[i].type == BUTTON)
         {
-            Serial.printf("Creating Button %s %d\n", sensors[i].name, sensors[i].pin);
+            // Serial.printf("Creating Button %s %d\n", sensors[i].name, sensors[i].pin);
             pinMode(sensors[i].pin, INPUT_PULLUP);
             if (sensors[i].name == "Button1")
             {
@@ -76,12 +76,10 @@ SensorManager::SensorManager(SensorGrid sensors) : sensorGrid(sensors)
 #else
         if (sensors[i].type == BUTTON)
         {
-            Serial.printf("Creating Button %s %d as Input Pullup\n", getSensorName(sensors[i].sensorID), sensors[i].pin);
             pinMode(sensors[i].pin, INPUT_PULLUP);
         }
         else
         {
-            // Serial.printf("Creating Sensor %s %d as Input\n", sensors[i].name, sensors[i].pin);
             pinMode(sensors[i].pin, INPUT);
         }
 #endif
@@ -141,7 +139,6 @@ void SensorManager::updateSensors()
     }
     SensorState *sensor = &sensorGrid[currentSensor];
 
-    Serial1.println("Updating Sensor: " + String(getSensorName(sensor->sensorID)));
     long currentTime = millis();
     // && currentTime - grid[i].lastDebounceTime > DEBOUNCE_DELAY
 
@@ -154,8 +151,6 @@ void SensorManager::updateSensors()
         // too soon to check again
         return;
     }
-
-    // Serial.printf("Updating %s\n", sensor->name);
     if (sensor->type == BUTTON)
     {
 #ifdef USE_BUTTON_INTERRUPTS
@@ -169,7 +164,7 @@ void SensorManager::updateSensors()
             {
                 sensor->value = 1;
             }
-            Serial.println("Toggle button1");
+
             button1Pressed = false;
         }
         if (sensor->pin == button2Pin && button2Pressed)
@@ -223,17 +218,8 @@ void SensorManager::updateSensors()
             {
                 sensor->initialized = true;
 
-                if (isVerbose())
-                {
-                    Serial.printf("Button %s initialized\n", getSensorName(sensor->sensorID));
-                }
                 return;
             }
-            // if (isVerbose() || printSensor == currentSensor || printSensor == -2)
-            // {
-            //     Serial.println("Button  changed: " + String(sensor->name) + " :" + String(value));
-            // }
-            // Serial.println("Button  changed: " + String(sensor->name) + " :" + String(value));
         }
 #endif
         return;
@@ -259,10 +245,7 @@ void SensorManager::updateSensors()
                 sensor->value = value;
                 sensor->changed = true;
             }
-            if (isVerbose())
-            {
-                Serial.printf("Sensor %s initialized\n",  getSensorName(sensor->sensorID));
-            }
+            
             return;
         }
 
@@ -319,7 +302,7 @@ bool SensorManager::handleSensorCommand(String command)
         for (int i = 0; i < sensorGrid.size(); i++)
         {
             SensorState *sensor = &sensorGrid[i];
-            String sensorName =  getSensorName(sensor->sensorID);
+            String sensorName = getSensorName(sensor->sensorID);
             sensorName.trim();
             Serial.println("Checking sensor: " + sensorName);
             if (sensorName.equalsIgnoreCase(sensorToPrint))

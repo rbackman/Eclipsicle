@@ -1,8 +1,9 @@
-#ifdef MASTER_BOARD
+
+#ifdef USE_AUDIO
 #include "audio.h"
+#include <driver/i2s.h>
 
-
-#define AUDIO_OUT_PIN 25 // DAC output pin
+// #define AUDIO_OUT_PIN 25 // DAC output pin
 
 SPIClass spi(VSPI); // Create a new SPI instance
 
@@ -10,6 +11,7 @@ SPIClass spi(VSPI); // Create a new SPI instance
 #define SD_MOSI 23   // SD Card MOSI
 #define SD_MISO 19   // SD Card MISO
 #define SD_SCK 2     // SD Card SCK
+#define I2S_PORT I2S_NUM_0
 
 bool sdCardMounted = false;
 
@@ -20,7 +22,6 @@ bool sdCardMounted = false;
 #define I2S_SAMPLE_BIT_COUNT 16
 #define SOUND_SAMPLE_RATE 16000
 #define SOUND_CHANNEL_COUNT 1
-#define I2S_PORT I2S_NUM_0
 
 const int I2S_DMA_BUF_COUNT = 8;
 const int I2S_DMA_BUF_LEN = 1024;
@@ -57,18 +58,17 @@ int16_t Buffer[BufferLen];
 void i2s_install()
 {
     const i2s_config_t i2s_config = {
-        .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
+        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX | I2S_MODE_RX),
         .sample_rate = SOUND_SAMPLE_RATE,
-        .bits_per_sample = i2s_bits_per_sample_t(I2S_SAMPLE_BIT_COUNT),
-        .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT,
-        .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
+        .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+        .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
+        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
         .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-        .dma_buf_count = 8,
-        .dma_buf_len = 1024,
+        .dma_buf_count = I2S_DMA_BUF_COUNT,
+        .dma_buf_len = I2S_DMA_BUF_LEN,
         .use_apll = false,
-        .tx_desc_auto_clear = false,
+        .tx_desc_auto_clear = true,
         .fixed_mclk = 0};
-
     esp_err_t err = i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
     if (err != ESP_OK)
     {
@@ -93,57 +93,71 @@ AudioManager::AudioManager()
 }
 void AudioManager::debugAudio()
 {
-    size_t bytesRead = 0;
-    esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, 0);
+    // size_t bytesRead = 0;
+    // esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, 0);
 
-    if (result == ESP_OK && bytesRead > 0)
-    {
-        int16_t samplesRead = bytesRead / 2;
-        int amplitude = getAmplitude(Buffer, samplesRead);
-        printAmplitude(amplitude);
-    }
-    else
-    {
-        Serial.println("Failed to read audio data");
-    }
+    // if (result == ESP_OK && bytesRead > 0)
+    // {
+    //     int16_t samplesRead = bytesRead / 2;
+    //     int amplitude = getAmplitude(Buffer, samplesRead);
+    //     printAmplitude(amplitude);
+    // }
+    // else
+    // {
+    //     Serial.println("Failed to read audio data");
+    // }
 }
-void AudioManager::playTone(int freq, int duration, int volume)
-{
 
-    ledcSetup(0, 5000, 8);
-    ledcAttachPin(AUDIO_OUT_PIN, 0);
-    ledcWriteTone(0, freq);
-    // Set the volume
-    ledcWrite(0, volume);
+void AudioManager::playTone(int freq, int duration, float volume)
+{
+    const int samples = SAMPLE_RATE * duration / 1000;
+    const float volumeScale = volume * 32767.0f; // Scale volume to 16-bit range
+
+    int16_t *buffer = new int16_t[samples];
+
+    // Generate sine wave
+    for (int i = 0; i < samples; i++)
+    {
+        float t = (float)i / SAMPLE_RATE;
+        buffer[i] = (int16_t)(sin(2 * M_PI * freq * t) * volumeScale);
+    }
+
+    size_t bytesWritten = 0;
+    esp_err_t result = i2s_write(I2S_NUM_0, buffer, samples * sizeof(int16_t), &bytesWritten, portMAX_DELAY);
+
+    if (result != ESP_OK)
+    {
+        Serial.println("Failed to play tone");
+    }
+
+    delete[] buffer;
+
+    // Delay to allow the tone to finish playing
     delay(duration);
-    ledcWriteTone(0, 0);
+
+    // Play a short period of silence to stop the tone
+    int16_t silence[100] = {0};
+    i2s_write(I2S_NUM_0, silence, sizeof(silence), &bytesWritten, portMAX_DELAY);
 }
 
 void AudioManager::init()
 {
     Serial.println("Initializing AudioManager...");
 
-    spi.begin(SD_SCK, SD_MISO, SD_MOSI, SD_CS_PIN);
-
-    if (!SD.begin(SD_CS_PIN, spi))
-    {
-        Serial.println("Card Mount Failed");
-    }
-    else
-    {
-        sdCardMounted = true;
-        Serial.println("SD Card mounted successfully");
-    }
+    // if (!SD.begin(SD_CS))
+    // {
+    //     Serial.println("SD Card initialization failed!");
+    //     return;
+    // }
 
     i2s_install();
     i2s_setpin();
-    i2s_start(I2S_PORT);
+    // out = new AudioOutputI2S();
+    // out->SetPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
+    // out->SetGain(0.5);
 
     Serial.println("AudioManager initialized.");
-    // delay(500);
-    // checkMic();
 }
-
 int AudioManager::getDecibel()
 {
     int32_t buffer32[64] = {0};
@@ -154,73 +168,53 @@ int AudioManager::getDecibel()
 
 int frameCount = 0;
 
-int AudioManager::getAmplitude(int16_t *buffer, int bufferSize)
-{
-    int32_t sum = 0;
-    for (int i = 0; i < bufferSize; i++)
-    {
-        sum += abs(buffer[i]);
-    }
-    return sum / bufferSize;
-}
+// int AudioManager::getAmplitude(int16_t *buffer, int bufferSize)
+// {
+//     int32_t sum = 0;
+//     for (int i = 0; i < bufferSize; i++)
+//     {
+//         sum += abs(buffer[i]);
+//     }
+//     return sum / bufferSize;
+// }
 
-void AudioManager::printAmplitude(int amplitude)
-{
-    int normalizedAmplitude = map(amplitude, 0, DEBUG_AMPLITUDE_MAX, 0, 40);
-    Serial.print("|");
-    for (int i = 0; i < 40; i++)
-    {
-        if (i < normalizedAmplitude)
-        {
-            Serial.print("#");
-        }
-        else
-        {
-            Serial.print(" ");
-        }
-    }
-    Serial.print("| ");
-    Serial.println(amplitude);
-}
+// void AudioManager::printAmplitude(int amplitude)
+// {
+//     int normalizedAmplitude = map(amplitude, 0, DEBUG_AMPLITUDE_MAX, 0, 40);
+//     Serial.print("|");
+//     for (int i = 0; i < 40; i++)
+//     {
+//         if (i < normalizedAmplitude)
+//         {
+//             Serial.print("#");
+//         }
+//         else
+//         {
+//             Serial.print(" ");
+//         }
+//     }
+//     Serial.print("| ");
+//     Serial.println(amplitude);
+// }
 
 void AudioManager::update()
 {
-    frameCount++;
     if (isRecording)
     {
         size_t bytesRead = 0;
-        esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, 0);
+        uint8_t buffer[512];
+        esp_err_t result = i2s_read(I2S_NUM_0, buffer, sizeof(buffer), &bytesRead, portMAX_DELAY);
 
         if (result == ESP_OK && bytesRead > 0)
         {
-            int16_t samplesRead = bytesRead / 2;
-            for (int i = 0; i < samplesRead; ++i)
-            {
-                int32_t val = Buffer[i] * AmplifyFactor;
-                val = constrain(val, -32768, 32767);
-                Buffer[i] = val;
-            }
-            audioFile.write((const uint8_t *)Buffer, bytesRead);
-            if (frameCount % 20 == 0)
-            {
-                Serial.print("-");
-            }
+            audioFile.write(buffer, bytesRead);
         }
     }
-    else if (isPlaying)
+
+    if (isPlaying && wav->isRunning())
     {
-       
-        int16_t sample;
-        if (audioFile.available() && audioFile.read((uint8_t *)&sample, 2) == 2) {
-            int32_t amplifiedSample = sample * volume / 10;
-            amplifiedSample = constrain(amplifiedSample, -32768, 32767);
-            int dacValue = map(amplifiedSample, -32768, 32767, 0, 255); // Convert to 8-bit unsigned
-            dacWrite(AUDIO_OUT_PIN, dacValue);
-            // delayMicroseconds(1000000 / SOUND_SAMPLE_RATE); // Ensure this matches your sample rate
-            // if (frameCount % 100 == 0)
-            //     printAmplitude(abs(amplifiedSample));
-        } else {
-            Serial.println("Playback complete.");
+        if (!wav->loop())
+        {
             stop();
         }
     }
@@ -228,11 +222,8 @@ void AudioManager::update()
 
 void AudioManager::record()
 {
-    if (!sdCardMounted)
-    {
-        Serial.println("SD Card not mounted.");
+    if (isRecording)
         return;
-    }
 
     audioFile = SD.open("/recording.wav", FILE_WRITE);
     if (!audioFile)
@@ -241,7 +232,7 @@ void AudioManager::record()
         return;
     }
 
-    writeWAVHeader(audioFile, SOUND_SAMPLE_RATE, I2S_SAMPLE_BIT_COUNT, SOUND_CHANNEL_COUNT);
+    writeWAVHeader(audioFile, SAMPLE_RATE, BITS_PER_SAMPLE, CHANNELS);
 
     isRecording = true;
     Serial.println("Recording started.");
@@ -255,16 +246,11 @@ void AudioManager::stop()
         audioFile.close();
         isRecording = false;
         Serial.println("Recording stopped.");
-
-        // Save the recording to a file
-        String filename = "/recording" + String(millis()) + ".wav";
-        Serial.printf("Saving recording to %s\n", filename.c_str());
-        saveFile(filename.c_str());
     }
 
     if (isPlaying)
     {
-        audioFile.close();
+        wav->stop();
         isPlaying = false;
         Serial.println("Playback stopped.");
     }
@@ -300,31 +286,29 @@ void AudioManager::checkMic()
 
 void AudioManager::play()
 {
-    if (!sdCardMounted)
-    {
-        Serial.println("SD Card not mounted.");
+    if (isPlaying)
         return;
-    }
-    audioFile = SD.open("/recording.wav");
-    if (!audioFile)
+
+    file = new AudioFileSourceSD("/recording.wav");
+    wav = new AudioGeneratorWAV();
+
+    if (wav->begin(file, out))
     {
-        Serial.println("Failed to open file for playback");
-        return;
+        isPlaying = true;
+        Serial.println("Playback started.");
     }
-
-    // Skip WAV header
-    audioFile.seek(44);
-
-    isPlaying = true;
-    Serial.println("Playback started.");
+    else
+    {
+        Serial.println("Failed to start playback.");
+    }
 }
 
-void AudioManager::setVolume(int volume)
-{
-    this->volume = volume;
-    Serial.print("Volume set to ");
-    Serial.println(volume);
-}
+// void AudioManager::setVolume(int volume)
+// {
+//     this->volume = volume;
+//     Serial.print("Volume set to ");
+//     Serial.println(volume);
+// }
 
 void AudioManager::saveFile(const char *filename)
 {
@@ -378,21 +362,6 @@ void AudioManager::loadFile(const char *filename)
         return;
     }
 
-    File destFile = SD.open("/recording.wav", FILE_WRITE);
-    if (!destFile)
-    {
-        Serial.println("Failed to open destination file for loading.");
-        audioFile.close();
-        return;
-    }
-
-    while (audioFile.available())
-    {
-        destFile.write(audioFile.read());
-    }
-
-    audioFile.close();
-    destFile.close();
     Serial.println("File loaded.");
 }
 
@@ -405,13 +374,13 @@ bool AudioManager::isPlayingAudio()
 {
     return isPlaying;
 }
-
-void AudioManager::writeWAVHeader(File file, uint32_t sampleRate, uint16_t bitDepth, uint16_t channels)
+void AudioManager::writeWAVHeader(fs::File &file, uint32_t sampleRate, uint16_t bitDepth, uint16_t channels)
 {
     uint32_t fileSize = 0;      // Placeholder for file size
     uint32_t subchunk2Size = 0; // Placeholder for subchunk2 size
 
     // Chunk ID "RIFF"
+
     file.write((const uint8_t *)"RIFF", 4);
 
     // Chunk size (fileSize - 8), will be filled in later
@@ -455,7 +424,7 @@ void AudioManager::writeWAVHeader(File file, uint32_t sampleRate, uint16_t bitDe
     file.write((const uint8_t *)&subchunk2Size, 4);
 }
 
-void AudioManager::updateWAVHeader(File file)
+void AudioManager::updateWAVHeader(File &file)
 {
     // Get the final file size
     uint32_t fileSize = file.size();
@@ -472,5 +441,4 @@ void AudioManager::updateWAVHeader(File file)
     file.seek(40);
     file.write((const uint8_t *)&subchunk2Size, 4);
 }
-
 #endif

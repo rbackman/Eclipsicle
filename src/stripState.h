@@ -1,4 +1,7 @@
 #pragma once
+
+#ifdef USE_LEDS
+
 #include "shared.h"
 #include "leds.h"
 #include <FastLED.h>
@@ -125,3 +128,5 @@ public:
     String getStripState();
     void  respondToParameterMessage(parameter_message parameter);
 };
+
+#endif

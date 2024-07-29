@@ -1,4 +1,5 @@
 
+#ifdef USE_LEDS
 
 #include <Adafruit_NeoPixel.h>
 #define FASTLED_ESP32_DMA
@@ -92,3 +93,5 @@ void decodeRLE(ByteRow encodedData, LedRow &dest)
     }
 }
 
+
+#endif

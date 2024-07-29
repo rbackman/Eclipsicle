@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef USE_LEDS
 #include "stripState.h"
 
 
@@ -34,3 +34,5 @@ public:
     int getCurrentStrip();
     void respondToParameterMessage(parameter_message parameter);
 };
+
+#endif

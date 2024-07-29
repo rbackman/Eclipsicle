@@ -1,52 +1,59 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#pragma once
 
-#include <Arduino.h>
-#include <SD.h>
-#include <SPI.h>
-#include <driver/i2s.h>
+#ifdef USE_AUDIO
 
-// #define MIC_WS 18      // I2S LRCLK
-// #define MIC_SD_DATA 26 // I2S DOUT
-// #define MIC_SCK 5      // I2S BCLK
+#include "Arduino.h"
 
-// #define AUDIO_OUT_PIN 25 // DAC output pin
 
-// #define SD_CS_PIN 15 // SD Card Chip Select
-// #define SD_MOSI 23   // SD Card MOSI
-// #define SD_MISO 19   // SD Card MISO
-// #define SD_SCK 2     // SD Card SCK
+#include "SPI.h"
+#include "SD.h"
+#include "FS.h"
+#include "AudioFileSourceSD.h"
+#include "AudioGeneratorWAV.h"
+#include "AudioOutputI2S.h"
+// Pin definitions
+#define I2S_BCLK 26
+#define I2S_LRC 22
+#define I2S_DOUT 25
+#define I2S_DIN 33
+#define SD_CS 5
+
+// I2S configuration
+#define SAMPLE_RATE 44100
+#define BITS_PER_SAMPLE 16
+#define CHANNELS 1
 
 class AudioManager
 {
 public:
     AudioManager();
     void init();
-    void update();
+    void record();
     void play();
     void stop();
-    void record();
-    void setVolume(int volume);
-    void saveFile(const char *filename);
-    void loadFile(const char *filename);
-    void playTone(int freq, int duration, int volume);
-    int getDecibel();
+    void update();
     bool isRecordingAudio();
     bool isPlayingAudio();
     void debugAudio();
-
+    void playTone(int freq, int duration, float volume);
+    void saveFile(const char *filename);
+    void loadFile(const char *filename);
+    int getDecibel();
 private:
+
+    void writeWAVHeader( File &file, uint32_t sampleRate, uint16_t bitDepth, uint16_t channels);
+    void updateWAVHeader( File &file);
     void checkMic();
-    void writeWAVHeader(File file, uint32_t sampleRate, uint16_t bitDepth, uint16_t channels);
-    void updateWAVHeader(File file);
 
-    int getAmplitude(int16_t *buffer, int bufferSize);
-
-    void printAmplitude(int amplitude);
+    AudioGeneratorWAV *wav;
+    AudioOutputI2S *out;
+    AudioFileSourceSD *file;
+  
 
     File audioFile;
-    bool isRecording = false;
-    bool isPlaying = false;
-    int volume = 128; // Default volume (0-255)
+   
+    bool isRecording;
+    bool isPlaying;
 };
-#endif // AUDIO_H
+
+#endif

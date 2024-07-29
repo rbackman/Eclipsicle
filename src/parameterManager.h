@@ -34,6 +34,7 @@ public:
         return "UNKNOWN";
     }
     virtual void respondToParameterMessage(parameter_message parameter);
+    bool handleTextMessage(std::string message);
     bool parameterChanged()
     {
         if (paramChanged)
@@ -47,6 +48,19 @@ public:
     {
         return name;
     }
+    ParameterID getParameterID(std::string name)
+    {
+        auto pnames = getParameterNames();
+        for (int i = 0; i < pnames.size(); i++)
+        {
+            if (pnames[i] == name)
+            {
+                return (ParameterID)i;
+            }
+        }
+        return PARAM_UNKNOWN;
+    }
+
 private:
     bool paramChanged = true;
     std::vector<BoolParameter> boolParams = {};
