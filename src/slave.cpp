@@ -1,11 +1,7 @@
 #ifdef SLAVE_BOARD
-// #define USE_MOTOR 1
-// #define USE_MESHNET 1
-#define USE_LEDS 1
-#define USE_ACCELEROMETER 1
-#define USE_DISPLAY 1
-#define USE_SENSORS 1
+
 #ifdef USE_LEDS
+
 #include "ledManager.h"
 
 #endif
@@ -27,7 +23,9 @@
 #ifdef USE_ACCELEROMETER
 #include <Adafruit_MPU6050.h>
 #endif
+#ifdef USE_SENSORS
 #include <Adafruit_Sensor.h>
+#endif
 #include <Wire.h>
 
 #ifdef USE_ACCELEROMETER
@@ -36,12 +34,14 @@ Adafruit_MPU6050 mpu;
 const int buttonPin = 0;    // GPIO 0 is often used for the boot button
 int lastButtonState = HIGH; // Assume button starts unpressed
 bool showAccel = false;
+
 #ifdef USE_DISPLAY
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 32, &Wire);
 #endif
 
 SerialManager *serialManager = new SerialManager(120, "Slave");
 ParameterManager *parameterManager;
+
 #ifdef USE_LEDS
 LEDManager *ledManager;
 #endif

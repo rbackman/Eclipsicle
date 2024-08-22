@@ -9,7 +9,9 @@
 CRGB ledsStrip1[LEDS_STRIP_1];
 CRGB ledsStrip2[LEDS_STRIP_2];
 
-LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP,PARAM_SEQUENCE})
+// std::vector<CRGB> ledStrips ;
+
+LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
 
     ledMatrix = new LedMatrix();
