@@ -117,7 +117,21 @@ void setup()
   {
     sanityCheckParameters();
   }
-  ledManager = new LEDManager();
+
+  //   struct LEDParams
+  // {
+  //     int ledPin;
+  //     int numLEDS;
+  //     int stripIndex;
+  //     LED_STATE startState;
+  //     bool reverse;
+  // };
+
+  std::vector<LEDParams> strips = {
+      {2, 60, 0, LED_STATE_PARTICLES, false},
+      {4, 60, 1, LED_STATE_PARTICLES, false},
+      {5, 60, 2, LED_STATE_PARTICLES, false}};
+  ledManager = new LEDManager(strips);
 
 #ifdef USE_DISPLAY
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally

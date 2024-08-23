@@ -6,21 +6,38 @@
 #include "stripState.h"
 #include <FastLED.h>
 
-CRGB ledsStrip1[LEDS_STRIP_1];
-CRGB ledsStrip2[LEDS_STRIP_2];
-
-// std::vector<CRGB> ledStrips ;
-
-LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
+LEDManager::LEDManager(std::vector<LEDParams> strips) : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
 
     ledMatrix = new LedMatrix();
 
-    stripStates[0] = new StripState(ledsStrip1, LED_STATE_PARTICLES, LEDS_STRIP_1, LED_PIN_1, 0, true);
-    stripStates[1] = new StripState(ledsStrip2, LED_STATE_PARTICLES, LEDS_STRIP_2, LED_PIN_2, 1, false);
+    for (int i = 0; i < strips.size(); i++)
+    {
+        LEDParams params = strips[i];
+        StripState *strip = new StripState(params.startState, params.numLEDS, params.ledPin, params.stripIndex, params.reverse);
+        stripStates.push_back(strip);
 
-    FastLED.addLeds<NEOPIXEL, LED_PIN_1>(ledsStrip1, LEDS_STRIP_1);
-    FastLED.addLeds<NEOPIXEL, LED_PIN_2>(ledsStrip2, LEDS_STRIP_2);
+        switch (i)
+        {
+        case 0:
+            FastLED.addLeds<NEOPIXEL, LED_PIN_1>(strip->leds, strip->getNumLEDS());
+            break;
+        case 1:
+            FastLED.addLeds<NEOPIXEL, LED_PIN_2>(strip->leds, strip->getNumLEDS());
+            break;
+        case 2:
+
+            FastLED.addLeds<NEOPIXEL, LED_PIN_3>(strip->leds, strip->getNumLEDS());
+            break;
+        case 3:
+            FastLED.addLeds<NEOPIXEL, LED_PIN_4>(strip->leds, strip->getNumLEDS());
+            break;
+
+        default:
+            Serial.println("Warning more strips than pins");
+            break;
+        }
+    }
     setValue(PARAM_BRIGHTNESS, 50);
 }
 
@@ -48,7 +65,7 @@ void LEDManager::setLEDImage(image_message msg)
     int currentStrip = getValue(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
-        for (int i = 0; i < NUM_STRIPS; i++)
+        for (int i = 0; i < stripStates.size(); i++)
         {
             stripStates[i]->setLEDRow(row);
         }
@@ -84,7 +101,7 @@ bool LEDManager::handleLEDCommand(String command)
         bool res = false;
         int currentStrip = getValue(PARAM_CURRENT_STRIP);
 
-        for (int i = 0; i < NUM_STRIPS; i++)
+        for (int i = 0; i < stripStates.size(); i++)
         {
             if (currentStrip == 0 || currentStrip == i + 1)
             {
@@ -111,7 +128,7 @@ void LEDManager::respondToParameterMessage(parameter_message parameter)
     {
         int currentStrip = getValue(PARAM_CURRENT_STRIP);
         Serial.println("update current strip " + String(currentStrip));
-        for (int i = 0; i < NUM_STRIPS; i++)
+        for (int i = 0; i < stripStates.size(); i++)
         {
             if (currentStrip == 0 || currentStrip == i + 1)
             {
@@ -130,7 +147,7 @@ void LEDManager::setBrightness(int brightness)
 void LEDManager::setAll(led color)
 {
     // set all leds to a color
-    for (int i = 0; i < NUM_STRIPS; i++)
+    for (int i = 0; i < stripStates.size(); i++)
     {
         stripStates[i]->setAll(color);
     }
@@ -148,7 +165,8 @@ void LEDManager::update()
 
     lastUpdate = currentTime;
 
-    for (int i = 0; i < NUM_STRIPS; i++)
+    Serial.printf("update %d", stripStates.size());
+    for (int i = 0; i < stripStates.size(); i++)
     {
         stripStates[i]->update();
     }
@@ -163,7 +181,7 @@ void LEDManager::setGravityPosition(float position)
     int currentStrip = getValue(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
-        for (int i = 0; i < NUM_STRIPS; i++)
+        for (int i = 0; i < stripStates.size(); i++)
         {
             stripStates[i]->setGravityPosition(position);
         }
@@ -179,7 +197,7 @@ void LEDManager::toggleMode()
     int currentStrip = getValue(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
-        for (int i = 0; i < NUM_STRIPS; i++)
+        for (int i = 0; i < stripStates.size(); i++)
         {
             stripStates[i]->toggleMode();
         }

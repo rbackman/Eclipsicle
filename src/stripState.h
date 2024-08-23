@@ -1,10 +1,10 @@
 #pragma once
 
 #ifdef USE_LEDS
-
+#include "FastLED.h"
 #include "shared.h"
 #include "leds.h"
-#include <FastLED.h>
+
 #include "parameterManager.h"
 struct Particle
 {
@@ -34,14 +34,12 @@ struct SliderParams
 };
 class StripState : public ParameterManager
 {
+
 private:
-    CRGB *leds;
     int stripIndex;
     int gravityPosition = 0;
-
-    bool invertLEDs = false;
-
     int numLEDS = 128;
+    bool invertLEDs = false;
 
     float scrollPos = 0;
 
@@ -49,7 +47,8 @@ private:
     Particle particles[10];
 
 public:
-    StripState(CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert);
+    CRGB *leds;
+    StripState(LED_STATE state, const int numLEDS, const int LED_PIN, int STRIP_INDEX, bool invert);
 
     void setNumLEDS(int num)
     {

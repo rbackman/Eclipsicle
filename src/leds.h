@@ -2,15 +2,14 @@
 #pragma once
 #include "shared.h"
 
-#define NUM_STRIPS 2
+#define HALL_EFFECT_PIN 34
+
+#define MAX_LEDS_PER_STRIP 200
 
 #define LED_PIN_1 2
 #define LED_PIN_2 4
-#define HALL_EFFECT_PIN 34
-
-#define LEDS_STRIP_1 200
-#define LEDS_STRIP_2 200
-#define MAX_LEDS_PER_STRIP 200
+#define LED_PIN_3 5
+#define LED_PIN_4 18
 
 enum LED_STATE
 {

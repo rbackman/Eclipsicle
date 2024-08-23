@@ -1,6 +1,6 @@
 
 #ifdef USE_LEDS
-#include "FastLED.h"
+
 #include "stripState.h"
 
 int val = 0;
@@ -9,11 +9,11 @@ int maxr = 0;
 
 led color;
 
-StripState::StripState(CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), leds(row), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
+StripState::StripState(LED_STATE state, const int numLEDS, const int LED_PIN, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
 
 {
 
-    leds = row;
+    leds = new CRGB[numLEDS];
 
     ledState = state;
 }
