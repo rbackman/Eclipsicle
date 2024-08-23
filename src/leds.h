@@ -8,8 +8,8 @@
 #define LED_PIN_2 4
 #define HALL_EFFECT_PIN 34
 
-#define LEDS_STRIP_1 128
-#define LEDS_STRIP_2 128
+#define LEDS_STRIP_1 200
+#define LEDS_STRIP_2 200
 #define MAX_LEDS_PER_STRIP 200
 
 enum LED_STATE

@@ -86,7 +86,8 @@ void StripState::updateParticles()
         int acceleration = getValue(PARAM_ACCELERATION);
         int maxSpeed = getValue(PARAM_MAX_SPEED);
         int velocity = getValue(PARAM_VELOCITY);
-        Serial.printf("Update all particles %d %d %d %d %d %d %d %d %d %d\n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
+        // %d %d %d %d %d %d %d %d %d\n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
+        Serial.printf("Update all particles hue start:%d \n  hue end:%d \n brightness:%d \n fade:%d \n width:%d \n life:%d \n randomDrift:%d \n acceleration:%d \n maxSpeed:%d \n velocity:%d \n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
         for (int i = 0; i < 10; i++)
         {
             auto particle = &particles[i];
@@ -155,13 +156,13 @@ void StripState::updateParticles()
             {
                 particle->velocity = 10;
             }
-            if (particle->randomDrift > 0)
-            {
-                if (random(0, 100) < particle->randomDrift)
-                {
-                    particle->acceleration = -particle->acceleration;
-                }
-            }
+            // if (particle->randomDrift > 0)
+            // {
+            //     if (random(0, 100) < particle->randomDrift)
+            //     {
+            //         particle->acceleration = -particle->acceleration;
+            //     }
+            // }
 
             if (particle->position < -width)
             {
@@ -196,7 +197,7 @@ void StripState::spawnParticle()
     int brightness = getValue(PARAM_BRIGHTNESS);
     int life = getValue(PARAM_PARTICLE_LIFE);
 
-    spawnParticle(-width, velocity, hueStart, hueEnd, brightness, width, life);
+    spawnParticle(0, velocity, hueStart, hueEnd, brightness, width, life);
 };
 String StripState::getStripState()
 {
@@ -209,11 +210,11 @@ void StripState::update()
     switch (ledState)
     {
     case LED_STATE_IDLE:
-    // {
-    //     // clearPixels();
-    // }
+        // {
+        //     // clearPixels();
+        // }
 
-    break;
+        break;
     case LED_STATE_PARTICLES:
     {
 
@@ -221,10 +222,12 @@ void StripState::update()
         int spawnRate = getValue(PARAM_SPAWN_RATE);
         float timeScale = getFloat(PARAM_TIME_SCALE);
 
+        // Serial.printf("Spawn Rate: %d\n timeScale  %f\n", spawnRate, timeScale);
+
         if (spawnRate > 0 && timeScale != 0)
         {
             int ranVal = random(0, 100);
-
+            // Serial.printf("Spawn Rate: %d\n timeScale  %f\n ranVal %d\n", spawnRate, timeScale, ranVal);
             if (ranVal < spawnRate)
             {
 
@@ -303,7 +306,7 @@ void StripState::update()
         for (int i = 0; i < numLEDS; i++)
         {
 
-            int val =(int)(i + scrollPos) % numLEDS;
+            int val = (int)(i + scrollPos) % numLEDS;
             colorFromHSV(color, float(val) / float(numLEDS), 1, 1);
             setPixel(i, color);
         }
@@ -365,7 +368,6 @@ void StripState::update()
         break;
     }
 }
-
 
 void StripState::setAll(led color)
 {

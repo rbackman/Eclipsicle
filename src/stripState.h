@@ -32,14 +32,14 @@ struct SliderParams
     int repeat;
     bool useGravity;
 };
-class StripState :public ParameterManager
+class StripState : public ParameterManager
 {
 private:
     CRGB *leds;
     int stripIndex;
     int gravityPosition = 0;
 
- bool invertLEDs = false;
+    bool invertLEDs = false;
 
     int numLEDS = 128;
 
@@ -47,11 +47,10 @@ private:
 
     LED_STATE ledState = LED_STATE_IDLE;
     Particle particles[10];
-  
 
 public:
     StripState(CRGB row[], LED_STATE state, int numLEDS, int LED_PIN, int STRIP_INDEX, bool invert);
-   
+
     void setNumLEDS(int num)
     {
         numLEDS = num;
@@ -83,6 +82,12 @@ public:
                 particles[i].brightness = brightness;
                 particles[i].width = width;
                 particles[i].life = life;
+
+                // if (isVerbose())
+                // {
+                // Serial.printf("\nSpawned particle\n  position x: %d\n velocity: %f \nhueStart: %d \nhueEnd: %d \nbrightness: %d \nwidth: %d \nlife: %d", position, velocity, hueStart, hueEnd, brightness, width, life);
+                // }
+
                 return;
             }
         }
@@ -95,7 +100,7 @@ public:
     void spawnParticle();
     void updateRandomParticles();
     void updateParticles();
-    
+
     void setLEDRow(LedRow ledRow)
     {
 
@@ -113,7 +118,7 @@ public:
     }
 
     void setAll(CRGB color);
-    void setAll (led color);
+    void setAll(led color);
     bool respondToText(String command);
 
     void clearPixels();
@@ -122,11 +127,10 @@ public:
     void setPixel(int index, int r, int g, int b);
 
     void toggleMode();
-   
 
     void update();
     String getStripState();
-    void  respondToParameterMessage(parameter_message parameter);
+    void respondToParameterMessage(parameter_message parameter);
 };
 
 #endif

@@ -491,6 +491,7 @@ void loop()
     //     Serial.println("Command not handled" + command);
     // }
   }
+
 #ifdef USE_LEDS
   ledManager->update();
 #endif

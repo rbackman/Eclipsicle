@@ -9,49 +9,47 @@
 #include <Arduino.h>
 #include <cstdint>
 
-#define PARAMETER_LIST           \
-    X(PARAM_HUE)                 \
-    X(PARAM_HUE_END)             \
-    X(PARAM_BRIGHTNESS)          \
-    X(PARAM_PARTICLE_WIDTH)      \
-    X(PARAM_PARTICLE_FADE)       \
-    X(PARAM_PARTICLE_UPDATE_ALL) \
-    X(PARAM_SLIDER_WIDTH)        \
-    X(PARAM_SLIDER_GRAVITY)      \
-    X(PARAM_VELOCITY)            \
-    X(PARAM_MAX_SPEED)           \
-    X(PARAM_ACCELERATION)        \
-    X(PARAM_RANDOM_DRIFT)        \
-    X(PARAM_TIME_SCALE)          \
-    X(PARAM_SLIDER_REPEAT)       \
-    X(PARAM_SLIDER_POSITION)     \
-    X(PARAM_SLIDER_HUE)          \
-    X(PARAM_SPAWN_RATE)          \
-    X(PARAM_PARTICLE_LIFE)       \
-    X(PARAM_SOUND_SCALE)         \
-    X(PARAM_SCROLL_SPEED)        \
-    X(PARAM_SLIDER_MULTIPLIER)   \
-    X(PARAM_RANDOM_ON)           \
-    X(PARAM_RANDOM_OFF)          \
-    X(PARAM_RANDOM_MIN)          \
-    X(PARAM_RANDOM_MAX)          \
-    X(PARAM_INVERT)              \
-    X(PARAM_CENTERED)            \
-    X(PARAM_BLACK_AND_WHITE)     \
-    X(PARAM_LOOP_ANIM)           \
-    X(PARAM_CYCLE)               \
-    X(PARAM_SEQUENCE)            \
-    X(PARAM_SHOW_FPS)            \
-    X(PARAM_DISPLAY_ACCEL)       \
-    X(PARAM_RECORD_AUDIO)        \
-    X(PARAM_CURRENT_STRIP)       \
-    X(PARAM_MASTER_LED_HUE)       \
-    X(PARAM_MASTER_LED_BRIGHTNESS)       \
-    X(PARAM_MASTER_LED_SATURATION)       \
-    X(PARAM_MASTER_VOLUME)       \
-    X(PARAM_UNKNOWN)       \
-
- 
+#define PARAMETER_LIST             \
+    X(PARAM_HUE)                   \
+    X(PARAM_HUE_END)               \
+    X(PARAM_BRIGHTNESS)            \
+    X(PARAM_PARTICLE_WIDTH)        \
+    X(PARAM_PARTICLE_FADE)         \
+    X(PARAM_PARTICLE_UPDATE_ALL)   \
+    X(PARAM_SLIDER_WIDTH)          \
+    X(PARAM_SLIDER_GRAVITY)        \
+    X(PARAM_VELOCITY)              \
+    X(PARAM_MAX_SPEED)             \
+    X(PARAM_ACCELERATION)          \
+    X(PARAM_RANDOM_DRIFT)          \
+    X(PARAM_TIME_SCALE)            \
+    X(PARAM_SLIDER_REPEAT)         \
+    X(PARAM_SLIDER_POSITION)       \
+    X(PARAM_SLIDER_HUE)            \
+    X(PARAM_SPAWN_RATE)            \
+    X(PARAM_PARTICLE_LIFE)         \
+    X(PARAM_SOUND_SCALE)           \
+    X(PARAM_SCROLL_SPEED)          \
+    X(PARAM_SLIDER_MULTIPLIER)     \
+    X(PARAM_RANDOM_ON)             \
+    X(PARAM_RANDOM_OFF)            \
+    X(PARAM_RANDOM_MIN)            \
+    X(PARAM_RANDOM_MAX)            \
+    X(PARAM_INVERT)                \
+    X(PARAM_CENTERED)              \
+    X(PARAM_BLACK_AND_WHITE)       \
+    X(PARAM_LOOP_ANIM)             \
+    X(PARAM_CYCLE)                 \
+    X(PARAM_SEQUENCE)              \
+    X(PARAM_SHOW_FPS)              \
+    X(PARAM_DISPLAY_ACCEL)         \
+    X(PARAM_RECORD_AUDIO)          \
+    X(PARAM_CURRENT_STRIP)         \
+    X(PARAM_MASTER_LED_HUE)        \
+    X(PARAM_MASTER_LED_BRIGHTNESS) \
+    X(PARAM_MASTER_LED_SATURATION) \
+    X(PARAM_MASTER_VOLUME)         \
+    X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
 #define ADC_MAX 2600
@@ -268,7 +266,6 @@ const std::vector<std::pair<MenuID, ParameterID>> parameterMenuList = {
     {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_BRIGHTNESS},
     {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_SATURATION},
 
-
     {MENU_DISPLAY_DEBUG_MODE, PARAM_SHOW_FPS},
     {MENU_DISPLAY_DEBUG_MODE, PARAM_DISPLAY_ACCEL},
     {MENU_DISPLAY_DEBUG_MODE, PARAM_BLACK_AND_WHITE},
@@ -293,11 +290,11 @@ static const std::vector<IntParameter> getDefaultParameters()
         {PARAM_MAX_SPEED, "MaxSpd", 100, 1, 100, 0.1},
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255, 1.0},
 
-        {PARAM_SPAWN_RATE, "Spawn", 5, 1, 40, 1.0},
+        {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40, 1.0},
         {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
-        {PARAM_PARTICLE_FADE, "Fade", 0, 0, 255, 1.0},
+        {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255, 1.0},
         {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100, 1.0},
-        {PARAM_TIME_SCALE, "Time", 10, -100, 100, 0.01},
+        {PARAM_TIME_SCALE, "Time", 100, -100, 100, 0.01},
         {PARAM_SLIDER_REPEAT, "Repeat", 1, 1, 10, 1.0},
         {PARAM_SLIDER_POSITION, "Pos", 0, 0, 255, 1.0},
         {PARAM_SLIDER_WIDTH, "Width", 1, 1, 60, 1.0},
@@ -316,8 +313,6 @@ static const std::vector<IntParameter> getDefaultParameters()
         {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360, 1.0},
         {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
         {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255, 1.0},
-
-
 
     };
 };

@@ -21,7 +21,7 @@ LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PAR
 
     FastLED.addLeds<NEOPIXEL, LED_PIN_1>(ledsStrip1, LEDS_STRIP_1);
     FastLED.addLeds<NEOPIXEL, LED_PIN_2>(ledsStrip2, LEDS_STRIP_2);
-    // setValue(PARAM_BRIGHTNESS, 50);
+    setValue(PARAM_BRIGHTNESS, 50);
 }
 
 void LEDManager::setLEDImage(image_message msg)
@@ -140,10 +140,12 @@ void LEDManager::update()
 {
     int currentTime = millis();
     int deltaTime = currentTime - lastUpdate;
+
     if (deltaTime < 1000 / fps)
     {
         return;
     }
+
     lastUpdate = currentTime;
 
     for (int i = 0; i < NUM_STRIPS; i++)
