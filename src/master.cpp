@@ -4,7 +4,9 @@
 #include "serial.h"
 #include "leds.h"
 #include "sensors.h"
-// #include "sound.h"
+#ifdef USE_AUDIO
+#include "audio.h"
+#endif
 // #include <SD.h>
 #include <SPI.h>
 #include "meshnet.h"
@@ -22,15 +24,17 @@
 // 2:  SD_SCK             12: BUTTON_RIGHT
 // 4:                     14: BUTTON_DOWN
 // 16: RX BUTTON_TRIG     27: BUTTON_UP
-// Tx:                    26: I2S_SD (Data In for INMP441,Data Out for MAX98357)
+// Tx:                    26: I2S_SD (Data In for INMP441)
 // 5:  I2S_SCK            25:
 // 18: I2S_WS             33: LED
 // 19: SD_MISO            32: SLIDER5
-// 21: OLED_SDA            35: SLIDER3
+// 21: OLED_SDA           35: SLIDER3
 // rx0:                   34: SLIDER4
 // tx0:                   39: SLIDER2
 // 22: OLED_SCL           36: SLIDER1
 // 23: SD_MOSI            37:
+
+// I2S pins
 
 #ifdef USE_DISPLAY
 #include <Adafruit_SSD1306.h>
@@ -46,8 +50,6 @@ enum Menu_Mode
 class Master : public ParameterManager
 {
 private:
-    const std::vector<std::string> slaves = {"Eclipsicle"}; //,"Go", "Slave1"};
-
     SerialManager *serialManager;
     SensorManager *sensorManager;
 
@@ -59,7 +61,7 @@ private:
 #define NUM_LEDS 16
     CRGB ledsStrip[NUM_LEDS];
 #define MASTER_LED_PIN 33
-    // SoundManager *soundManager;
+
     JsonDocument doc;
 
     std::vector<std::string> menuText = {};
@@ -208,7 +210,7 @@ public:
                 display.fillRect(xpos, ypos + yoffset, 64, 8, BLACK); // Draw a black rectangle for normal text
                 display.setTextColor(WHITE);                          // Set text color to white for normal text
             }
-          
+
             display.println(text.c_str());
         }
         display.display();
@@ -219,7 +221,7 @@ public:
 
         serialManager = new SerialManager(120, "Master");
         meshManager = new MeshnetManager();
-        meshManager->connectSlaves(slaves);
+        meshManager->connectSlaves();
 
         int value = getValue(PARAM_MASTER_LED_HUE);
         Serial.println("Starting Master Hue: " + String(value));
@@ -235,7 +237,7 @@ public:
         FastLED.show();
 #ifdef USE_AUDIO
         audioManager = new AudioManager();
-        audioManager->playTone(1500, 100, 5);
+        // audioManager->playTone(1500, 100, 5);
 #endif
 
 #ifdef USE_DISPLAY
@@ -344,6 +346,8 @@ public:
             if (message.sensorId == BUTTON_TRIGGER)
             {
                 audioManager->playTone(1000, 100, 5);
+                meshManager->sendParametersToSlaves(PARAM_BEAT, 255);
+                Serial.println("Trigger Button");
             }
             if (message.sensorId == BUTTON_LEFT)
             {
@@ -380,8 +384,8 @@ public:
                         menuMode = MENU_MODE_MENU_CHOOSER;
                         used = true;
                     }
-                    
-                    #ifdef USE_AUDIO
+
+#ifdef USE_AUDIO
                     if (message.sensorId == BUTTON_TRIGGER)
                     {
 
@@ -407,7 +411,7 @@ public:
                     {
                         audioManager->debugAudio();
                     }
-                    #endif
+#endif
                 }
                 else if (menuMode == MENU_MODE_MENU_CHOOSER)
                 {
@@ -502,14 +506,14 @@ public:
 
                         // Serial.printf("Selected Menu %d  %d %s\n", selectedMenu, currentMenu, getMenuName(currentMenu));
 
-                        std::string name = getMenuName(currentMenu,32);
+                        std::string name = getMenuName(currentMenu, 32);
 
                         meshManager->sendStringToSlaves("menu:" + String(name.c_str()));
 
                         if (getChildrenOfMenu(currentMenu).size() == 0) // if there are zero root menus for a mode, then go to edit mode
                         {
                             selectedMenu = 0;
-                         
+
                             // Serial.print("Menu Selected " + name + " " + String(currentMenu));
                             verticalAlignment = false;
                             menuMode = MENU_MODE_EDIT_MODE;
@@ -538,12 +542,17 @@ public:
 
     void update()
     {
-        #ifdef USE_AUDIO
+#ifdef USE_AUDIO
         audioManager->update();
-        #endif
+
+        auto decibels = audioManager->getDecibel();
+        if (decibels > 0)
+        {
+            Serial.println("Decibels: " + String(decibels));
+        }
+#endif
         sensorManager->updateSensors();
         serialManager->updateSerial();
-        // soundManager->update();
 
         while (sensorManager->messageAvailable())
         {

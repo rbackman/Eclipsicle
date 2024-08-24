@@ -34,7 +34,8 @@ SerialManager::SerialManager(int size, String name)
     memset(buffer, 0, bufferSize);
     Serial.begin(115200);
 
-    Serial.println("Starting serial on device " + getName());
+    // Serial.println("ESPNow Init Success  " + String(WiFi.macAddress()));
+    Serial.printf("Starting serial on device %s  \nwith address %s /n", getName(), String(WiFi.macAddress()).c_str());
 }
 void SerialManager::updateSerial()
 {

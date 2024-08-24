@@ -40,6 +40,7 @@ private:
     int gravityPosition = 0;
     int numLEDS = 128;
     bool invertLEDs = false;
+    float beatSize = 0;
 
     float scrollPos = 0;
 
@@ -47,8 +48,9 @@ private:
     Particle particles[10];
 
 public:
+    bool isActive = true;
     CRGB *leds;
-    StripState(LED_STATE state, const int numLEDS, const int LED_PIN, int STRIP_INDEX, bool invert);
+    StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert);
 
     void setNumLEDS(int num)
     {

@@ -1,11 +1,11 @@
-#ifdef USE_AUDIO
+#ifdef SPEAKER_TEST
 
 #include <Arduino.h>
 #include <SD.h>
 #include <SPI.h>
 #include <AudioGeneratorWAV.h>
 #include <AudioFileSourceSD.h>
-#include <Audio
+
 #include <AudioOutputI2S.h>
 #include <driver/i2s.h>
 
@@ -55,7 +55,7 @@ AudioGeneratorWAV *wav;
 AudioFileSourceSD *file;
 AudioOutputI2S *out;
 
-AudioMic bool isRecording = false;
+bool isRecording = false;
 bool sdloaded = false;
 void writeWAVHeader(File &file, uint32_t sampleRate, uint16_t bitDepth, uint16_t channels)
 {
@@ -193,7 +193,8 @@ void startRecording()
 
   // Write WAV header
   writeWAVHeader(recording, 16000, 16, 1);
-
+  int16_t *buffer = new int16_t[5000];
+  size_t bytesRead = 0;
   while (isRecording)
   {
     i2s_read(I2S_NUM_0, buffer, sizeof(buffer), &bytesRead, portMAX_DELAY);

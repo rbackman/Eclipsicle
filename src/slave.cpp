@@ -39,7 +39,7 @@ bool showAccel = false;
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 32, &Wire);
 #endif
 
-SerialManager *serialManager = new SerialManager(120, "Slave");
+SerialManager *serialManager = new SerialManager(120, SLAVE_NAME);
 ParameterManager *parameterManager;
 
 #ifdef USE_LEDS
@@ -105,7 +105,13 @@ ParameterHandler parameterHandler = [](parameter_message msg)
   }
 
   parameterManager->respondToParameterMessage(msg);
+
+#ifdef USE_LEDS
   ledManager->respondToParameterMessage(msg);
+#endif
+#ifdef USE_MOTOR
+  motorManager->respondToParameterMessage(msg);
+#endif
 };
 
 void setup()
@@ -127,11 +133,11 @@ void setup()
   //     bool reverse;
   // };
 
-  std::vector<LEDParams> strips = {
-      {2, 60, 0, LED_STATE_PARTICLES, false},
-      {4, 60, 1, LED_STATE_PARTICLES, false},
-      {5, 60, 2, LED_STATE_PARTICLES, false}};
-  ledManager = new LEDManager(strips);
+  // std::vector<LEDParams> strips = {
+  //     {128, 0, LED_STATE_SLIDER, false},
+  //     {128, 1, LED_STATE_SLIDER, false}};
+  // // {16, 2, LED_STATE_PARTICLES, false}};
+  ledManager = new LEDManager(SLAVE_NAME);
 
 #ifdef USE_DISPLAY
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally

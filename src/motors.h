@@ -17,6 +17,7 @@ public:
     void initMotors();
     void initDriver();
     bool handleMotorCommand(String command);
+    bool respondToParameterMessage(parameter_message parameter);
     void updateMotors();
     void setMotor(int motorVal);
 };

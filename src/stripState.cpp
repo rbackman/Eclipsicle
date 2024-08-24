@@ -9,12 +9,10 @@ int maxr = 0;
 
 led color;
 
-StripState::StripState(LED_STATE state, const int numLEDS, const int LED_PIN, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
+StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
 
 {
-
     leds = new CRGB[numLEDS];
-
     ledState = state;
 }
 
@@ -85,9 +83,9 @@ void StripState::updateParticles()
         int randomDrift = getValue(PARAM_RANDOM_DRIFT);
         int acceleration = getValue(PARAM_ACCELERATION);
         int maxSpeed = getValue(PARAM_MAX_SPEED);
-        int velocity = getValue(PARAM_VELOCITY);
+        // int velocity = getValue(PARAM_VELOCITY);
         // %d %d %d %d %d %d %d %d %d\n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
-        Serial.printf("Update all particles hue start:%d \n  hue end:%d \n brightness:%d \n fade:%d \n width:%d \n life:%d \n randomDrift:%d \n acceleration:%d \n maxSpeed:%d \n velocity:%d \n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
+        // Serial.printf("Update all particles hue start:%d \n  hue end:%d \n brightness:%d \n fade:%d \n width:%d \n life:%d \n randomDrift:%d \n acceleration:%d \n maxSpeed:%d \n velocity:%d \n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
         for (int i = 0; i < 10; i++)
         {
             auto particle = &particles[i];
@@ -100,9 +98,9 @@ void StripState::updateParticles()
                 particle->width = width;
                 particle->life = life;
                 particle->randomDrift = randomDrift;
-                particle->acceleration = acceleration;
-                particle->maxSpeed = maxSpeed;
-                particle->velocity = velocity;
+                // particle->acceleration = acceleration;
+                // particle->maxSpeed = maxSpeed;
+                // particle->velocity = velocity;
             }
         }
         // update all particles
@@ -135,10 +133,7 @@ void StripState::updateParticles()
             }
 
             int width = particle->width;
-            if (particle->maxSpeed != 0)
-            {
-                width = (int)(particle->width * abs(particle->acceleration) / particle->maxSpeed);
-            }
+
             if (width < 1)
             {
                 width = 1;
@@ -148,13 +143,13 @@ void StripState::updateParticles()
                 width = particle->width;
             }
 
-            if (particle->velocity < -10)
+            if (particle->velocity < -particle->maxSpeed)
             {
-                particle->velocity = -10;
+                particle->velocity = -particle->maxSpeed;
             }
-            if (particle->velocity > 10)
+            if (particle->velocity > particle->maxSpeed)
             {
-                particle->velocity = 10;
+                particle->velocity = particle->maxSpeed;
             }
             // if (particle->randomDrift > 0)
             // {
@@ -206,13 +201,30 @@ String StripState::getStripState()
 void StripState::update()
 {
 
-    // Serial.printf("update strip %s %s \n", getName().c_str(), getLedStateName(ledState));
+    if (beatSize > 0.1)
+    {
+        float beatFade = getFloat(PARAM_BEAT_FADE);
+        int beatMaxSize = getValue(PARAM_BEAT_MAX_SIZE);
+
+        beatSize = beatSize - beatFade;
+        if (beatSize < 1)
+        {
+            beatSize = 0;
+        }
+        else if (beatSize > beatMaxSize)
+        {
+            beatSize = beatMaxSize;
+        }
+    }
+    else
+    {
+        beatSize = 0;
+    }
     switch (ledState)
     {
     case LED_STATE_IDLE:
-        // {
-        //     // clearPixels();
-        // }
+
+        // clearPixels();
 
         break;
     case LED_STATE_PARTICLES:
@@ -251,24 +263,28 @@ void StripState::update()
         bool centered = getBool(PARAM_CENTERED);
         int position = getValue(PARAM_SLIDER_POSITION);
 
-        float multiplier = getFloat(PARAM_SLIDER_MULTIPLIER);
-        int width = getValue(PARAM_SLIDER_WIDTH);
+        float multiplier = 1; // getFloat(PARAM_SLIDER_MULTIPLIER);
+        int width = getValue(PARAM_SLIDER_WIDTH) + beatSize;
         int hueshift = getValue(PARAM_SLIDER_HUE);
-        float repeat = getValue(PARAM_SLIDER_REPEAT);
+        float repeat = getFloat(PARAM_SLIDER_REPEAT);
 
         if (useGravity)
             centerPos = (position + gravityPosition) % numLEDS;
         else
             centerPos = position % numLEDS;
 
-        for (int i = 0; i < numLEDS; i++)
+        clearPixels();
+
+        int first = centerPos - width / 2;
+        for (int i = first; i <= first + width; i++)
         {
+
             int distanceFromCenter = abs(i - centerPos);
             // check for overflow distance since it is a loop
-            if (distanceFromCenter > numLEDS / 2)
-            {
-                distanceFromCenter = numLEDS - distanceFromCenter;
-            }
+            // if (distanceFromCenter > numLEDS / 2)
+            // {
+            //     distanceFromCenter = numLEDS - distanceFromCenter;
+            // }
             if (centered)
             {
                 distanceFromCenter = abs(i - numLEDS / 2 - centerPos);
@@ -278,22 +294,22 @@ void StripState::update()
                 distanceFromCenter = width - distanceFromCenter;
             }
 
-            // If pixel is outside the width, clear it
-            if (distanceFromCenter > width * multiplier)
-            {
-                clearPixel(i);
-            }
-            else
-            {
+            // // If pixel is outside the width, clear it
+            // if (distanceFromCenter > width * multiplier)
+            // {
+            //     clearPixel(i);
+            // }
+            // else
+            // {
 
-                // Calculate the hue for each pixel, based on its position relative to the center
-                // The hue cycles 'repeat' times over the width of the strip
+            // Calculate the hue for each pixel, based on its position relative to the center
+            // The hue cycles 'repeat' times over the width of the strip
 
-                float hue = fmod(hueshift + distanceFromCenter * repeat * (360.0 / width), 360.0);
-                float fade = 1 - (distanceFromCenter / (width * multiplier));
-                colorFromHSV(color, hue / 360.0, 1, fade);
-                setPixel(i, color);
-            }
+            float hue = fmod(hueshift + distanceFromCenter * repeat * (360.0 / width), 360.0);
+            float fade = 1 - (distanceFromCenter / (width * multiplier));
+            colorFromHSV(color, hue / 360.0, 1, fade);
+            setPixel(i, color);
+            // }
         }
     }
     break;
@@ -301,13 +317,15 @@ void StripState::update()
     case LED_STATE_RAINBOW:
     {
         float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
-        scrollPos += scrollSpeed;
+        float repeat = getFloat(PARAM_RAINBOW_REPEAT);
+        int offset = getValue(PARAM_RAINBOW_OFFSET);
+        scrollPos += scrollSpeed / 100.0;
 
         for (int i = 0; i < numLEDS; i++)
         {
-
-            int val = (int)(i + scrollPos) % numLEDS;
-            colorFromHSV(color, float(val) / float(numLEDS), 1, 1);
+            int val = (int)(offset + i + scrollPos) % numLEDS;
+            // colorFromHSV(color, float(val) / float(numLEDS ), 1, 1);
+            colorFromHSV(color, fmod(val * repeat, 360.0) / 360.0, 1, 1);
             setPixel(i, color);
         }
     }
@@ -364,6 +382,29 @@ void StripState::update()
     }
     break;
 
+    case LED_STATE_POINT_CONTROL:
+    {
+
+        int pointPosition = (int)getValue(PARAM_CURRENT_LED);
+
+        int pointHue = getValue(PARAM_HUE);
+        int pointBrightness = getValue(PARAM_BRIGHTNESS);
+        clearPixels();
+
+        if (isActive)
+        {
+            // Serial.printf("point control strip %s   %d \n", getName().c_str(), pointPosition);
+
+            colorFromHSV(color, float(pointHue) / float(255), 1, float(pointBrightness) / float(255));
+            setPixel(pointPosition, color);
+        }
+        else
+        {
+
+            clearPixels();
+        }
+    }
+    break;
     default:
         break;
     }
@@ -417,12 +458,16 @@ bool StripState::respondToText(String command)
         {
             ledState = LED_STATE_RANDOM_PARTICLES;
         }
+        else if (menuName == "LEDDbg")
+        {
+            ledState = LED_STATE_POINT_CONTROL;
+        }
 
         else
         {
             return false;
         }
-        Serial.printf("Set LED State:%d  %s", ledState, getLedStateName(ledState));
+        Serial.printf("Set LED State:%d  %s \n", ledState, getLedStateName(ledState));
         return true;
     }
     return false;
@@ -439,13 +484,21 @@ void StripState::clearPixels()
 
 void StripState::setPixel(int index, led color)
 {
-
+    int ledIndex = (index % numLEDS + numLEDS) % numLEDS;
+    if (ledIndex < 0 || ledIndex >= numLEDS)
+    {
+        Serial.printf("Invalid LED index %d\n", ledIndex);
+        return;
+    }
     if (invertLEDs)
-
-        leds[numLEDS - index - 1] = CRGB(color.r, color.g, color.b);
+        leds[numLEDS - ledIndex - 1] = CRGB(color.r, color.g, color.b);
 
     else
-        leds[index] = CRGB(color.r, color.g, color.b);
+    {
+
+        leds[ledIndex] = CRGB(color.r, color.g, color.b);
+        // Serial.printf("Set Pixel %d %d %d %d\n", index, color.r, color.g, color.b);
+    }
 }
 void StripState::setPixel(int index, int r, int g, int b)
 {
@@ -469,6 +522,10 @@ void StripState::clearPixel(int index)
 void StripState::respondToParameterMessage(parameter_message parameter)
 {
     ParameterManager::respondToParameterMessage(parameter);
+    if (parameter.paramID == PARAM_BEAT)
+    {
+        beatSize = parameter.value;
+    }
     // don't need to do anything here
 }
 

@@ -30,6 +30,15 @@ bool MotorManager::handleMotorCommand(String cmd)
     return false;
 }
 
+bool MotorManager::respondToParameterMessage(parameter_message parameter)
+{
+    if (parameter.paramID == PARAM_MOTOR_SPEED)
+    {
+        setMotor(parameter.value);
+        return true;
+    }
+    return false;
+}
 void MotorManager::setMotor(int val)
 {
     int dutyCycle = map(val, 0, 180, 3277, 6554);

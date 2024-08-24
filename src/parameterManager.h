@@ -20,7 +20,7 @@ public:
         {
             if (it->id == type)
             {
-                return it->name.c_str();
+                return it->name;
             }
         }
 
@@ -28,7 +28,7 @@ public:
         {
             if (it->id == type)
             {
-                return it->name.c_str();
+                return it->name;
             }
         }
         return "UNKNOWN";

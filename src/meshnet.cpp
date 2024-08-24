@@ -22,7 +22,7 @@ MeshnetManager::MeshnetManager()
     init();
 }
 
-void MeshnetManager::connectSlaves(std::vector<std::string> slaves)
+void MeshnetManager::connectSlaves()
 
 {
 
@@ -42,7 +42,7 @@ void MeshnetManager::connectSlaves(std::vector<std::string> slaves)
     memset(&peerInfo, 0, sizeof(peerInfo));
     for (int i = 0; i < slaves.size(); i++)
     {
-        MacAddress mac = addresses[slaves[i]];
+        MacAddress mac = slaves[i].mac;
         _slaves.push_back(mac);
 
         memcpy(peerInfo.peer_addr, mac.data(), 6);
@@ -76,8 +76,6 @@ void MeshnetManager::init()
     }
     // Register for a callback function that will be called when data is received
     esp_now_register_recv_cb(MeshnetManager::OnDataRecv);
-
-    Serial.println("ESPNow Init Success  " + String(WiFi.macAddress()));
 };
 
 void MeshnetManager::sendStringToSlaves(String command)

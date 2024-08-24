@@ -40,15 +40,18 @@ ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> fi
         }
     }
 
-    Serial.printf("Parameter Manager Initialized %s intParams:%d boolParams:%d \n", name.c_str(), intParams.size(), boolParams.size());
+    if (isVerbose())
+    {
+        Serial.printf("Parameter Manager Initialized %s intParams:%d boolParams:%d \n", name.c_str(), intParams.size(), boolParams.size());
 
-    for (const auto &iParam : intParams)
-    {
-        Serial.printf("Int Param %d %s %d\n", iParam.id, iParam.name.c_str(), iParam.value);
-    }
-    for (const auto &bParam : boolParams)
-    {
-        Serial.printf("Bool Param %d %s %s \n", bParam.id, bParam.name.c_str(), bParam.value ? "true" : "false");
+        for (const auto &iParam : intParams)
+        {
+            Serial.printf("Int Param %d %s %d\n", iParam.id, iParam.name.c_str(), iParam.value);
+        }
+        for (const auto &bParam : boolParams)
+        {
+            Serial.printf("Bool Param %d %s %s \n", bParam.id, bParam.name.c_str(), bParam.value ? "true" : "false");
+        }
     }
 }
 
@@ -85,17 +88,20 @@ void ParameterManager::setValue(ParameterID id, int val)
         {
             intParams[i].value = val;
             paramChanged = true;
-            Serial.printf("updating parameter %d %s for %s\n", id, getParameterName(id), name.c_str());
+            if (isVerbose())
+                Serial.printf("updating parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
             return;
         }
     }
     if (isBoolParameter(id))
     {
-        Serial.printf("Warning setting int value for bool parameter %d %s for %s\n", id, getParameterName(id), name.c_str());
+        if (isVerbose())
+            Serial.printf(" setting int value for bool parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
         setBool(id, val);
         return;
     }
-    Serial.printf("Cant set Int Parameter, not found %d %s for %s\n", id, getParameterName(id), name.c_str());
+    // if (isVerbose())
+    //     Serial.printf("Cant set Int Parameter, not found %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
 }
 void ParameterManager::setBool(ParameterID id, bool val)
 {
@@ -189,7 +195,6 @@ bool ParameterManager::handleTextMessage(std::string message)
             std::string param = message.substr(0, paramID);
             std::string value = message.substr(paramID + 1);
 
-            
             try
             {
 

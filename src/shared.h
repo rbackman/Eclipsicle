@@ -24,6 +24,8 @@
     X(PARAM_RANDOM_DRIFT)          \
     X(PARAM_TIME_SCALE)            \
     X(PARAM_SLIDER_REPEAT)         \
+    X(PARAM_RAINBOW_REPEAT)        \
+    X(PARAM_RAINBOW_OFFSET)        \
     X(PARAM_SLIDER_POSITION)       \
     X(PARAM_SLIDER_HUE)            \
     X(PARAM_SPAWN_RATE)            \
@@ -45,10 +47,15 @@
     X(PARAM_DISPLAY_ACCEL)         \
     X(PARAM_RECORD_AUDIO)          \
     X(PARAM_CURRENT_STRIP)         \
+    X(PARAM_CURRENT_LED)           \
     X(PARAM_MASTER_LED_HUE)        \
     X(PARAM_MASTER_LED_BRIGHTNESS) \
     X(PARAM_MASTER_LED_SATURATION) \
     X(PARAM_MASTER_VOLUME)         \
+    X(PARAM_MOTOR_SPEED)           \
+    X(PARAM_BEAT)                  \
+    X(PARAM_BEAT_MAX_SIZE)         \
+    X(PARAM_BEAT_FADE)             \
     X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
@@ -176,6 +183,7 @@ enum MenuID
     MENU_DISPLAY_DEBUG_MODE,
     MENU_SETTINGS_DEBUG_MODE,
     MENU_MISC_DEBUG_MODE,
+    MENU_LED_DEBUG_MODE,
     MENU_MASTER_LED_MODE,
     MENU_SETTINGS,
     MENU_AUDIO,
@@ -209,6 +217,7 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_DISPLAY_DEBUG_MODE, {"Display", MENU_DEBUG}},
     {MENU_SETTINGS_DEBUG_MODE, {"Settings", MENU_DEBUG}},
     {MENU_MISC_DEBUG_MODE, {"Misc", MENU_DEBUG}},
+    {MENU_LED_DEBUG_MODE, {"LEDDbg", MENU_DEBUG}},
 };
 
 struct IntParameter
@@ -247,6 +256,8 @@ const std::vector<std::pair<MenuID, ParameterID>> parameterMenuList = {
 
     {MENU_RAINBOW_MODE, PARAM_SCROLL_SPEED},
     {MENU_RAINBOW_MODE, PARAM_BRIGHTNESS},
+    {MENU_RAINBOW_MODE, PARAM_RAINBOW_REPEAT},
+    {MENU_RAINBOW_MODE, PARAM_RAINBOW_OFFSET},
     {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_WIDTH},
     {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_REPEAT},
     {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_POSITION},
@@ -270,11 +281,15 @@ const std::vector<std::pair<MenuID, ParameterID>> parameterMenuList = {
     {MENU_DISPLAY_DEBUG_MODE, PARAM_DISPLAY_ACCEL},
     {MENU_DISPLAY_DEBUG_MODE, PARAM_BLACK_AND_WHITE},
 
+    {MENU_MISC_DEBUG_MODE, PARAM_MOTOR_SPEED},
     {MENU_MISC_DEBUG_MODE, PARAM_SEQUENCE},
     {MENU_MISC_DEBUG_MODE, PARAM_SOUND_SCALE},
     {MENU_MISC_DEBUG_MODE, PARAM_RECORD_AUDIO},
     {MENU_MISC_DEBUG_MODE, PARAM_LOOP_ANIM},
-    {MENU_MISC_DEBUG_MODE, PARAM_CURRENT_STRIP},
+    {MENU_LED_DEBUG_MODE, PARAM_CURRENT_STRIP},
+    {MENU_LED_DEBUG_MODE, PARAM_CURRENT_LED},
+    {MENU_LED_DEBUG_MODE, PARAM_HUE},
+    {MENU_LED_DEBUG_MODE, PARAM_BRIGHTNESS},
 
 };
 
@@ -286,33 +301,39 @@ static const std::vector<IntParameter> getDefaultParameters()
         {PARAM_HUE_END, "HueEnd", 120, 0, 360, 1.0},
         {PARAM_PARTICLE_WIDTH, "Width", 10, 1, 60, 1.0},
         {PARAM_VELOCITY, "Vel", 10, 1, 100, 0.1},
-        {PARAM_ACCELERATION, "Accel", 10, -10, 100, 0.1},
-        {PARAM_MAX_SPEED, "MaxSpd", 100, 1, 100, 0.1},
+        {PARAM_ACCELERATION, "Accel", 0, -10, 100, 0.1},
+        {PARAM_MAX_SPEED, "MaxSpd", 1, 1, 10, 0.1},
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255, 1.0},
 
         {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40, 1.0},
         {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
         {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255, 1.0},
         {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100, 1.0},
-        {PARAM_TIME_SCALE, "Time", 100, -100, 100, 0.01},
-        {PARAM_SLIDER_REPEAT, "Repeat", 1, 1, 10, 1.0},
+        {PARAM_TIME_SCALE, "Time", 10, 1, 100, 0.1},
+        {PARAM_SLIDER_REPEAT, "Repeat", 10, 1, 100, 0.1},
         {PARAM_SLIDER_POSITION, "Pos", 0, 0, 255, 1.0},
-        {PARAM_SLIDER_WIDTH, "Width", 1, 1, 60, 1.0},
+        {PARAM_SLIDER_WIDTH, "Width", 6, 1, 60, 1.0},
         {PARAM_SLIDER_HUE, "Hue", 60, 0, 360, 1.0},
         {PARAM_RANDOM_ON, "On", 30, 0, 255, 1.0},
         {PARAM_RANDOM_OFF, "Off", 30, 0, 255, 1.0},
         {PARAM_RANDOM_MIN, "Min", 0, 0, 255, 1.0},
         {PARAM_RANDOM_MAX, "Max", 255, 0, 255, 1.0},
         {PARAM_DISPLAY_ACCEL, "Accel", 0, 0, 1, 1.0},
-
+        {PARAM_RAINBOW_REPEAT, "Repeat", 1, 1, 10, 1.0},
+        {PARAM_RAINBOW_OFFSET, "Offset", 0, 0, 255, 1.0},
         {PARAM_SOUND_SCALE, "Sound", 0, 0, 1, 1.0},
-        {PARAM_SCROLL_SPEED, "Speed", 0, 0, 1, 1.0},
+        {PARAM_SCROLL_SPEED, "Speed", 0, 0, 100, 1.0},
         {PARAM_SLIDER_MULTIPLIER, "Mult", 0, 0, 1, 1.0},
         {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3, 1.0},
-
+        {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255, 0.5},
         {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360, 1.0},
-        {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
+        {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 50, 0, 255, 1.0},
         {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255, 1.0},
+        {PARAM_MASTER_VOLUME, "Volume", 0, 0, 255, 1.0},
+        {PARAM_MOTOR_SPEED, "Speed", 0, 0, 255, 1.0},
+        {PARAM_BEAT, "Beat", 0, 0, 255, 1.0},
+        {PARAM_BEAT_MAX_SIZE, "MaxSize", 30, 0, 255, 1.0},
+        {PARAM_BEAT_FADE, "Fade", 50, 0, 255, 0.05},
 
     };
 };
@@ -414,8 +435,86 @@ typedef std::vector<SensorState> SensorGrid;
 
 bool isVerbose();
 
-using MacAddress = std::array<uint8_t, 6>; // Change this line
+using MacAddress = std::array<uint8_t, 6>;
 using MacAddresses = std::map<std::string, MacAddress>;
+
+#define HALL_EFFECT_PIN 34
+
+#define MAX_LEDS_PER_STRIP 200
+
+#define LED_PIN_1 2
+#define LED_PIN_2 4
+#define LED_PIN_3 19
+#define LED_PIN_4 18
+
+enum LED_STATE
+{
+    LED_STATE_IDLE,
+    LED_STATE_RAINBOW,
+    LED_STATE_DOUBLE_RAINBOW,
+    LED_STATE_SLIDER,
+    LED_STATE_RANDOM,
+    LED_STATE_POINT_CONTROL,
+    LED_STATE_PARTICLES,
+    LED_STATE_RANDOM_PARTICLES,
+};
+struct LEDParams
+{
+    int numLEDS;
+    int stripIndex;
+    LED_STATE startState;
+    bool reverse;
+};
+
+struct LEDRig
+{
+    std::string name;
+    MacAddress mac;
+    std::vector<LEDParams> strips;
+};
+
+const std::vector<LEDRig> slaves = {
+    {
+        "Eclipsicle",
+        {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
+        {
+            {200, 0, LED_STATE_SLIDER, false},
+            {200, 1, LED_STATE_SLIDER, false},
+
+        },
+    },
+    {
+        "Bike",
+        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
+        {
+            {48, 0, LED_STATE_SLIDER, false},
+            {48, 1, LED_STATE_SLIDER, false},
+            {18, 2, LED_STATE_SLIDER, false},
+        },
+    },
+    {
+        "SuperSpinner",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {280, 0, LED_STATE_IDLE, false},
+            {280, 1, LED_STATE_IDLE, false},
+        },
+    }};
+
+// map to state names
+const std::map<LED_STATE, String> LED_STATE_NAMES = {
+    {LED_STATE_IDLE, "IDLE"},
+    {LED_STATE_RAINBOW, "RAINBOW"},
+    {LED_STATE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
+    {LED_STATE_SLIDER, "SLIDER"},
+    {LED_STATE_RANDOM, "RANDOM"},
+    {LED_STATE_POINT_CONTROL, "POINT_CONTROL"},
+    {LED_STATE_PARTICLES, "PARTICLES"},
+    {LED_STATE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}
+
+};
+
+const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 
 void colorFromHSV(led &color, float h, float s, float v);
 void setVerbose(bool verb);

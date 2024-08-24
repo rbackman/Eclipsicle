@@ -2,15 +2,6 @@
 #ifdef USE_LEDS
 #include "stripState.h"
 
-struct LEDParams
-{
-    int ledPin;
-    int numLEDS;
-    int stripIndex;
-    LED_STATE startState;
-    bool reverse;
-};
-
 class LEDManager : public ParameterManager
 {
 
@@ -25,7 +16,7 @@ private:
     int fps = 60;
 
 public:
-    LEDManager(std::vector<LEDParams> strips);
+    LEDManager(std::string name);
 
     void setGravityPosition(float position);
     void update();

@@ -1,7 +1,7 @@
 #include "shared.h"
 #include <WiFi.h>
 
-bool _verbose = true;
+bool _verbose = false;
 String _name = "default";
 String getName()
 {
@@ -28,14 +28,15 @@ std::vector<ParameterID> getParametersForMenu(MenuID menu)
   }
   return menuParams;
 }
-const char *getMenuName(MenuID type,int MaxSize)
+const char *getMenuName(MenuID type, int MaxSize)
 {
   auto it = menuTypeMap.find(type);
   if (it != menuTypeMap.end())
   {
     auto name = it->second.first;
-    if(name.size() >MaxSize){
-      return  name.substr(0,MaxSize).c_str();
+    if (name.size() > MaxSize)
+    {
+      return name.substr(0, MaxSize).c_str();
     }
     return name.c_str();
   }
@@ -158,13 +159,14 @@ void colorFromHSV(led &color, float h, float s, float v)
   // }
 }
 
-std::vector<std::string> getParameterNames(){
-    std::vector<std::string> names = {
+std::vector<std::string> getParameterNames()
+{
+  std::vector<std::string> names = {
 #define X(name) #name,
-        PARAMETER_LIST
+      PARAMETER_LIST
 #undef X
-    };
-    return names;
+  };
+  return names;
 }
 
 void sanityCheckParameters()

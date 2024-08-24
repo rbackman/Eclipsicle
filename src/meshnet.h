@@ -21,7 +21,7 @@ public:
     MeshnetManager();
 
 public:
-    void connectSlaves(std::vector<std::string> slaves);
+    void connectSlaves();
     void sendSensorCommandToSlaves(sensor_message msg);
     void sendImageToSlaves(image_message image);
     void sendParametersToSlaves(ParameterID paramID, int value);
@@ -33,25 +33,11 @@ public:
     void setSensorHandler(SensorHandler handler) { _sensorHandler = handler; }
     void setParameterHandler(ParameterHandler handler) { _parameterHandler = handler; }
 
-
 private:
     ImageHandler _imageHandler = nullptr;
     TextHandler _textHandler = nullptr;
     SensorHandler _sensorHandler = nullptr;
     ParameterHandler _parameterHandler = nullptr;
-
-    MacAddresses addresses = {
-        {"Slave1", {0xEC, 0x94, 0xCB, 0x6A, 0xFE, 0x08}},       // slave1
-        {"Go", {0xB0, 0xA7, 0x32, 0x81, 0x9A, 0x88}},           // light board "GO"
-        {"Pine", {0xC8, 0xC9, 0xA3, 0xCF, 0xA1, 0xB4}},         // master  "pine"
-        {"Slave3", {0xB0, 0xB2, 0x1C, 0xA8, 0x0C, 0x9C}},       // slave3
-        {"SuperSpinner", {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC}}, // 40:91:51:FB:F7:BC
-        {                                                       // Eclipsicle  40:91:51:FB:B7:48
-         "Eclipsicle",
-         {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48}}
-
-        // {0xA8, 0x42, 0xE3, 0xC8, 0x36, 0xC8}} // A8:42:E3:C8:36:C8
-    };
 
     std::vector<MacAddress> _slaves;
 
@@ -147,7 +133,8 @@ private:
 
             instance->handleSensorMessage(msg);
         }
-        else if(messageType==MESSAGE_TYPE_PARAMETER){
+        else if (messageType == MESSAGE_TYPE_PARAMETER)
+        {
             parameter_message msg;
             if (len != sizeof(msg))
             {
@@ -238,7 +225,7 @@ private:
 
             instance->handleSensorMessage(msg);
         }
-       
+
         else
         {
             Serial.println("Unknown message type " + String(messageType));
