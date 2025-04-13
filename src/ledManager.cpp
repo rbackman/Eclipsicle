@@ -8,7 +8,6 @@
 
 LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
-
     LEDRig rig;
     for (auto i : slaves)
     {
@@ -92,6 +91,15 @@ void LEDManager::setLEDImage(image_message msg)
     else
     {
         stripStates[currentStrip - 1]->setLEDRow(row);
+    }
+}
+
+void LEDManager::setLED(int ledIndex, led color)
+{
+    // set all leds to a color
+    for (int i = 0; i < stripStates.size(); i++)
+    {
+        stripStates[i]->setPixel(ledIndex, color);
     }
 }
 

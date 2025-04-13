@@ -24,7 +24,7 @@ public:
     void setBrightness(int brightness);
     void setAll(led color);
     bool handleLEDCommand(String command);
-
+    void setLED(int ledIndex, led color);
     void toggleMode();
     String getStripState();
     int getCurrentStrip();

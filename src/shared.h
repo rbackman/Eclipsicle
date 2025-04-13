@@ -107,6 +107,7 @@ enum SensorID
     AUDIO_AMP,
     AUDIO_FREQ,
     AUDIO_BEAT,
+    RANGEFINDER,
 };
 
 const SensorID sliderIDs[] = {SLIDER1, SLIDER2, SLIDER3, SLIDER4, SLIDER5};
@@ -493,13 +494,34 @@ const std::vector<LEDRig> slaves = {
         },
     },
     {
-        "SuperSpinner",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+
+        "Spinner",
+        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
         {
             {280, 0, LED_STATE_IDLE, false},
             {280, 1, LED_STATE_IDLE, false},
         },
-    }};
+    },
+    {
+        "Dunno",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {100, 0, LED_STATE_IDLE, false},
+            {100, 1, LED_STATE_IDLE, false},
+            {100,2, LED_STATE_IDLE, false},
+        },
+   
+    }, {
+        "Bike",
+        {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
+        {
+            {100, 0, LED_STATE_IDLE, false},
+            {100, 1, LED_STATE_IDLE, false},
+            {100,2, LED_STATE_IDLE, false},
+        },
+    }
+    };
+
 
 // map to state names
 const std::map<LED_STATE, String> LED_STATE_NAMES = {
