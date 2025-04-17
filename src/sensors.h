@@ -1,12 +1,6 @@
 #pragma once
 #include "shared.h"
 
-// void initSensors(SensorGrid &sensors);
-// void updateSensor();
-// int getSensorValue(String name, int min, int max);
-
-// bool handleSensorCommand(String command);
-
 #define DEBOUNCE_DELAY 50
 
 class SensorManager

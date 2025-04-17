@@ -1,8 +1,7 @@
 #pragma once
 
 #include <ArduinoJson.h>
-#include <String.h>
-
+#include <Arduino.h>
 class SerialManager
 {
 private:

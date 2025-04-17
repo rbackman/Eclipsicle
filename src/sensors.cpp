@@ -1,4 +1,5 @@
 
+#ifdef USE_SENSORS
 
 #include "sensors.h"
 #include "shared.h"
@@ -245,7 +246,7 @@ void SensorManager::updateSensors()
                 sensor->value = value;
                 sensor->changed = true;
             }
-            
+
             return;
         }
 
@@ -319,3 +320,5 @@ bool SensorManager::handleSensorCommand(String command)
     }
     return false;
 }
+
+#endif

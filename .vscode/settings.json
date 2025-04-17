@@ -1,5 +1,6 @@
 {
     "files.associations": {
+        "*.tsx": "typescriptreact",
         "sstream": "cpp",
         "vector": "cpp",
         "array": "cpp",
@@ -73,7 +74,11 @@
         "fstream": "cpp",
         "iomanip": "cpp",
         "cinttypes": "cpp",
-        "arduino.h": "c"
+        "arduino.h": "c",
+        "condition_variable": "cpp",
+        "csignal": "cpp",
+        "set": "cpp",
+        "thread": "cpp"
     },
     "cmake.sourceDirectory": "C:/Users/rback/Code/roborepo/apps/ledSpinner"
 }

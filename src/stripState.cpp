@@ -7,7 +7,7 @@ int val = 0;
 int minr = 0;
 int maxr = 0;
 
-led color;
+led tempColor;
 
 StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
 
@@ -60,8 +60,8 @@ void StripState::fadeParticleTail(int position, int width, int hueStart, int hue
             float fadeFactor = log(1 + fadeSpeed * j) / log(1 + fadeSpeed * width);
             int adjustedBrightness = brightness * (1.0 - fadeFactor);
 
-            colorFromHSV(color, hue / 360.0, 1.0, adjustedBrightness / 255.0);
-            setPixel(index, color);
+            colorFromHSV(tempColor, hue / 360.0, 1.0, adjustedBrightness / 255.0);
+            setPixel(index, tempColor);
         }
     }
 }
@@ -307,8 +307,8 @@ void StripState::update()
 
             float hue = fmod(hueshift + distanceFromCenter * repeat * (360.0 / width), 360.0);
             float fade = 1 - (distanceFromCenter / (width * multiplier));
-            colorFromHSV(color, hue / 360.0, 1, fade);
-            setPixel(i, color);
+            colorFromHSV(tempColor, hue / 360.0, 1, fade);
+            setPixel(i, tempColor);
             // }
         }
     }
@@ -325,8 +325,8 @@ void StripState::update()
         {
             int val = (int)(offset + i + scrollPos) % numLEDS;
             // colorFromHSV(color, float(val) / float(numLEDS ), 1, 1);
-            colorFromHSV(color, fmod(val * repeat, 360.0) / 360.0, 1, 1);
-            setPixel(i, color);
+            colorFromHSV(tempColor, fmod(val * repeat, 360.0) / 360.0, 1, 1);
+            setPixel(i, tempColor);
         }
     }
     break;
@@ -339,16 +339,16 @@ void StripState::update()
         for (int i = 0; i < numLEDS; i += 2)
         {
             int val = i + scrollPos;
-            colorFromHSV(color, float(val) / float(numLEDS), 1, 1);
-            setPixel(i, color);
+            colorFromHSV(tempColor, float(val) / float(numLEDS), 1, 1);
+            setPixel(i, tempColor);
         }
 
         // TODO: use a second slider to drive a second scrollSpeed and use that here
         for (int i = 1; i < numLEDS; i += 2)
         {
             int val = i + scrollPos;
-            colorFromHSV(color, 1 - (float(val) / float(numLEDS)), 1, 1);
-            setPixel(i, color);
+            colorFromHSV(tempColor, 1 - (float(val) / float(numLEDS)), 1, 1);
+            setPixel(i, tempColor);
         }
     }
     break;
@@ -370,8 +370,8 @@ void StripState::update()
                 if (random(0, 100) > randomOff)
                 {
                     val = random(minr, maxr);
-                    colorFromHSV(color, float(val) / float(255), 1, 1);
-                    setPixel(i, color);
+                    colorFromHSV(tempColor, float(val) / float(255), 1, 1);
+                    setPixel(i, tempColor);
                 }
                 else
                 {
@@ -395,8 +395,8 @@ void StripState::update()
         {
             // Serial.printf("point control strip %s   %d \n", getName().c_str(), pointPosition);
 
-            colorFromHSV(color, float(pointHue) / float(255), 1, float(pointBrightness) / float(255));
-            setPixel(pointPosition, color);
+            colorFromHSV(tempColor, float(pointHue) / float(255), 1, float(pointBrightness) / float(255));
+            setPixel(pointPosition, tempColor);
         }
         else
         {
@@ -410,11 +410,11 @@ void StripState::update()
     }
 }
 
-void StripState::setAll(led color)
+void StripState::setAll(led tcol)
 {
     for (int i = 0; i < numLEDS; i++)
     {
-        setPixel(i, color);
+        setPixel(i, tcol);
     }
 }
 bool StripState::respondToText(String command)

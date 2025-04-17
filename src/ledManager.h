@@ -17,7 +17,8 @@ private:
 
 public:
     LEDManager(std::string name);
-
+    LEDManager(std::string name, std::vector<StripState *> strips);
+    void initStrips();
     void setGravityPosition(float position);
     void update();
     void setLEDImage(image_message image);

@@ -1,5 +1,6 @@
 
 
+#ifdef USE_MOTOR
 int MOTOR_PIN = 18;
 #include <esp_now.h>
 #include <WiFi.h>
@@ -53,3 +54,5 @@ void MotorManager::updateMotors()
 void MotorManager::initDriver()
 {
 }
+
+#endif

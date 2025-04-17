@@ -7,7 +7,7 @@
 #include <string>
 
 #include <Arduino.h>
-#include <cstdint>
+// #include <cstdint>
 
 #define PARAMETER_LIST             \
     X(PARAM_HUE)                   \
@@ -485,6 +485,14 @@ const std::vector<LEDRig> slaves = {
         },
     },
     {
+        "simpled",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {100, 0, LED_STATE_IDLE, false},
+
+        },
+    },
+    {
         "Bike",
         {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
         {
@@ -508,20 +516,19 @@ const std::vector<LEDRig> slaves = {
         {
             {100, 0, LED_STATE_IDLE, false},
             {100, 1, LED_STATE_IDLE, false},
-            {100,2, LED_STATE_IDLE, false},
+            {100, 2, LED_STATE_IDLE, false},
         },
-   
-    }, {
+
+    },
+    {
         "Bike",
         {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
         {
             {100, 0, LED_STATE_IDLE, false},
             {100, 1, LED_STATE_IDLE, false},
-            {100,2, LED_STATE_IDLE, false},
+            {100, 2, LED_STATE_IDLE, false},
         },
-    }
-    };
-
+    }};
 
 // map to state names
 const std::map<LED_STATE, String> LED_STATE_NAMES = {

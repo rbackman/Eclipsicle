@@ -29,6 +29,11 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
         StripState *strip = new StripState(params.startState, params.numLEDS, params.stripIndex, params.reverse);
         stripStates.push_back(strip);
     }
+    initStrips();
+}
+
+void LEDManager::initStrips()
+{
     for (int i = 0; i < stripStates.size(); i++)
     {
         StripState *strip = stripStates[i];
@@ -58,7 +63,21 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
     }
     setValue(PARAM_BRIGHTNESS, 50);
 }
-
+LEDManager::LEDManager(std::string name, std::vector<StripState *> strips) : ParameterManager(name.c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
+{
+    ledMatrix = new LedMatrix();
+    for (int i = 0; i < strips.size(); i++) // Changed sizeof(strips) to strips.size()
+    {
+        stripStates.push_back(strips[i]);                                                // Changed &strips[i] to strips[i]
+        Serial.printf("Adding strip %d with %d LEDs\n", i + 1, strips[i]->getNumLEDS()); // Changed strips[i].getNumLEDS() to strips[i]->getNumLEDS()
+    }
+    initStrips();
+    setValue(PARAM_CURRENT_STRIP, 1);
+}
+int LEDManager::getCurrentStrip()
+{
+    return getValue(PARAM_CURRENT_STRIP);
+}
 void LEDManager::setLEDImage(image_message msg)
 {
 
