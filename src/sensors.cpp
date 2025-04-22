@@ -126,13 +126,14 @@ sensor_message SensorManager::getNextMessage()
         message.sensorId = sensorGrid[currentSensor].sensorID;
         return message;
     }
+
     // should never get here
 }
 
 void SensorManager::updateSensors()
 {
     // only updates one sensor at a time to avoid saturating the ADC
-
+    // Serial.println("Updating sensor: " + String(currentSensor) + " " + sensorGrid[currentSensor].type);
     currentSensor++;
     if (currentSensor >= sensorGrid.size())
     {
@@ -228,12 +229,12 @@ void SensorManager::updateSensors()
     else
 
     {
+        int anlg = analogRead(sensor->pin);
         // linearize logrithmic sensor value
-        int value = map(pow(analogRead(sensor->pin), 1.5), 262048, 0, 0, 255);
+        int value = map(pow(anlg, 1.5), 262048, 0, 0, 255);
         // value = constrain(value, 0, 255);
-        // if(currentSensor==1){
-        //     Serial.println("Sensor: " + String(sensor->name) + " :" + String(value) + " analog: " + String(analog));
-        // }
+
+        Serial.println("Sensor: " + String(value) + " analog: " + String(anlg));
 
         value = 255 - value;
 

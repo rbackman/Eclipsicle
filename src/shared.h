@@ -485,6 +485,13 @@ const std::vector<LEDRig> slaves = {
         },
     },
     {
+        "tradeday",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {100, 0, LED_STATE_IDLE, false},
+        },
+    },
+    {
         "simpled",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
