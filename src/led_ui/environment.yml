@@ -1,0 +1,11 @@
+name: led-ui
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pyqt=5
+  - pyserial
+  - pip
+  - pip:
+      - qdarkstyle  # Optional: nice dark theme

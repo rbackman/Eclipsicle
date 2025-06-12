@@ -1,5 +1,8 @@
 #pragma once
 #include "shared.h"
+#include <ArduinoJson.h>
+
+// using ParameterChangeListener = std::function<void(parameter_message)>;
 class ParameterManager
 {
 public:
@@ -34,6 +37,7 @@ public:
         return "UNKNOWN";
     }
     virtual void respondToParameterMessage(parameter_message parameter);
+    void handleJsonMessage(JsonDocument &doc);
     bool handleTextMessage(std::string message);
     bool parameterChanged()
     {
@@ -66,4 +70,5 @@ private:
     std::vector<BoolParameter> boolParams = {};
     std::vector<IntParameter> intParams = {};
     std::string name;
+    // std::vector<ParameterChangeListener> listeners = {};
 };

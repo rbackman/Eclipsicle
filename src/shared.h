@@ -1,4 +1,5 @@
 
+// shared.h
 #pragma once
 
 #include <vector>
@@ -443,8 +444,8 @@ using MacAddresses = std::map<std::string, MacAddress>;
 
 #define MAX_LEDS_PER_STRIP 200
 
-#define LED_PIN_1 2
-#define LED_PIN_2 4
+#define LED_PIN_1 17
+#define LED_PIN_2 5
 #define LED_PIN_3 19
 #define LED_PIN_4 18
 
@@ -479,8 +480,16 @@ const std::vector<LEDRig> slaves = {
         "Eclipsicle",
         {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
         {
-            {200, 0, LED_STATE_SLIDER, false},
+            {164, 0, LED_STATE_PARTICLES, false},
             {200, 1, LED_STATE_SLIDER, false},
+
+        },
+    },
+    {
+        "Tesseratica",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {164, 0, LED_STATE_PARTICLES, false},
 
         },
     },
@@ -495,7 +504,7 @@ const std::vector<LEDRig> slaves = {
         "simpled",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
-            {100, 0, LED_STATE_IDLE, false},
+            {164, 0, LED_STATE_PARTICLES, false},
 
         },
     },

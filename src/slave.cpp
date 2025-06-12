@@ -31,14 +31,14 @@
 #ifdef USE_ACCELEROMETER
 Adafruit_MPU6050 mpu;
 #endif
-const int buttonPin = 0;    // GPIO 0 is often used for the boot button
+
 int lastButtonState = HIGH; // Assume button starts unpressed
 bool showAccel = false;
 
 #ifdef USE_DISPLAY
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 32, &Wire);
 #endif
-
+JsonDocument doc;
 SerialManager *serialManager = new SerialManager(120, SLAVE_NAME);
 ParameterManager *parameterManager;
 
@@ -46,8 +46,9 @@ ParameterManager *parameterManager;
 LEDManager *ledManager;
 #endif
 
+#ifdef MESH_NET
 MeshnetManager *meshManager;
-
+#endif
 #ifdef USE_MOTOR
 MotorManager *motorManager;
 #endif
@@ -185,15 +186,16 @@ void setup()
 #ifdef USE_MOTOR
   motorManager = new MotorManager();
 #endif
-
+#ifdef MESH_NET
   meshManager = new MeshnetManager();
 
   meshManager->setImageHandler(imageHandler);
   meshManager->setTextHandler(textHandler);
+  //  parameters use over espnow
   meshManager->setParameterHandler(parameterHandler);
-
 #ifdef USE_SENSORS
   meshManager->setSensorHandler(sensorHandler);
+#endif
 #endif
 
   Serial.println("Free memory Setup: ");
@@ -203,6 +205,18 @@ void setup()
 void processCmd(String command)
 {
 
+  if (command == "verbose")
+  {
+    setVerbose(true);
+    Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
+    return;
+  }
+  if (command == "quiet")
+  {
+    setVerbose(false);
+    Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
+    return;
+  }
   // ledManager->handleLEDCommand(command);
   // meshManager->handleMeshCommand(command);
   // checkLEDCommand(command);
@@ -369,18 +383,18 @@ int displayFrameRate = 10;
 void loop()
 {
 
-  int buttonState = digitalRead(buttonPin);
+  // int buttonState = digitalRead(buttonPin);
 
-  // Check if button state has changed from high to low (button press)
-  if (buttonState == LOW && lastButtonState == HIGH)
-  {
+  // // Check if button state has changed from high to low (button press)
+  // if (buttonState == LOW && lastButtonState == HIGH)
+  // {
 
-    ledManager->toggleMode();
-    Serial.print("Switched to mode: ");
-    Serial.println(ledManager->getStripState());
-  }
+  //   ledManager->toggleMode();
+  //   Serial.print("Switched to mode: ");
+  //   Serial.println(ledManager->getStripState());
+  // }
 
-  lastButtonState = buttonState; // Update the last button state
+  // lastButtonState = buttonState; // Update the last button state
 
 #ifdef USE_ACCELEROMETER
   sensors_event_t a, g, temp;
@@ -483,6 +497,8 @@ void loop()
   if (serialManager->stringAvailable())
   {
     String command = serialManager->readString();
+    if (command.length() == 0)
+      return;
     Serial.println("Command: " + command);
     processCmd(command);
 #ifdef USE_LEDS
@@ -511,7 +527,25 @@ void loop()
     //     Serial.println("Command not handled" + command);
     // }
   }
+  else if (serialManager->jsonAvailable())
+  {
 
+    if (serialManager->readJson(doc))
+    {
+      if (isVerbose())
+      {
+        Serial.print("Json received: ");
+        serializeJson(doc, Serial);
+        Serial.println();
+      }
+      parameterManager->handleJsonMessage(doc);
+      ledManager->handleJsonMessage(doc);
+    }
+    else
+    {
+      Serial.println("Json not handled");
+    }
+  }
 #ifdef USE_LEDS
   ledManager->update();
 #endif

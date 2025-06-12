@@ -16,6 +16,11 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
             rig = i;
         }
     }
+    if (rig.name == "")
+    {
+        Serial.printf("No LED rig found with name %s\n", slavename.c_str());
+        return;
+    }
     if (rig.strips.size() == 0)
     {
         Serial.printf("No LED strips defined. add slave %s to shared.h \n", slavename.c_str());
@@ -146,7 +151,7 @@ bool LEDManager::handleLEDCommand(String command)
     {
         bool res = false;
         int currentStrip = getValue(PARAM_CURRENT_STRIP);
-
+        Serial1.println("current strip " + String(currentStrip));
         for (int i = 0; i < stripStates.size(); i++)
         {
             if (currentStrip == 0 || currentStrip == i + 1)

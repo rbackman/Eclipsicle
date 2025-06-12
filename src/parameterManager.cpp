@@ -183,6 +183,71 @@ void ParameterManager::respondToParameterMessage(parameter_message parameter)
 
     setValue(parameter.paramID, parameter.value);
 }
+void ParameterManager::handleJsonMessage(JsonDocument &doc)
+{
+    try
+    {
+        const char *type = doc["type"].as<const char *>();
+        if (type == nullptr)
+        {
+            Serial.println("Type is null in JSON message");
+            return;
+        }
+        if (type == "parameter")
+        {
+            parameter_message parameter;
+            parameter.type = MESSAGE_TYPE_PARAMETER;
+            const char *paramName = doc["param"].as<const char *>();
+            if (paramName == nullptr)
+            {
+                Serial.println("Parameter name is null in JSON message");
+                return;
+            }
+            parameter.paramID = getParameterID(paramName);
+            if (parameter.paramID == PARAM_UNKNOWN)
+            {
+                Serial.printf("Unknown parameter name in JSON message: %s\n", paramName);
+                return;
+            }
+
+            if (doc["value"].is<int>())
+            {
+                parameter.value = doc["value"].as<int>();
+            }
+            else if (doc["value"].is<float>())
+            {
+                Serial.printf("Warning: Float value received for int parameter %s\n", paramName);
+                // parameter.value = (int)doc["value"].as<float>();
+            }
+            else
+            {
+                // no value sent
+                parameter.value = 0;
+            }
+            if (doc["boolValue"].is<bool>())
+            {
+                parameter.boolValue = doc["boolValue"].as<bool>();
+            }
+            else
+            {
+                parameter.boolValue = false;
+            }
+
+            respondToParameterMessage(parameter);
+        }
+        else
+        {
+            Serial.printf("Invalid JSON message received type: %s\n", type);
+            Serial.println("Full message:");
+            serializeJson(doc, Serial);
+            Serial.println();
+        }
+    }
+    catch (...)
+    {
+        Serial.println("Param Manager Error handling JSON message");
+    }
+}
 
 bool ParameterManager::handleTextMessage(std::string message)
 {

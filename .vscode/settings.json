@@ -78,7 +78,15 @@
         "condition_variable": "cpp",
         "csignal": "cpp",
         "set": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "charconv": "cpp",
+        "list": "cpp",
+        "netfwd": "cpp",
+        "format": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp",
+        "span": "cpp",
+        "stop_token": "cpp"
     },
     "cmake.sourceDirectory": "C:/Users/rback/Code/roborepo/apps/ledSpinner"
 }
