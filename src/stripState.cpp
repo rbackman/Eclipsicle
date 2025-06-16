@@ -2,18 +2,55 @@
 #ifdef USE_LEDS
 
 #include "stripState.h"
-
+#include "animations.h"
 int val = 0;
 int minr = 0;
 int maxr = 0;
-
 led tempColor;
+
+void ParticleAnimation::spawnParticle(int position, float velocity, int hueStart, int hueEnd, int brightness, int width, int life)
+{
+
+    bool used = false;
+    for (int i = 0; i < 10; i++)
+    {
+        if (!particles[i].active)
+        {
+            used = true;
+            particles[i].active = true;
+            particles[i].position = position;
+            particles[i].velocity = velocity;
+            particles[i].hueStart = hueStart;
+            particles[i].hueEnd = hueEnd;
+            particles[i].brightness = brightness;
+            particles[i].width = width;
+            particles[i].life = life;
+
+            // if (isVerbose())
+            // {
+            // Serial.printf("\nSpawned particle\n  position x: %d\n velocity: %f \nhueStart: %d \nhueEnd: %d \nbrightness: %d \nwidth: %d \nlife: %d", position, velocity, hueStart, hueEnd, brightness, width, life);
+            // }
+
+            return;
+        }
+    }
+    if (!used)
+    {
+        Serial.println("No free particles");
+    }
+}
 
 StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
 
 {
     leds = new CRGB[numLEDS];
-    ledState = state;
+    if (state != LED_STATE_IDLE)
+    {
+        Serial.print("Starting strip ");
+        Serial.print(stripIndex);
+        Serial.print(" with state ");
+        Serial.println(getLedStateName(state));
+    }
 }
 
 void StripState::toggleMode()
@@ -24,183 +61,48 @@ void StripState::toggleMode()
     this->clearPixels();
 }
 
-void StripState::updateRandomParticles()
-{
-
-    float startHue = getValue(PARAM_HUE);
-    float endHue = getValue(PARAM_HUE_END);
-    float velocity = getValue(PARAM_VELOCITY);
-
-    if (random(0, 100) > 90)
-    {
-        float vel = random(10, 50) / 10.0;
-        if (abs(vel) < 0.5)
-        {
-            vel = random(1, 2);
-        }
-        // random(0, 360), random(0, 255)
-        int shue = startHue + random(-60, 60);
-        int ehue = startHue + random(-60, 60);
-        int size = random(2, 10);
-        spawnParticle(0, vel, shue, ehue, 200, size, 60);
-    }
-    updateParticles();
-}
-
-void StripState::fadeParticleTail(int position, int width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction)
-{
-    for (int j = 0; j < width; j++)
-    {
-        int index = position - j * direction;
-        if (index >= 0 && index < numLEDS)
-        {
-            const int hue = interpolate(hueStart, hueEnd, (float)j / width);
-
-            // Logarithmic decay for brightness
-            float fadeFactor = log(1 + fadeSpeed * j) / log(1 + fadeSpeed * width);
-            int adjustedBrightness = brightness * (1.0 - fadeFactor);
-
-            colorFromHSV(tempColor, hue / 360.0, 1.0, adjustedBrightness / 255.0);
-            setPixel(index, tempColor);
-        }
-    }
-}
-void StripState::updateParticles()
-{
-
-    float timeScale = getFloat(PARAM_TIME_SCALE);
-    bool cycle = getBool(PARAM_CYCLE);
-
-    if (getBool(PARAM_PARTICLE_UPDATE_ALL) && parameterChanged())
-    {
-
-        int hueStart = getValue(PARAM_HUE);
-        int hueEnd = getValue(PARAM_HUE_END);
-        int brightness = getValue(PARAM_BRIGHTNESS);
-        int fade = getValue(PARAM_PARTICLE_FADE);
-        int width = getValue(PARAM_PARTICLE_WIDTH);
-        int life = getValue(PARAM_PARTICLE_LIFE);
-        int randomDrift = getValue(PARAM_RANDOM_DRIFT);
-        int acceleration = getValue(PARAM_ACCELERATION);
-        int maxSpeed = getValue(PARAM_MAX_SPEED);
-        // int velocity = getValue(PARAM_VELOCITY);
-        // %d %d %d %d %d %d %d %d %d\n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
-        // Serial.printf("Update all particles hue start:%d \n  hue end:%d \n brightness:%d \n fade:%d \n width:%d \n life:%d \n randomDrift:%d \n acceleration:%d \n maxSpeed:%d \n velocity:%d \n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
-        for (int i = 0; i < 10; i++)
-        {
-            auto particle = &particles[i];
-            if (particle->active)
-            {
-                particle->hueStart = hueStart;
-                particle->hueEnd = hueEnd;
-                particle->brightness = brightness;
-                particle->fade = fade;
-                particle->width = width;
-                particle->life = life;
-                particle->randomDrift = randomDrift;
-                // particle->acceleration = acceleration;
-                // particle->maxSpeed = maxSpeed;
-                // particle->velocity = velocity;
-            }
-        }
-        // update all particles
-    }
-
-    for (int i = 0; i < 10; i++)
-    {
-        auto particle = &particles[i];
-        if (particle->active)
-        {
-
-            particle->position += particle->velocity * timeScale;
-            particle->velocity += particle->acceleration * timeScale;
-            if (particle->velocity > particle->maxSpeed)
-            {
-                particle->velocity = particle->maxSpeed;
-            }
-            if (particle->velocity < -particle->maxSpeed)
-            {
-                particle->velocity = -particle->maxSpeed;
-            }
-
-            if (particle->life != -1 && timeScale != 0)
-            {
-                particle->life--;
-                if (particle->life <= 0)
-                {
-                    particle->active = false;
-                }
-            }
-
-            int width = particle->width;
-
-            if (width < 1)
-            {
-                width = 1;
-            }
-            if (width > particle->width)
-            {
-                width = particle->width;
-            }
-
-            if (particle->velocity < -particle->maxSpeed)
-            {
-                particle->velocity = -particle->maxSpeed;
-            }
-            if (particle->velocity > particle->maxSpeed)
-            {
-                particle->velocity = particle->maxSpeed;
-            }
-            // if (particle->randomDrift > 0)
-            // {
-            //     if (random(0, 100) < particle->randomDrift)
-            //     {
-            //         particle->acceleration = -particle->acceleration;
-            //     }
-            // }
-
-            if (particle->position < -width)
-            {
-                if (cycle)
-                    particle->position = numLEDS + width;
-                else
-                    particle->active = false;
-            }
-            else if (particle->position >= numLEDS + width)
-            {
-                if (cycle)
-                    particle->position = -width;
-                else
-                    particle->active = false;
-            }
-            else
-            {
-
-                int direction = particle->velocity > 0 ? 1 : -1;
-
-                fadeParticleTail(particle->position, width, particle->hueStart, particle->hueEnd, particle->brightness, particle->fade, direction);
-            }
-        }
-    }
-}
-void StripState::spawnParticle()
-{
-    int width = getValue(PARAM_PARTICLE_WIDTH);
-    int velocity = getValue(PARAM_VELOCITY);
-    int hueStart = getValue(PARAM_HUE);
-    int hueEnd = getValue(PARAM_HUE_END);
-    int brightness = getValue(PARAM_BRIGHTNESS);
-    int life = getValue(PARAM_PARTICLE_LIFE);
-
-    spawnParticle(0, velocity, hueStart, hueEnd, brightness, width, life);
-};
 String StripState::getStripState()
 {
     return getLedStateName(ledState);
 }
+
+void StripState::addAnimation(ANIMATION_TYPE anim)
+{
+    if (ledState == LED_STATE_SINGLE_ANIMATION)
+    {
+        animations.clear();
+    }
+    if (anim == ANIMATION_TYPE_PARTICLES)
+    {
+        ParticleAnimation particleAnimation(this, false);
+        animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
+    }
+    else if (anim == ANIMATION_TYPE_RAINBOW)
+    {
+        RainbowAnimation rainbowAnimation(this);
+        animations.emplace_back(std::make_unique<RainbowAnimation>(rainbowAnimation));
+    }
+    else if (anim == ANIMATION_TYPE_DOUBLE_RAINBOW)
+    {
+    }
+    else if (anim == ANIMATION_TYPE_SLIDER)
+    {
+    }
+    else if (anim == ANIMATION_TYPE_RANDOM)
+    {
+    }
+    else if (anim == ANIMATION_TYPE_POINT_CONTROL)
+    {
+    }
+    else if (anim == ANIMATION_TYPE_RANDOM_PARTICLES)
+    {
+        ParticleAnimation particleAnimation(this, true);
+        animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
+    }
+}
 void StripState::update()
 {
-
+    clearPixels();
     if (beatSize > 0.1)
     {
         float beatFade = getFloat(PARAM_BEAT_FADE);
@@ -227,160 +129,140 @@ void StripState::update()
         // clearPixels();
 
         break;
-    case LED_STATE_PARTICLES:
+
+    case LED_STATE_SINGLE_ANIMATION:
+    case LED_STATE_MULTI_ANIMATION:
     {
-
-        clearPixels();
-        int spawnRate = getValue(PARAM_SPAWN_RATE);
-        float timeScale = getFloat(PARAM_TIME_SCALE);
-
-        // Serial.printf("Spawn Rate: %d\n timeScale  %f\n", spawnRate, timeScale);
-
-        if (spawnRate > 0 && timeScale != 0)
+        if (animations.size() > 0)
         {
-            int ranVal = random(0, 100);
-            // Serial.printf("Spawn Rate: %d\n timeScale  %f\n ranVal %d\n", spawnRate, timeScale, ranVal);
-            if (ranVal < spawnRate)
+            if (ledState == LED_STATE_SINGLE_ANIMATION)
             {
-
-                spawnParticle();
+                animations[currentAnimation].get()->update(this);
             }
-        }
-        updateParticles();
-    }
-    break;
-    case LED_STATE_RANDOM_PARTICLES:
-    {
-        clearPixels();
-        updateRandomParticles();
-    }
-    break;
-    case LED_STATE_SLIDER:
-    {
-
-        int centerPos = 0;
-        bool useGravity = getBool(PARAM_SLIDER_GRAVITY);
-        bool centered = getBool(PARAM_CENTERED);
-        int position = getValue(PARAM_SLIDER_POSITION);
-
-        float multiplier = 1; // getFloat(PARAM_SLIDER_MULTIPLIER);
-        int width = getValue(PARAM_SLIDER_WIDTH) + beatSize;
-        int hueshift = getValue(PARAM_SLIDER_HUE);
-        float repeat = getFloat(PARAM_SLIDER_REPEAT);
-
-        if (useGravity)
-            centerPos = (position + gravityPosition) % numLEDS;
-        else
-            centerPos = position % numLEDS;
-
-        clearPixels();
-
-        int first = centerPos - width / 2;
-        for (int i = first; i <= first + width; i++)
-        {
-
-            int distanceFromCenter = abs(i - centerPos);
-            // check for overflow distance since it is a loop
-            // if (distanceFromCenter > numLEDS / 2)
-            // {
-            //     distanceFromCenter = numLEDS - distanceFromCenter;
-            // }
-            if (centered)
+            else
             {
-                distanceFromCenter = abs(i - numLEDS / 2 - centerPos);
-            }
-            if (invertLEDs)
-            {
-                distanceFromCenter = width - distanceFromCenter;
-            }
-
-            // // If pixel is outside the width, clear it
-            // if (distanceFromCenter > width * multiplier)
-            // {
-            //     clearPixel(i);
-            // }
-            // else
-            // {
-
-            // Calculate the hue for each pixel, based on its position relative to the center
-            // The hue cycles 'repeat' times over the width of the strip
-
-            float hue = fmod(hueshift + distanceFromCenter * repeat * (360.0 / width), 360.0);
-            float fade = 1 - (distanceFromCenter / (width * multiplier));
-            colorFromHSV(tempColor, hue / 360.0, 1, fade);
-            setPixel(i, tempColor);
-            // }
-        }
-    }
-    break;
-
-    case LED_STATE_RAINBOW:
-    {
-        float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
-        float repeat = getFloat(PARAM_RAINBOW_REPEAT);
-        int offset = getValue(PARAM_RAINBOW_OFFSET);
-        scrollPos += scrollSpeed / 100.0;
-
-        for (int i = 0; i < numLEDS; i++)
-        {
-            int val = (int)(offset + i + scrollPos) % numLEDS;
-            // colorFromHSV(color, float(val) / float(numLEDS ), 1, 1);
-            colorFromHSV(tempColor, fmod(val * repeat, 360.0) / 360.0, 1, 1);
-            setPixel(i, tempColor);
-        }
-    }
-    break;
-
-    case LED_STATE_DOUBLE_RAINBOW:
-    {
-        float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
-        scrollPos += scrollSpeed;
-
-        for (int i = 0; i < numLEDS; i += 2)
-        {
-            int val = i + scrollPos;
-            colorFromHSV(tempColor, float(val) / float(numLEDS), 1, 1);
-            setPixel(i, tempColor);
-        }
-
-        // TODO: use a second slider to drive a second scrollSpeed and use that here
-        for (int i = 1; i < numLEDS; i += 2)
-        {
-            int val = i + scrollPos;
-            colorFromHSV(tempColor, 1 - (float(val) / float(numLEDS)), 1, 1);
-            setPixel(i, tempColor);
-        }
-    }
-    break;
-
-    case LED_STATE_RANDOM:
-    {
-        int randomMin = getValue(PARAM_RANDOM_MIN);
-        int randomMax = getValue(PARAM_RANDOM_MAX);
-        int randomOn = getValue(PARAM_RANDOM_ON);
-        int randomOff = getValue(PARAM_RANDOM_OFF);
-
-        val = 0;
-        minr = min(randomMin, randomMax);
-        maxr = max(randomMin, randomMax);
-        for (int i = 0; i < numLEDS; i++)
-        {
-            if (random(0, 100) > randomOn)
-            {
-                if (random(0, 100) > randomOff)
+                for (int i = 0; i < animations.size(); i++)
                 {
-                    val = random(minr, maxr);
-                    colorFromHSV(tempColor, float(val) / float(255), 1, 1);
-                    setPixel(i, tempColor);
-                }
-                else
-                {
-                    clearPixel(i);
+                    animations[i].get()->update(this);
                 }
             }
         }
     }
+
     break;
+
+        break;
+        // case LED_STATE_SLIDER:
+        // {
+
+        //     int centerPos = 0;
+        //     bool useGravity = getBool(PARAM_SLIDER_GRAVITY);
+        //     bool centered = getBool(PARAM_CENTERED);
+        //     int position = getValue(PARAM_SLIDER_POSITION);
+
+        //     float multiplier = 1; // getFloat(PARAM_SLIDER_MULTIPLIER);
+        //     int width = getValue(PARAM_SLIDER_WIDTH) + beatSize;
+        //     int hueshift = getValue(PARAM_SLIDER_HUE);
+        //     float repeat = getFloat(PARAM_SLIDER_REPEAT);
+
+        //     if (useGravity)
+        //         centerPos = (position + gravityPosition) % numLEDS;
+        //     else
+        //         centerPos = position % numLEDS;
+
+        //     clearPixels();
+
+        //     int first = centerPos - width / 2;
+        //     for (int i = first; i <= first + width; i++)
+        //     {
+
+        //         int distanceFromCenter = abs(i - centerPos);
+        //         // check for overflow distance since it is a loop
+        //         // if (distanceFromCenter > numLEDS / 2)
+        //         // {
+        //         //     distanceFromCenter = numLEDS - distanceFromCenter;
+        //         // }
+        //         if (centered)
+        //         {
+        //             distanceFromCenter = abs(i - numLEDS / 2 - centerPos);
+        //         }
+        //         if (invertLEDs)
+        //         {
+        //             distanceFromCenter = width - distanceFromCenter;
+        //         }
+
+        //         // // If pixel is outside the width, clear it
+        //         // if (distanceFromCenter > width * multiplier)
+        //         // {
+        //         //     clearPixel(i);
+        //         // }
+        //         // else
+        //         // {
+
+        //         // Calculate the hue for each pixel, based on its position relative to the center
+        //         // The hue cycles 'repeat' times over the width of the strip
+
+        //         float hue = fmod(hueshift + distanceFromCenter * repeat * (360.0 / width), 360.0);
+        //         float fade = 1 - (distanceFromCenter / (width * multiplier));
+        //         colorFromHSV(tempColor, hue / 360.0, 1, fade);
+        //         setPixel(i, tempColor);
+        //         // }
+        //     }
+        // }
+        // break;
+
+        break;
+
+        // case LED_STATE_DOUBLE_RAINBOW:
+        // {
+        //     float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
+        //     scrollPos += scrollSpeed;
+
+        //     for (int i = 0; i < numLEDS; i += 2)
+        //     {
+        //         int val = i + scrollPos;
+        //         colorFromHSV(tempColor, float(val) / float(numLEDS), 1, 1);
+        //         setPixel(i, tempColor);
+        //     }
+
+        //     // TODO: use a second slider to drive a second scrollSpeed and use that here
+        //     for (int i = 1; i < numLEDS; i += 2)
+        //     {
+        //         int val = i + scrollPos;
+        //         colorFromHSV(tempColor, 1 - (float(val) / float(numLEDS)), 1, 1);
+        //         setPixel(i, tempColor);
+        //     }
+        // }
+        // break;
+
+        // case LED_STATE_RANDOM:
+        // {
+        //     int randomMin = getValue(PARAM_RANDOM_MIN);
+        //     int randomMax = getValue(PARAM_RANDOM_MAX);
+        //     int randomOn = getValue(PARAM_RANDOM_ON);
+        //     int randomOff = getValue(PARAM_RANDOM_OFF);
+
+        //     val = 0;
+        //     minr = min(randomMin, randomMax);
+        //     maxr = max(randomMin, randomMax);
+        //     for (int i = 0; i < numLEDS; i++)
+        //     {
+        //         if (random(0, 100) > randomOn)
+        //         {
+        //             if (random(0, 100) > randomOff)
+        //             {
+        //                 val = random(minr, maxr);
+        //                 colorFromHSV(tempColor, float(val) / float(255), 1, 1);
+        //                 setPixel(i, tempColor);
+        //             }
+        //             else
+        //             {
+        //                 clearPixel(i);
+        //             }
+        //         }
+        //     }
+        // }
+        // break;
 
     case LED_STATE_POINT_CONTROL:
     {
@@ -425,49 +307,52 @@ bool StripState::respondToText(String command)
     if (command.startsWith("menu:"))
     {
         String menuName = command.substring(5);
-
+        ANIMATION_TYPE animType = ANIMATION_TYPE_NONE;
         if (menuName == "Particles")
         {
 
-            ledState = LED_STATE_PARTICLES;
+            animType = ANIMATION_TYPE_PARTICLES;
         }
         else if (menuName == "Random")
         {
 
-            ledState = LED_STATE_RANDOM;
+            animType = ANIMATION_TYPE_RANDOM;
         }
         else if (menuName == "Slider")
         {
 
-            ledState = LED_STATE_SLIDER;
+            animType = ANIMATION_TYPE_SLIDER;
         }
         else if (menuName == "Rainbow")
         {
-            ledState = LED_STATE_RAINBOW;
+            animType = ANIMATION_TYPE_RAINBOW;
         }
         else if (menuName == "Double Rainbow")
         {
-            ledState = LED_STATE_DOUBLE_RAINBOW;
+            animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
         }
         else if (menuName == "Idle")
         {
 
-            ledState = LED_STATE_IDLE;
+            animType = ANIMATION_TYPE_IDLE;
         }
         else if (menuName == "RndParticles")
         {
-            ledState = LED_STATE_RANDOM_PARTICLES;
+            animType = ANIMATION_TYPE_RANDOM_PARTICLES;
         }
         else if (menuName == "LEDDbg")
         {
-            ledState = LED_STATE_POINT_CONTROL;
+            animType = ANIMATION_TYPE_POINT_CONTROL;
         }
 
         else
         {
             return false;
         }
-        Serial.printf("Set LED State:%d  %s \n", ledState, getLedStateName(ledState));
+
+        setAnimation(animType);
+
+        Serial.printf("Set LED State:%d  %s \n", animType, getAnimationName(animType));
         return true;
     }
     return false;
@@ -526,7 +411,26 @@ void StripState::respondToParameterMessage(parameter_message parameter)
     {
         beatSize = parameter.value;
     }
-    // don't need to do anything here
+    if (ledState == LED_STATE_POINT_CONTROL && parameter.paramID == PARAM_CURRENT_LED)
+    {
+        // Serial.printf("point control strip %s   %d \n", getName().c_str(), parameter.value);
+    }
+
+    if (ledState == LED_STATE_SINGLE_ANIMATION && parameter.paramID == PARAM_ANIMATION_TYPE)
+    {
+        animations.clear();
+        addAnimation((ANIMATION_TYPE)parameter.value);
+        currentAnimation = 0;
+    }
+    else if (ledState == LED_STATE_MULTI_ANIMATION && parameter.paramID == PARAM_ANIMATION_TYPE)
+    {
+        addAnimation((ANIMATION_TYPE)parameter.value);
+        currentAnimation = animations.size() - 1;
+    }
+    if (currentAnimation < animations.size())
+    {
+        animations[currentAnimation].respondToParameterMessage(parameter);
+    }
 }
 
 #endif

@@ -49,7 +49,7 @@ void SerialManager::updateSerial()
             if (bufPos >= bufferSize - 1)
             {
                 // If the buffer is full, reset it:
-                Serial.println("WARNING! buffer full reseting buffer bufPos=" + bufPos);
+                Serial.println("WARNING! buffer full, bufPos=" + String(bufPos));
                 clearBuffer();
             }
 
@@ -74,11 +74,11 @@ void SerialManager::updateSerial()
             {
                 if (isVerbose())
                 {
-
-                    Serial.println("\nJSON received");
+                    Serial.println("Semicolon received. convert to JSON");
                     Serial.println("buffer size " + String(bufPos));
-                    Serial.printf("val: %s\n", buffer);
+                    Serial.printf("val: %s", buffer);
                 }
+
                 buffer[bufPos] = '\0'; // Null-terminate the string
 
                 _jsonAvailable = true;
@@ -187,11 +187,11 @@ bool SerialManager::readJson(JsonDocument &doc)
     {
         Serial.print(F("deserializeJson() failed with code "));
         Serial.println(error.c_str());
-        clearBuffer();
+        Serial.println("Buffer: " + String(buffer));
 
         return false;
     }
-
+    clearBuffer();
     // if (isVerbose())
     // {
     //     Serial.print("Json Deserialized: ");

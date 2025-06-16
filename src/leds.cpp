@@ -7,7 +7,6 @@
 #include "leds.h"
 #include "sensors.h"
 
-
 #define LED_TYPE WS2811
 #define COLOR_ORDER GRB
 
@@ -15,8 +14,6 @@
 // #define LED_PIN_2 4
 // #define LED_PIN_3 2
 // #define LED_PIN_4 4
-
-
 
 led colorUtil;
 
@@ -48,16 +45,15 @@ ByteRow base64Decode(uint8_t *input, int len)
     return ret;
 }
 
-
 String getLedStateName(LED_STATE state)
 {
     return LED_STATE_NAMES.at(state);
 }
 
-
-
-
-
+String getAnimationName(ANIMATION_TYPE type)
+{
+    return ANIMATION_TYPE_NAMES.at(type);
+}
 
 void decodeRLE(ByteRow encodedData, LedRow &dest)
 {
@@ -92,6 +88,5 @@ void decodeRLE(ByteRow encodedData, LedRow &dest)
         dest[destIndex++] = {0, 0, 0};
     }
 }
-
 
 #endif

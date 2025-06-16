@@ -31,7 +31,9 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
     for (int i = 0; i < rig.strips.size(); i++)
     {
         LEDParams params = rig.strips[i];
-        StripState *strip = new StripState(params.startState, params.numLEDS, params.stripIndex, params.reverse);
+        StripState *strip = new StripState(LED_STATE_SINGLE_ANIMATION, params.numLEDS, params.stripIndex, params.reverse);
+
+        strip->setAnimation(params.startState);
         stripStates.push_back(strip);
     }
     initStrips();
@@ -151,7 +153,7 @@ bool LEDManager::handleLEDCommand(String command)
     {
         bool res = false;
         int currentStrip = getValue(PARAM_CURRENT_STRIP);
-        Serial1.println("current strip " + String(currentStrip));
+
         for (int i = 0; i < stripStates.size(); i++)
         {
             if (currentStrip == 0 || currentStrip == i + 1)

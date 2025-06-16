@@ -57,6 +57,7 @@
     X(PARAM_BEAT)                  \
     X(PARAM_BEAT_MAX_SIZE)         \
     X(PARAM_BEAT_FADE)             \
+    X(PARAM_ANIMATION_TYPE)        \
     X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
@@ -306,7 +307,7 @@ static const std::vector<IntParameter> getDefaultParameters()
         {PARAM_ACCELERATION, "Accel", 0, -10, 100, 0.1},
         {PARAM_MAX_SPEED, "MaxSpd", 1, 1, 10, 0.1},
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255, 1.0},
-
+        {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255, 1.0},
         {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40, 1.0},
         {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
         {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255, 1.0},
@@ -444,7 +445,7 @@ using MacAddresses = std::map<std::string, MacAddress>;
 
 #define MAX_LEDS_PER_STRIP 200
 
-#define LED_PIN_1 17
+#define LED_PIN_1 23
 #define LED_PIN_2 5
 #define LED_PIN_3 19
 #define LED_PIN_4 18
@@ -452,19 +453,27 @@ using MacAddresses = std::map<std::string, MacAddress>;
 enum LED_STATE
 {
     LED_STATE_IDLE,
-    LED_STATE_RAINBOW,
-    LED_STATE_DOUBLE_RAINBOW,
-    LED_STATE_SLIDER,
-    LED_STATE_RANDOM,
+    LED_STATE_SINGLE_ANIMATION,
+    LED_STATE_MULTI_ANIMATION,
     LED_STATE_POINT_CONTROL,
-    LED_STATE_PARTICLES,
-    LED_STATE_RANDOM_PARTICLES,
+};
+enum ANIMATION_TYPE
+{
+    ANIMATION_TYPE_NONE,
+    ANIMATION_TYPE_PARTICLES,
+    ANIMATION_TYPE_RAINBOW,
+    ANIMATION_TYPE_DOUBLE_RAINBOW,
+    ANIMATION_TYPE_SLIDER,
+    ANIMATION_TYPE_RANDOM,
+    ANIMATION_TYPE_POINT_CONTROL,
+    ANIMATION_TYPE_RANDOM_PARTICLES,
+    ANIMATION_TYPE_IDLE
 };
 struct LEDParams
 {
     int numLEDS;
     int stripIndex;
-    LED_STATE startState;
+    ANIMATION_TYPE startState;
     bool reverse;
 };
 
@@ -480,8 +489,8 @@ const std::vector<LEDRig> slaves = {
         "Eclipsicle",
         {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
         {
-            {164, 0, LED_STATE_PARTICLES, false},
-            {200, 1, LED_STATE_SLIDER, false},
+            {164, 0, ANIMATION_TYPE_PARTICLES, false},
+            {200, 1, ANIMATION_TYPE_SLIDER, false},
 
         },
     },
@@ -489,7 +498,7 @@ const std::vector<LEDRig> slaves = {
         "Tesseratica",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
-            {164, 0, LED_STATE_PARTICLES, false},
+            {164, 0, ANIMATION_TYPE_PARTICLES, false},
 
         },
     },
@@ -497,14 +506,14 @@ const std::vector<LEDRig> slaves = {
         "tradeday",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
-            {100, 0, LED_STATE_IDLE, false},
+            {100, 0, ANIMATION_TYPE_POINT_CONTROL, false},
         },
     },
     {
         "simpled",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
-            {164, 0, LED_STATE_PARTICLES, false},
+            {164, 0, ANIMATION_TYPE_PARTICLES, false},
 
         },
     },
@@ -512,9 +521,9 @@ const std::vector<LEDRig> slaves = {
         "Bike",
         {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
         {
-            {48, 0, LED_STATE_SLIDER, false},
-            {48, 1, LED_STATE_SLIDER, false},
-            {18, 2, LED_STATE_SLIDER, false},
+            {48, 0, ANIMATION_TYPE_SLIDER, false},
+            {48, 1, ANIMATION_TYPE_SLIDER, false},
+            {18, 2, ANIMATION_TYPE_SLIDER, false},
         },
     },
     {
@@ -522,42 +531,39 @@ const std::vector<LEDRig> slaves = {
         "Spinner",
         {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
         {
-            {280, 0, LED_STATE_IDLE, false},
-            {280, 1, LED_STATE_IDLE, false},
+            {280, 0, ANIMATION_TYPE_IDLE, false},
+            {280, 1, ANIMATION_TYPE_IDLE, false},
         },
     },
-    {
-        "Dunno",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {100, 0, LED_STATE_IDLE, false},
-            {100, 1, LED_STATE_IDLE, false},
-            {100, 2, LED_STATE_IDLE, false},
-        },
 
-    },
     {
         "Bike",
         {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
         {
-            {100, 0, LED_STATE_IDLE, false},
-            {100, 1, LED_STATE_IDLE, false},
-            {100, 2, LED_STATE_IDLE, false},
+            {100, 0, ANIMATION_TYPE_IDLE, false},
+            {100, 1, ANIMATION_TYPE_IDLE, false},
+            {100, 2, ANIMATION_TYPE_IDLE, false},
         },
     }};
 
 // map to state names
 const std::map<LED_STATE, String> LED_STATE_NAMES = {
     {LED_STATE_IDLE, "IDLE"},
-    {LED_STATE_RAINBOW, "RAINBOW"},
-    {LED_STATE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
-    {LED_STATE_SLIDER, "SLIDER"},
-    {LED_STATE_RANDOM, "RANDOM"},
     {LED_STATE_POINT_CONTROL, "POINT_CONTROL"},
-    {LED_STATE_PARTICLES, "PARTICLES"},
-    {LED_STATE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}
+    {LED_STATE_SINGLE_ANIMATION, "SINGLE_ANIMATION"},
+    {LED_STATE_MULTI_ANIMATION, "MULTI_ANIMATION"}
 
 };
+
+const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
+    {ANIMATION_TYPE_NONE, "NONE"},
+    {ANIMATION_TYPE_PARTICLES, "PARTICLES"},
+    {ANIMATION_TYPE_RAINBOW, "RAINBOW"},
+    {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
+    {ANIMATION_TYPE_SLIDER, "SLIDER"},
+    {ANIMATION_TYPE_RANDOM, "RANDOM"},
+    {ANIMATION_TYPE_POINT_CONTROL, "POINT_CONTROL"},
+    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}};
 
 const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 

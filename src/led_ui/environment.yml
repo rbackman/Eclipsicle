@@ -7,5 +7,7 @@ dependencies:
   - pyqt=5
   - pyserial
   - pip
+
   - pip:
       - qdarkstyle  # Optional: nice dark theme
+      - qtawesome

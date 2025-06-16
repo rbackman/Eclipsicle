@@ -37,7 +37,7 @@ public:
         return "UNKNOWN";
     }
     virtual void respondToParameterMessage(parameter_message parameter);
-    void handleJsonMessage(JsonDocument &doc);
+    bool handleJsonMessage(JsonDocument &doc);
     bool handleTextMessage(std::string message);
     bool parameterChanged()
     {

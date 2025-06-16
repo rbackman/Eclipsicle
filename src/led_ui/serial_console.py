@@ -3,29 +3,30 @@ from PyQt5.QtCore import pyqtSignal, QTimer
 import serial
 import threading
 import json
+import typing
 
 
 class SerialConsole(QWidget):
     append_signal = pyqtSignal(str)
     motorToCheck = 0
     motors = ["dowel", "drill", "x_axis"]
-    stringListeners = []
-    jsonListeners = []
+    stringListeners: list[typing.Callable] = []
+    jsonListeners: list[typing.Callable] = []
 
-    def __init__(self, port):
+    def __init__(self, port, baud=115200, timeout=0.1):
         super().__init__()
 
         self.ser = None
         self.running = False  # Start off
 
         try:
-            self.ser = serial.Serial(port, 115200, timeout=0.1)
+            self.ser = serial.Serial(port, baudrate=baud, timeout=timeout)
         except serial.SerialException as e:
             self.show_error(f"Could not open serial port {port}:\n{e}")
             return
         except Exception as e:
             self.show_error(
-                f"Unexpected error while connecting to {port}:\n{e}")
+                f"Unexpected error while connecting to {port} {baud} {timeout}:\n{e}")
             return
 
         self.init_ui()
@@ -106,25 +107,20 @@ class SerialConsole(QWidget):
             self.log("⚠️ Serial port not open.")
             return
         msg = json.dumps(data)
-        self.ser.write((msg + ";").encode())
-        self.log("→ " + msg)
+        jsonstring = msg+";"
+        self.ser.write(jsonstring.encode())
+        self.log("→ " + jsonstring)
 
     def send_cmd(self, data):
         if not self.ser or not self.ser.is_open:
             self.log("⚠️ Serial port not open.")
             return
-        msg = json.dumps(data)
-        self.ser.write((msg + "\n").encode())
-        self.log("→ " + msg)
+
+        self.ser.write((data + "\n").encode())
+        self.log("→ " + data)
 
     def manual_send(self):
         msg = self.input.text()
         self.ser.write((msg + "\n").encode())
         self.log("→ " + msg)
         self.input.clear()
-
-    def closeEvent(self, event):
-        self.running = False
-        if self.ser and self.ser.is_open:
-            self.ser.close()
-        event.accept()

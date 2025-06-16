@@ -1,123 +1,208 @@
 import sys
 import json
+from collections import deque
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QListWidget, QStackedWidget,
-    QLabel, QSlider, QCheckBox, QColorDialog, QPushButton, QHBoxLayout
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
+    QStackedWidget, QLabel, QSlider, QCheckBox, QColorDialog, QPushButton,
+    QHeaderView
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QColor
+import qtawesome as qta           # pip install qtawesome
 from serial_console import SerialConsole
 
-# Example simplified data structure for menus
-MENU_STRUCTURE = {
-    "Main": ["Patterns", "LED", "Audio", "Debug"],
-    "Patterns": ["Particles", "Rainbow", "Slider", "Random"],
-    "Particles": ["Color", "Speed", "Life"],
-    "LED": ["Master LED"],
+# ───────────────────────────── MENU + PARAM ------------------------------------------------------------------
+# (unchanged skeleton – plug your full MENU_TREE and PARAM_MAP here)
+MENU_TREE = {
+    "Main": {
+        "Patterns": {
+            "Particles": {"Color": {}, "Speed": {}, "Life": {}},
+            "Rainbow": {},
+            "Double Rainbow": {},
+            "Slider": {"Color": {}, "Settings": {}},
+            "Random": {},
+        },
+        "LED": {"Master LED": {}},
+        "Audio": {},
+        "Debug": {"Display": {}, "Settings": {}, "Misc": {}, "LEDDbg": {}},
+    }
 }
 
-# Example parameter mapping (use your real parameter IDs here)
-PARAMETERS = {
-    "Particles": [
+PARAM_MAP = {
+    "Color": [
         {"id": "PARAM_HUE", "type": "color"},
+        {"id": "PARAM_HUE_END", "type": "int", "min": 0, "max": 360},
         {"id": "PARAM_PARTICLE_WIDTH", "type": "int", "min": 1, "max": 60},
     ],
-    "Master LED": [
-        {"id": "PARAM_MASTER_LED_HUE", "type": "color"},
-        {"id": "PARAM_MASTER_LED_BRIGHTNESS", "type": "int", "min": 0, "max": 255},
-        {"id": "PARAM_INVERT", "type": "bool"},
-    ]
+    # … add the rest …
 }
+
+# ───────────────────────────── Font‑Awesome / MDI icon table --------------------------------------------------
+# Use Font‑Awesome 5 solid (fa5s) by default to avoid “Invalid font prefix” errors.
+ICON = {
+    "Main": "fa5s.home",
+    "Patterns": "mdi.texture",
+    "Particles": "mdi.atom",
+    "Rainbow": "fa5s.rainbow",
+    "Double Rainbow": "fa5s.rainbow",
+    "Slider": "fa5s.sliders-h",
+    "Random": "fa5s.random",
+    "LED": "fa5s.lightbulb",
+    "Master LED": "fa5s.lightbulb",
+    "Audio": "fa5s.music",
+    "Debug": "fa5s.bug",
+    "Display": "fa5s.desktop",
+    "Settings": "fa5s.cog",
+    "Misc": "fa5s.ellipsis-h",
+    "LEDDbg": "fa5s.eye",
+}
+
+# ───────────────────────────── Serial throttler --------------------------------------------------------------
+
+
+class DebouncedSlider(QWidget):
+    def __init__(self, param, console: SerialConsole):
+        super().__init__()
+        self.param = param
+        self.console = console
+
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(param['min'], param['max'])
+        self.label = QLabel(f"{param['id']}: {self.slider.value()}")
+
+        self.timer = QTimer(self)
+        self.timer.setSingleShot(True)
+        self.timer.setInterval(100)    # wait 100 ms after last move
+        self.timer.timeout.connect(self._flush)
+
+        self.slider.valueChanged.connect(self._on_change)
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.label)
+        layout.addWidget(self.slider)
+
+    def _on_change(self, v):
+        self.label.setText(f"{self.param['id']}: {v}")
+        self.timer.start()             # reset/start the 100 ms timer
+
+    def _flush(self):
+        v = self.slider.value()
+        self.console.send_json(
+            {"type": "parameter", "param": self.param['id'], "value": v})
+
+
+class ThrottledSerial:
+    def __init__(self, console: SerialConsole, interval_ms: int = 30):
+        self.console = console
+        self.q: deque[dict] = deque()
+        self.timer = QTimer()
+        self.timer.setInterval(interval_ms)
+        self.timer.timeout.connect(self._tick)
+        self.timer.start()
+
+    def send_json(self, obj: dict):
+        self.q.append(obj)
+
+    def _tick(self):
+        if self.q:
+            self.console.send_json(self.q.popleft())
+
+# ───────────────────────────── Parameter page ----------------------------------------------------------------
+
+
+class ParamPage(QWidget):
+    def __init__(self, params, console:  SerialConsole):
+        super().__init__()
+        self.console = console
+        lay = QVBoxLayout(self)
+        lay.setAlignment(Qt.AlignTop)
+        for prm in params:
+            kind = prm["type"]
+            if kind == "int":
+                lbl = QLabel(f"{prm['id']}: 0")
+                sld = DebouncedSlider(prm, self.console)
+                lay.addWidget(lbl)
+                lay.addWidget(sld)
+            elif kind == "bool":
+                cb = QCheckBox(prm["id"])
+                cb.stateChanged.connect(
+                    lambda s, p=prm: self._send(p['id'], bool(s)))
+                lay.addWidget(cb)
+            elif kind == "color":
+                btn = QPushButton(qta.icon("fa5s.paint-brush"),
+                                  f"{prm['id']}: pick …")
+                btn.clicked.connect(lambda _, p=prm: self._pick(p['id']))
+                lay.addWidget(btn)
+
+    def _upd_int(self, lbl, prm, v):
+        lbl.setText(f"{prm['id']}: {v}")
+        self._send(prm['id'], v)
+
+    def _pick(self, pid):
+        c = QColorDialog.getColor()
+        if c.isValid():
+            self._send(pid, int(c.hueF() * 360))
+
+    def _send(self, name, val): self.console.send_json(
+        {"type": "parameter", "param": name, "value": val})
+
+# ───────────────────────────── Main widget -------------------------------------------------------------------
 
 
 class ParameterMenuWidget(QWidget):
-    def __init__(self, serial_console):
+    def __init__(self, console: SerialConsole):
         super().__init__()
+        self.console = console
+        self.cache: dict[str, ParamPage] = {}
+        self.tree = QTreeWidget()
+        self.tree.setHeaderHidden(True)
+        self.tree.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.tree.setIndentation(14)
+        self.pages = QStackedWidget()
 
-        self.serial_console = serial_console
+        self._build_tree()
+        self.tree.currentItemChanged.connect(self._sel_changed)
+        root = QHBoxLayout(self)
+        root.addWidget(self.tree, 1)
+        root.addWidget(self.pages, 3)
+        self.setWindowTitle("ESP32 Pattern Controller")
+        self.resize(760, 500)
 
-        self.layout = QHBoxLayout()
+    # helper to build icon safely
+    def _qta_icon(self, key):
+        try:
+            return qta.icon(key) if key else qta.icon("fa5s.square")
+        except Exception:
+            return qta.icon("fa5s.square")
 
-        # Menu List
-        self.menu_list = QListWidget()
-        self.menu_list.addItems(MENU_STRUCTURE.keys())
-        self.menu_list.currentItemChanged.connect(self.menu_selected)
+    def _build_tree(self):
+        def add(node, branch):
+            for name, sub in branch.items():
+                itm = QTreeWidgetItem([name])
+                itm.setIcon(0, self._qta_icon(ICON.get(name)))
+                node.addChild(itm)
+                add(itm, sub)
+        root = QTreeWidgetItem(["Main"])
+        root.setIcon(0, self._qta_icon(ICON.get("Main")))
+        self.tree.addTopLevelItem(root)
+        add(root, MENU_TREE["Main"])
+        self.tree.expandAll()
+        # focus first leaf
+        leaf = root.child(0)
+        while leaf and leaf.childCount():
+            leaf = leaf.child(0)
+        self.tree.setCurrentItem(leaf)
 
-        # Stacked widget to hold parameter UIs
-        self.stack = QStackedWidget()
-        self.parameter_pages = {}
-
-        for menu in MENU_STRUCTURE.keys():
-            page = QWidget()
-            page.setLayout(QVBoxLayout())
-            self.stack.addWidget(page)
-            self.parameter_pages[menu] = page
-
-        self.layout.addWidget(self.menu_list, 1)
-        self.layout.addWidget(self.stack, 3)
-
-        self.setLayout(self.layout)
-
-    def menu_selected(self, current, previous):
-        if current:
-            menu_name = current.text()
-            page = self.parameter_pages[menu_name]
-            page.layout().setAlignment(Qt.AlignTop)
-
-            # Clear current widgets
-            for i in reversed(range(page.layout().count())):
-                page.layout().itemAt(i).widget().setParent(None)
-
-            # Populate parameters
-            params = PARAMETERS.get(menu_name, [])
-            for param in params:
-                widget = self.create_param_widget(param)
-                page.layout().addWidget(widget)
-
-            self.stack.setCurrentWidget(page)
-
-    def create_param_widget(self, param):
-        param_type = param["type"]
-
-        if param_type == "int":
-            slider = QSlider(Qt.Horizontal)
-            slider.setMinimum(param["min"])
-            slider.setMaximum(param["max"])
-            slider.valueChanged.connect(
-                lambda v, p=param: self.send_param(p["id"], v))
-
-            label = QLabel(f'{param["id"]}: {slider.value()}')
-            slider.valueChanged.connect(
-                lambda v, l=label, p=param: l.setText(f'{p["id"]}: {v}'))
-
-            layout = QVBoxLayout()
-            layout.addWidget(label)
-            layout.addWidget(slider)
-
-            widget = QWidget()
-            widget.setLayout(layout)
-
-        elif param_type == "bool":
-            checkbox = QCheckBox(param["id"])
-            checkbox.stateChanged.connect(
-                lambda s, p=param: self.send_param(p["id"], bool(s)))
-            widget = checkbox
-
-        elif param_type == "color":
-            button = QPushButton(f'{param["id"]}: Select Color')
-            button.clicked.connect(lambda _, p=param: self.pick_color(p["id"]))
-            widget = button
-
-        return widget
-
-    def pick_color(self, param_id):
-        color = QColorDialog.getColor()
-        if color.isValid():
-            hsv = color.getHsv()
-            hue = int(hsv[0] * 360 / 255)
-            self.send_param(param_id, hue)
-
-    def send_param(self, param_id, value):
-        data = {"type": "parameter", "paramID": param_id, "value": value}
-        print(f"Sending: {json.dumps(data)}")
-        self.serial_console.send_json(data)
+    def _sel_changed(self, cur, _prev):
+        if not cur:
+            return
+        name = cur.text(0)
+        if name not in self.cache:
+            page = ParamPage(PARAM_MAP.get(name, []),
+                             self.console) if name in PARAM_MAP else QWidget()
+            self.cache[name] = page
+            self.pages.addWidget(page)
+            isMenu = name not in PARAM_MAP
+            if (isMenu):
+                self.console.send_cmd(f"menu:{name}")
+        self.pages.setCurrentWidget(self.cache[name])

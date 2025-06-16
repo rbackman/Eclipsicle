@@ -499,7 +499,7 @@ void loop()
     String command = serialManager->readString();
     if (command.length() == 0)
       return;
-    Serial.println("Command: " + command);
+
     processCmd(command);
 #ifdef USE_LEDS
     ledManager->handleLEDCommand(command);
@@ -529,7 +529,7 @@ void loop()
   }
   else if (serialManager->jsonAvailable())
   {
-
+    bool handled = false;
     if (serialManager->readJson(doc))
     {
       if (isVerbose())
@@ -538,12 +538,20 @@ void loop()
         serializeJson(doc, Serial);
         Serial.println();
       }
-      parameterManager->handleJsonMessage(doc);
-      ledManager->handleJsonMessage(doc);
+      if (parameterManager->handleJsonMessage(doc))
+      {
+        handled = true;
+      }
+      if (ledManager->handleJsonMessage(doc))
+      {
+        handled = true;
+      }
     }
     else
     {
       Serial.println("Json not handled");
+      serializeJson(doc, Serial);
+      Serial.println();
     }
   }
 #ifdef USE_LEDS
