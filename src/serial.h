@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 #include <Arduino.h>
+
 class SerialManager
 {
 private:

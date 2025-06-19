@@ -28,13 +28,110 @@ MENU_TREE = {
     }
 }
 
+
+# #define PARAMETER_LIST             \
+#     X(PARAM_HUE)                   \
+#     X(PARAM_HUE_END)               \
+#     X(PARAM_BRIGHTNESS)            \
+#     X(PARAM_PARTICLE_WIDTH)        \
+#     X(PARAM_PARTICLE_FADE)         \
+#     X(PARAM_PARTICLE_UPDATE_ALL)   \
+#     X(PARAM_SLIDER_WIDTH)          \
+#     X(PARAM_SLIDER_GRAVITY)        \
+#     X(PARAM_VELOCITY)              \
+#     X(PARAM_MAX_SPEED)             \
+#     X(PARAM_ACCELERATION)          \
+#     X(PARAM_RANDOM_DRIFT)          \
+#     X(PARAM_TIME_SCALE)            \
+#     X(PARAM_SLIDER_REPEAT)         \
+#     X(PARAM_RAINBOW_REPEAT)        \
+#     X(PARAM_RAINBOW_OFFSET)        \
+#     X(PARAM_SLIDER_POSITION)       \
+#     X(PARAM_SLIDER_HUE)            \
+#     X(PARAM_SPAWN_RATE)            \
+#     X(PARAM_PARTICLE_LIFE)         \
+#     X(PARAM_SOUND_SCALE)           \
+#     X(PARAM_SCROLL_SPEED)          \
+#     X(PARAM_SLIDER_MULTIPLIER)     \
+#     X(PARAM_RANDOM_ON)             \
+#     X(PARAM_RANDOM_OFF)            \
+#     X(PARAM_RANDOM_MIN)            \
+#     X(PARAM_RANDOM_MAX)            \
+#     X(PARAM_INVERT)                \
+#     X(PARAM_CENTERED)              \
+#     X(PARAM_BLACK_AND_WHITE)       \
+#     X(PARAM_LOOP_ANIM)             \
+#     X(PARAM_CYCLE)                 \
+#     X(PARAM_SEQUENCE)              \
+#     X(PARAM_SHOW_FPS)              \
+#     X(PARAM_DISPLAY_ACCEL)         \
+#     X(PARAM_RECORD_AUDIO)          \
+#     X(PARAM_CURRENT_STRIP)         \
+#     X(PARAM_CURRENT_LED)           \
+#     X(PARAM_MASTER_LED_HUE)        \
+#     X(PARAM_MASTER_LED_BRIGHTNESS) \
+#     X(PARAM_MASTER_LED_SATURATION) \
+#     X(PARAM_MASTER_VOLUME)         \
+#     X(PARAM_MOTOR_SPEED)           \
+#     X(PARAM_BEAT)                  \
+#     X(PARAM_BEAT_MAX_SIZE)         \
+#     X(PARAM_BEAT_FADE)             \
+#     X(PARAM_ANIMATION_TYPE)        \
+#     X(PARAM_UNKNOWN)
+
 PARAM_MAP = {
     "Color": [
         {"id": "PARAM_HUE", "type": "color"},
         {"id": "PARAM_HUE_END", "type": "int", "min": 0, "max": 360},
         {"id": "PARAM_PARTICLE_WIDTH", "type": "int", "min": 1, "max": 60},
     ],
-    # … add the rest …
+    "Random": [
+        {"id": "PARAM_RANDOM_MIN", "type": "int", "min": 0, "max": 255},
+        {"id": "PARAM_RANDOM_MAX", "type": "int", "min": 0, "max": 255},
+        {"id": "PARAM_RANDOM_ON", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_RANDOM_OFF", "type": "int", "min": 0, "max": 100},
+    ],
+    "Speed": [
+        {"id": "PARAM_TIME_SCALE", "type": "float", "min": 0, "max": 2},
+        {"id": "PARAM_ACCELERATION", "type": "float", "min": 0, "max": 10},
+    ],
+    "Life": [
+        {"id": "PARAM_PARTICLE_LIFE", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_PARTICLE_FADE", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_SPAWN_RATE", "type": "int", "min": 0, "max": 100},
+    ],
+    "Slider": [
+        {"id": "PARAM_SLIDER_WIDTH", "type": "int", "min": 1, "max": 100},
+        {"id": "PARAM_SLIDER_GRAVITY", "type": "int", "min": 0, "max": 100},
+
+
+    ],
+    "Master LED": [
+        {"id": "PARAM_MASTER_LED_HUE", "type": "color"},
+        {"id": "PARAM_MASTER_LED_BRIGHTNESS", "type": "int", "min": 0, "max": 255},
+        {"id": "PARAM_MASTER_LED_SATURATION", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_MASTER_VOLUME", "type": "int", "min": 0, "max": 100},
+    ],
+    "Display": [
+        {"id": "PARAM_SHOW_FPS", "type": "bool"},
+        {"id": "PARAM_DISPLAY_ACCEL", "type": "bool"},
+        {"id": "PARAM_RECORD_AUDIO", "type": "bool"},
+    ],
+    "Misc": [
+        {"id": "PARAM_INVERT", "type": "bool"},
+        {"id": "PARAM_CENTERED", "type": "bool"},
+        {"id": "PARAM_BLACK_AND_WHITE", "type": "bool"},
+        {"id": "PARAM_LOOP_ANIM", "type": "bool"},
+        {"id": "PARAM_CYCLE", "type": "bool"},
+        {"id": "PARAM_SEQUENCE", "type": "bool"},
+    ],
+    "Settings": [
+        {"id": "PARAM_CURRENT_STRIP", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_CURRENT_LED", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_MASTER_LED_HUE", "type": "int", "min": 0, "max": 360},
+        {"id": "PARAM_MASTER_LED_BRIGHTNESS", "type": "int", "min": 0, "max": 255},
+        {"id": "PARAM_MASTER_LED_SATURATION", "type": "int", "min": 0, "max": 100},
+    ],
 }
 
 # ───────────────────────────── Font‑Awesome / MDI icon table --------------------------------------------------
@@ -88,7 +185,7 @@ class DebouncedSlider(QWidget):
     def _flush(self):
         v = self.slider.value()
         self.console.send_json(
-            {"type": "parameter", "param": self.param['id'], "value": v})
+            {"param": self.param['id'], "value": v})
 
 
 class ThrottledSerial:
@@ -133,10 +230,26 @@ class ParamPage(QWidget):
                                   f"{prm['id']}: pick …")
                 btn.clicked.connect(lambda _, p=prm: self._pick(p['id']))
                 lay.addWidget(btn)
+            elif kind == "float":
+                lbl = QLabel(f"{prm['id']}: 0.0")
+                sld = QSlider(Qt.Horizontal)
+                sld.setRange(int(prm['min'] * 100), int(prm['max'] * 100))
+                sld.valueChanged.connect(
+                    lambda v, l=lbl, p=prm: self._upd_float(l, p, v))
+                lay.addWidget(lbl)
+                lay.addWidget(sld)
 
     def _upd_int(self, lbl, prm, v):
         lbl.setText(f"{prm['id']}: {v}")
         self._send(prm['id'], v)
+
+    def _upd_float(self, lbl, prm, v):
+        lbl.setText(f"{prm['id']}: {v / 100:.2f}")
+        self._send(prm['id'], v / 100)
+
+    def _upd_bool(self, cb, prm, s):
+        cb.setText(f"{prm['id']}: {bool(s)}")
+        self._send(prm['id'], bool(s))
 
     def _pick(self, pid):
         c = QColorDialog.getColor()
@@ -144,7 +257,7 @@ class ParamPage(QWidget):
             self._send(pid, int(c.hueF() * 360))
 
     def _send(self, name, val): self.console.send_json(
-        {"type": "parameter", "param": name, "value": val})
+        {"param": name, "value": val})
 
 # ───────────────────────────── Main widget -------------------------------------------------------------------
 

@@ -50,11 +50,6 @@ String getLedStateName(LED_STATE state)
     return LED_STATE_NAMES.at(state);
 }
 
-String getAnimationName(ANIMATION_TYPE type)
-{
-    return ANIMATION_TYPE_NAMES.at(type);
-}
-
 void decodeRLE(ByteRow encodedData, LedRow &dest)
 {
     int destIndex = 0;

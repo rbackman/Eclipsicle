@@ -8,39 +8,7 @@ int minr = 0;
 int maxr = 0;
 led tempColor;
 
-void ParticleAnimation::spawnParticle(int position, float velocity, int hueStart, int hueEnd, int brightness, int width, int life)
-{
-
-    bool used = false;
-    for (int i = 0; i < 10; i++)
-    {
-        if (!particles[i].active)
-        {
-            used = true;
-            particles[i].active = true;
-            particles[i].position = position;
-            particles[i].velocity = velocity;
-            particles[i].hueStart = hueStart;
-            particles[i].hueEnd = hueEnd;
-            particles[i].brightness = brightness;
-            particles[i].width = width;
-            particles[i].life = life;
-
-            // if (isVerbose())
-            // {
-            // Serial.printf("\nSpawned particle\n  position x: %d\n velocity: %f \nhueStart: %d \nhueEnd: %d \nbrightness: %d \nwidth: %d \nlife: %d", position, velocity, hueStart, hueEnd, brightness, width, life);
-            // }
-
-            return;
-        }
-    }
-    if (!used)
-    {
-        Serial.println("No free particles");
-    }
-}
-
-StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str()), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
+StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
 
 {
     leds = new CRGB[numLEDS];
@@ -75,11 +43,13 @@ void StripState::addAnimation(ANIMATION_TYPE anim)
     if (anim == ANIMATION_TYPE_PARTICLES)
     {
         ParticleAnimation particleAnimation(this, false);
+        Serial.println("Adding particle animation");
         animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
     }
     else if (anim == ANIMATION_TYPE_RAINBOW)
     {
         RainbowAnimation rainbowAnimation(this);
+        Serial.println("Adding rainbow animation");
         animations.emplace_back(std::make_unique<RainbowAnimation>(rainbowAnimation));
     }
     else if (anim == ANIMATION_TYPE_DOUBLE_RAINBOW)
@@ -90,6 +60,13 @@ void StripState::addAnimation(ANIMATION_TYPE anim)
     }
     else if (anim == ANIMATION_TYPE_RANDOM)
     {
+        RandomAnimation randomAnimation(this);
+        animations.emplace_back(std::make_unique<RandomAnimation>(randomAnimation));
+    }
+    else if (anim == ANIMATION_TYPE_IDLE)
+    {
+        // ParticleAnimation particleAnimation(this, false);
+        // animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
     }
     else if (anim == ANIMATION_TYPE_POINT_CONTROL)
     {
@@ -106,7 +83,7 @@ void StripState::update()
     if (beatSize > 0.1)
     {
         float beatFade = getFloat(PARAM_BEAT_FADE);
-        int beatMaxSize = getValue(PARAM_BEAT_MAX_SIZE);
+        int beatMaxSize = getInt(PARAM_BEAT_MAX_SIZE);
 
         beatSize = beatSize - beatFade;
         if (beatSize < 1)
@@ -267,10 +244,10 @@ void StripState::update()
     case LED_STATE_POINT_CONTROL:
     {
 
-        int pointPosition = (int)getValue(PARAM_CURRENT_LED);
+        int pointPosition = (int)getInt(PARAM_CURRENT_LED);
 
-        int pointHue = getValue(PARAM_HUE);
-        int pointBrightness = getValue(PARAM_BRIGHTNESS);
+        int pointHue = getInt(PARAM_HUE);
+        int pointBrightness = getInt(PARAM_BRIGHTNESS);
         clearPixels();
 
         if (isActive)
@@ -307,40 +284,44 @@ bool StripState::respondToText(String command)
     if (command.startsWith("menu:"))
     {
         String menuName = command.substring(5);
+        menuName.trim();
+        menuName.toLowerCase();
         ANIMATION_TYPE animType = ANIMATION_TYPE_NONE;
-        if (menuName == "Particles")
+        if (menuName.startsWith("part"))
         {
 
             animType = ANIMATION_TYPE_PARTICLES;
         }
-        else if (menuName == "Random")
+        else if (menuName.startsWith("rand") || menuName.startsWith("random"))
         {
 
             animType = ANIMATION_TYPE_RANDOM;
         }
-        else if (menuName == "Slider")
+        else if (menuName == "slider")
         {
 
             animType = ANIMATION_TYPE_SLIDER;
         }
-        else if (menuName == "Rainbow")
+        else if (menuName.startsWith("rain"))
         {
+
             animType = ANIMATION_TYPE_RAINBOW;
         }
-        else if (menuName == "Double Rainbow")
+
+        else if (menuName.startsWith("double"))
         {
             animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
         }
-        else if (menuName == "Idle")
+        else if (menuName == "idle")
         {
 
             animType = ANIMATION_TYPE_IDLE;
         }
-        else if (menuName == "RndParticles")
+        else if (menuName == "rndparticles")
         {
             animType = ANIMATION_TYPE_RANDOM_PARTICLES;
         }
-        else if (menuName == "LEDDbg")
+        else if (menuName == "leddbg")
         {
             animType = ANIMATION_TYPE_POINT_CONTROL;
         }
@@ -407,6 +388,7 @@ void StripState::clearPixel(int index)
 void StripState::respondToParameterMessage(parameter_message parameter)
 {
     ParameterManager::respondToParameterMessage(parameter);
+
     if (parameter.paramID == PARAM_BEAT)
     {
         beatSize = parameter.value;
@@ -429,7 +411,7 @@ void StripState::respondToParameterMessage(parameter_message parameter)
     }
     if (currentAnimation < animations.size())
     {
-        animations[currentAnimation].respondToParameterMessage(parameter);
+        animations[currentAnimation]->respondToParameterMessage(parameter);
     }
 }
 

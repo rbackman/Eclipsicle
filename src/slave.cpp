@@ -39,11 +39,11 @@ bool showAccel = false;
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 32, &Wire);
 #endif
 JsonDocument doc;
-SerialManager *serialManager = new SerialManager(120, SLAVE_NAME);
+SerialManager *serialManager = new SerialManager(220, SLAVE_NAME);
 ParameterManager *parameterManager;
 
 #ifdef USE_LEDS
-LEDManager *ledManager;
+LEDManager *ledManager = new LEDManager(SLAVE_NAME);
 #endif
 
 #ifdef MESH_NET
@@ -115,6 +115,12 @@ ParameterHandler parameterHandler = [](parameter_message msg)
 #endif
 };
 
+void respondToParameterChange(parameter_message parameter)
+{
+
+  ledManager->respondToParameterMessage(parameter);
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -138,8 +144,8 @@ void setup()
   //     {128, 0, LED_STATE_SLIDER, false},
   //     {128, 1, LED_STATE_SLIDER, false}};
   // // {16, 2, LED_STATE_PARTICLES, false}};
-  ledManager = new LEDManager(SLAVE_NAME);
 
+  parameterManager->addParameterChangeListener(respondToParameterChange);
 #ifdef USE_DISPLAY
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
@@ -532,20 +538,20 @@ void loop()
     bool handled = false;
     if (serialManager->readJson(doc))
     {
-      if (isVerbose())
-      {
-        Serial.print("Json received: ");
-        serializeJson(doc, Serial);
-        Serial.println();
-      }
+      // if (isVerbose())
+      // {
+      //   Serial.print("Json received: ");
+      //   serializeJson(doc, Serial);
+      //   Serial.println();
+      // }
       if (parameterManager->handleJsonMessage(doc))
       {
         handled = true;
       }
-      if (ledManager->handleJsonMessage(doc))
-      {
-        handled = true;
-      }
+      // if (ledManager->handleJsonMessage(doc))
+      // {
+      //   handled = true;
+      // }
     }
     else
     {

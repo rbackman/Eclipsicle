@@ -68,7 +68,7 @@ void LEDManager::initStrips()
             break;
         }
     }
-    setValue(PARAM_BRIGHTNESS, 50);
+    setInt(PARAM_BRIGHTNESS, 50);
 }
 LEDManager::LEDManager(std::string name, std::vector<StripState *> strips) : ParameterManager(name.c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
@@ -79,11 +79,11 @@ LEDManager::LEDManager(std::string name, std::vector<StripState *> strips) : Par
         Serial.printf("Adding strip %d with %d LEDs\n", i + 1, strips[i]->getNumLEDS()); // Changed strips[i].getNumLEDS() to strips[i]->getNumLEDS()
     }
     initStrips();
-    setValue(PARAM_CURRENT_STRIP, 1);
+    setInt(PARAM_CURRENT_STRIP, 1);
 }
 int LEDManager::getCurrentStrip()
 {
-    return getValue(PARAM_CURRENT_STRIP);
+    return getInt(PARAM_CURRENT_STRIP);
 }
 void LEDManager::setLEDImage(image_message msg)
 {
@@ -106,7 +106,7 @@ void LEDManager::setLEDImage(image_message msg)
 
     decodeRLE(rleRow, row);
 
-    int currentStrip = getValue(PARAM_CURRENT_STRIP);
+    int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
         for (int i = 0; i < stripStates.size(); i++)
@@ -146,13 +146,13 @@ bool LEDManager::handleLEDCommand(String command)
     {
         int strip = command.substring(6).toInt();
 
-        setValue(PARAM_CURRENT_STRIP, strip);
+        setInt(PARAM_CURRENT_STRIP, strip);
         return true;
     }
     else
     {
         bool res = false;
-        int currentStrip = getValue(PARAM_CURRENT_STRIP);
+        int currentStrip = getInt(PARAM_CURRENT_STRIP);
 
         for (int i = 0; i < stripStates.size(); i++)
         {
@@ -172,13 +172,14 @@ bool LEDManager::handleLEDCommand(String command)
 void LEDManager::respondToParameterMessage(parameter_message parameter)
 {
     ParameterManager::respondToParameterMessage(parameter);
+    Serial.printf("LEDManager responding to parameter message %d %d %d\n", parameter.type, parameter.paramID, parameter.value);
     if (parameter.paramID == PARAM_BRIGHTNESS)
     {
         setBrightness(parameter.value);
     }
     else if (parameter.paramID == PARAM_CURRENT_STRIP)
     {
-        setValue(PARAM_CURRENT_STRIP, parameter.value);
+        setInt(PARAM_CURRENT_STRIP, parameter.value);
         for (int i = 0; i < stripStates.size(); i++)
         {
             if (parameter.value == 0 || parameter.value == i + 1)
@@ -193,7 +194,7 @@ void LEDManager::respondToParameterMessage(parameter_message parameter)
     }
     else
     {
-        int currentStrip = getValue(PARAM_CURRENT_STRIP);
+        int currentStrip = getInt(PARAM_CURRENT_STRIP);
         // Serial.println("update current strip " + String(currentStrip));
         for (int i = 0; i < stripStates.size(); i++)
         {
@@ -258,7 +259,7 @@ void LEDManager::setGravityPosition(float position)
 {
     // gravity position is the LED index that is the bottom of the strip according to the accelerometer
     gravityPosition = position;
-    int currentStrip = getValue(PARAM_CURRENT_STRIP);
+    int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
         for (int i = 0; i < stripStates.size(); i++)
@@ -274,7 +275,7 @@ void LEDManager::setGravityPosition(float position)
 
 void LEDManager::toggleMode()
 {
-    int currentStrip = getValue(PARAM_CURRENT_STRIP);
+    int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
         for (int i = 0; i < stripStates.size(); i++)
@@ -289,7 +290,7 @@ void LEDManager::toggleMode()
 }
 String LEDManager::getStripState()
 {
-    int currentStrip = getValue(PARAM_CURRENT_STRIP);
+    int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
         return stripStates[0]->getStripState();

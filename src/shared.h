@@ -138,6 +138,7 @@ const std::map<SensorID, std::string> sensorIDMap = {
     {AUDIO_AMP, "AudioAmp"},
     {AUDIO_FREQ, "AudioFreq"},
     {AUDIO_BEAT, "AudioBeat"}};
+
 const char *getSensorName(SensorID id);
 
 enum MESSAGE_TYPE
@@ -163,7 +164,7 @@ enum ParameterID
 #undef X
 };
 std::vector<std::string> getParameterNames();
-
+std::string getParameterName(ParameterID id);
 enum MenuID
 {
     MENU_ROOT = -1,
@@ -230,7 +231,6 @@ struct IntParameter
     int value;
     int min;
     int max;
-    float scale;
 };
 
 struct BoolParameter
@@ -238,6 +238,15 @@ struct BoolParameter
     ParameterID id;
     std::string name;
     bool value;
+};
+
+struct FloatParameter
+{
+    ParameterID id;
+    std::string name;
+    float value;
+    float min;
+    float max;
 };
 
 // add parameters to menu
@@ -296,50 +305,46 @@ const std::vector<std::pair<MenuID, ParameterID>> parameterMenuList = {
 
 };
 
-static const std::vector<IntParameter> getDefaultParameters()
+static const std::vector<IntParameter> getDefaultIntParameters()
 {
 
     return {
-        {PARAM_HUE, "Hue", 60, 0, 360, 1.0},
-        {PARAM_HUE_END, "HueEnd", 120, 0, 360, 1.0},
-        {PARAM_PARTICLE_WIDTH, "Width", 10, 1, 60, 1.0},
-        {PARAM_VELOCITY, "Vel", 10, 1, 100, 0.1},
-        {PARAM_ACCELERATION, "Accel", 0, -10, 100, 0.1},
-        {PARAM_MAX_SPEED, "MaxSpd", 1, 1, 10, 0.1},
-        {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255, 1.0},
-        {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255, 1.0},
-        {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40, 1.0},
-        {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
-        {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255, 1.0},
-        {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100, 1.0},
-        {PARAM_TIME_SCALE, "Time", 10, 1, 100, 0.1},
-        {PARAM_SLIDER_REPEAT, "Repeat", 10, 1, 100, 0.1},
-        {PARAM_SLIDER_POSITION, "Pos", 0, 0, 255, 1.0},
-        {PARAM_SLIDER_WIDTH, "Width", 6, 1, 60, 1.0},
-        {PARAM_SLIDER_HUE, "Hue", 60, 0, 360, 1.0},
-        {PARAM_RANDOM_ON, "On", 30, 0, 255, 1.0},
-        {PARAM_RANDOM_OFF, "Off", 30, 0, 255, 1.0},
-        {PARAM_RANDOM_MIN, "Min", 0, 0, 255, 1.0},
-        {PARAM_RANDOM_MAX, "Max", 255, 0, 255, 1.0},
-        {PARAM_DISPLAY_ACCEL, "Accel", 0, 0, 1, 1.0},
-        {PARAM_RAINBOW_REPEAT, "Repeat", 1, 1, 10, 1.0},
-        {PARAM_RAINBOW_OFFSET, "Offset", 0, 0, 255, 1.0},
-        {PARAM_SOUND_SCALE, "Sound", 0, 0, 1, 1.0},
-        {PARAM_SCROLL_SPEED, "Speed", 0, 0, 100, 1.0},
-        {PARAM_SLIDER_MULTIPLIER, "Mult", 0, 0, 1, 1.0},
-        {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3, 1.0},
-        {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255, 0.5},
-        {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360, 1.0},
-        {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 50, 0, 255, 1.0},
-        {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255, 1.0},
-        {PARAM_MASTER_VOLUME, "Volume", 0, 0, 255, 1.0},
-        {PARAM_MOTOR_SPEED, "Speed", 0, 0, 255, 1.0},
-        {PARAM_BEAT, "Beat", 0, 0, 255, 1.0},
-        {PARAM_BEAT_MAX_SIZE, "MaxSize", 30, 0, 255, 1.0},
-        {PARAM_BEAT_FADE, "Fade", 50, 0, 255, 0.05},
+        {PARAM_HUE, "Hue", 60, 0, 360},
+        {PARAM_HUE_END, "HueEnd", 120, 0, 360},
+        {PARAM_PARTICLE_WIDTH, "Width", 10, 1, 60},
 
+        {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255},
+        {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255},
+        {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40},
+        {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255},
+        {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255},
+        {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100},
+
+        {PARAM_SLIDER_POSITION, "Pos", 0, 0, 255},
+        {PARAM_SLIDER_WIDTH, "Width", 6, 1, 60},
+        {PARAM_SLIDER_HUE, "Hue", 60, 0, 360},
+        {PARAM_RANDOM_ON, "On", 30, 0, 255},
+        {PARAM_RANDOM_OFF, "Off", 30, 0, 255},
+        {PARAM_RANDOM_MIN, "Min", 0, 0, 255},
+        {PARAM_RANDOM_MAX, "Max", 255, 0, 255},
+        {PARAM_DISPLAY_ACCEL, "Accel", 0, 0, 1},
+        {PARAM_RAINBOW_REPEAT, "Repeat", 1, 1, 10},
+        {PARAM_RAINBOW_OFFSET, "Offset", 0, 0, 255},
+        {PARAM_SOUND_SCALE, "Sound", 0, 0, 1},
+        {PARAM_SCROLL_SPEED, "Speed", 0, 0, 100},
+        {PARAM_SLIDER_MULTIPLIER, "Mult", 0, 0, 1},
+        {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3},
+        {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255},
+        {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360},
+        {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 50, 0, 255},
+        {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255},
+        {PARAM_MASTER_VOLUME, "Volume", 0, 0, 255},
+        {PARAM_MOTOR_SPEED, "Speed", 0, 0, 255},
+        {PARAM_BEAT, "Beat", 0, 0, 255},
+        {PARAM_BEAT_MAX_SIZE, "MaxSize", 30, 0, 255},
+        {PARAM_BEAT_FADE, "Fade", 50, 0, 255},
     };
-};
+}
 
 static const std::vector<BoolParameter> getDefaultBoolParameters()
 {
@@ -355,9 +360,25 @@ static const std::vector<BoolParameter> getDefaultBoolParameters()
         {PARAM_SLIDER_GRAVITY, "Gravity", false},
         {PARAM_RECORD_AUDIO, "Record", false},
         {PARAM_PARTICLE_UPDATE_ALL, "UpdateAll", true},
+
     };
 }
 
+static const std::vector<FloatParameter> getDefaultFloatParameters()
+{
+
+    return {
+        {PARAM_SLIDER_GRAVITY, "Gravity", 0.0, 0.0, 1.0},
+        {PARAM_SLIDER_MULTIPLIER, "Mult", 1.0, 0.0, 1.0},
+        {PARAM_SCROLL_SPEED, "Speed", 1.0, 0.0, 100.0},
+        {PARAM_SOUND_SCALE, "Sound", 1.0, 0.0, 1.0},
+        {PARAM_TIME_SCALE, "Time", 10.0, 1.0, 100.0},
+        {PARAM_SLIDER_REPEAT, "Repeat", 2.0, 1.0, 10.0},
+        {PARAM_VELOCITY, "Vel", 0.2, 1.0, 10.0},
+        {PARAM_ACCELERATION, "Accel", 0.0, -10.0, 100.0},
+        {PARAM_MAX_SPEED, "MaxSpd", 1.0, 1.0, 10.0},
+    };
+}
 std::vector<ParameterID> getParametersForMenu(MenuID menu);
 
 std::vector<MenuID> getChildrenOfMenu(MenuID type);
@@ -457,18 +478,39 @@ enum LED_STATE
     LED_STATE_MULTI_ANIMATION,
     LED_STATE_POINT_CONTROL,
 };
+
+#define ANIMATION_LIST                 \
+    X(ANIMATION_TYPE_NONE)             \
+    X(ANIMATION_TYPE_PARTICLES)        \
+    X(ANIMATION_TYPE_RAINBOW)          \
+    X(ANIMATION_TYPE_DOUBLE_RAINBOW)   \
+    X(ANIMATION_TYPE_SLIDER)           \
+    X(ANIMATION_TYPE_RANDOM)           \
+    X(ANIMATION_TYPE_POINT_CONTROL)    \
+    X(ANIMATION_TYPE_RANDOM_PARTICLES) \
+    X(ANIMATION_TYPE_IDLE)
+
+// enum ANIMATION_TYPE
+// {
+//     ANIMATION_TYPE_NONE,
+//     ANIMATION_TYPE_PARTICLES,
+//     ANIMATION_TYPE_RAINBOW,
+//     ANIMATION_TYPE_DOUBLE_RAINBOW,
+//     ANIMATION_TYPE_SLIDER,
+//     ANIMATION_TYPE_RANDOM,
+//     ANIMATION_TYPE_POINT_CONTROL,
+//     ANIMATION_TYPE_RANDOM_PARTICLES,
+//     ANIMATION_TYPE_IDLE
+// };
 enum ANIMATION_TYPE
 {
-    ANIMATION_TYPE_NONE,
-    ANIMATION_TYPE_PARTICLES,
-    ANIMATION_TYPE_RAINBOW,
-    ANIMATION_TYPE_DOUBLE_RAINBOW,
-    ANIMATION_TYPE_SLIDER,
-    ANIMATION_TYPE_RANDOM,
-    ANIMATION_TYPE_POINT_CONTROL,
-    ANIMATION_TYPE_RANDOM_PARTICLES,
-    ANIMATION_TYPE_IDLE
+#define X(name) name,
+    ANIMATION_LIST
+#undef X
 };
+
+std::string getAnimationName(ANIMATION_TYPE type);
+
 struct LEDParams
 {
     int numLEDS;

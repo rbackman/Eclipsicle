@@ -61,23 +61,12 @@ void SerialManager::updateSerial()
 
             if (data == 27)
             {
-                if (isVerbose())
-                {
-                    Serial.println(" Escape pressed, clearing buffer");
-                    Serial.println(String(buffer));
-                }
 
                 clearBuffer();
             }
 
             else if (data == ';' and bufPos > 0 and bufPos < bufferSize - 2)
             {
-                if (isVerbose())
-                {
-                    Serial.println("Semicolon received. convert to JSON");
-                    Serial.println("buffer size " + String(bufPos));
-                    Serial.printf("val: %s", buffer);
-                }
 
                 buffer[bufPos] = '\0'; // Null-terminate the string
 
@@ -182,13 +171,22 @@ bool SerialManager::readJson(JsonDocument &doc)
     _jsonAvailable = false;
 
     // Serial.println("Current Buffer as strinf:" + String(buffer));
-    auto error = deserializeJson(doc, buffer);
+    //  just use the first split of ; to decode json
+    char *jsonString = strtok(buffer, ";");
+    if (jsonString == nullptr)
+    {
+        Serial.println("Error: jsonString is null");
+        clearBuffer();
+        return false;
+    }
+
+    auto error = deserializeJson(doc, jsonString);
     if (error)
     {
         Serial.print(F("deserializeJson() failed with code "));
         Serial.println(error.c_str());
-        Serial.println("Buffer: " + String(buffer));
-
+        Serial.println("Buffer: " + String(jsonString));
+        clearBuffer();
         return false;
     }
     clearBuffer();

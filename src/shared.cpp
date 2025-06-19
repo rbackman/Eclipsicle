@@ -152,11 +152,6 @@ void colorFromHSV(led &color, float h, float s, float v)
   color.r = int(r * 255);
   color.g = int(g * 255);
   color.b = int(b * 255);
-
-  // if (h != 0)
-  // {
-  //   printf("rgb :%d %d %d :", color.r, color.g, color.b);
-  // }
 }
 
 std::vector<std::string> getParameterNames()
@@ -168,12 +163,48 @@ std::vector<std::string> getParameterNames()
   };
   return names;
 }
+std::string getParameterName(ParameterID type)
+{
+  auto names = getParameterNames();
+  if (type < 0 || type >= names.size())
+  {
+    return "UNKNOWN";
+  }
+
+  std::string name = names[type];
+  name.erase(0, 6);
+  return name;
+}
+
+std::vector<std::string> getAnimationNames()
+{
+  std::vector<std::string> names = {
+#define X(name) #name,
+      ANIMATION_LIST
+#undef X
+  };
+  return names;
+}
+std::string getAnimationName(ANIMATION_TYPE type)
+{
+  auto names = getAnimationNames();
+  if (type < 0 || type >= names.size())
+  {
+    return "UNKNOWN";
+  }
+  // return names[type];
+  // remove ANIMATION_TYPE_ prefix
+  std::string name = names[type];
+  name.erase(0, 15);
+  return name;
+}
 
 void sanityCheckParameters()
 {
   auto names = getParameterNames();
-  auto intParams = getDefaultParameters();
+  auto intParams = getDefaultIntParameters();
   auto boolParams = getDefaultBoolParameters();
+  auto floatParams = getDefaultFloatParameters();
   int missingParams = 0;
   for (int i = 0; i < names.size(); i++)
   {
@@ -193,6 +224,18 @@ void sanityCheckParameters()
       continue;
     }
     for (auto param : boolParams)
+    {
+      if (param.id == i)
+      {
+        found = true;
+        break;
+      }
+    }
+    if (found)
+    {
+      continue;
+    }
+    for (auto param : floatParams)
     {
       if (param.id == i)
       {

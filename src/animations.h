@@ -33,38 +33,20 @@ struct SliderParams
     bool useGravity;
 };
 
-class StripAnimation
+class StripAnimation : public ParameterManager
 {
     ANIMATION_TYPE animationType;
-
-    std::map<int, float> params;
 
 protected:
     StripState *stripState;
     int scrollPos = 0;
 
 public:
-    void update(StripState *strip) = 0;
-    StripAnimation(StripState *state, ANIMATION_TYPE type, std::map<int, float> params) : stripState(state), animationType(type), params(params) {}
-    void setParam(int id, float value)
+    virtual void update(StripState *strip) = 0;
+    StripAnimation(StripState *state, ANIMATION_TYPE type, std::vector<ParameterID> params) : ParameterManager(getAnimationName(type), params)
     {
-        params[id] = value;
-    }
-    float getParam(int id, float defaultValue = 0)
-    {
-        if (params.find(id) != params.end())
-        {
-            return params[id];
-        }
-        return defaultValue;
-    }
-
-    void respondToParameterMessage(parameter_message parameter)
-    {
-        if (params.find(parameter.paramID) != params.end())
-        {
-            params[parameter.paramID] = parameter.value;
-        }
+        this->stripState = state;
+        this->animationType = type;
     }
 };
 
@@ -81,19 +63,11 @@ class ParticleAnimation : public StripAnimation
 
 public:
     void update(StripState *strip);
-    ParticleAnimation(StripState *state, bool random) : StripAnimation(state, ANIMATION_TYPE_PARTICLES, {
-                                                                                                            {PARAM_HUE, 100},
-                                                                                                            {PARAM_HUE_END, 230},
-                                                                                                            {PARAM_VELOCITY, 12},
-                                                                                                            {PARAM_BRIGHTNESS, 50},
-                                                                                                            {PARAM_PARTICLE_WIDTH, 5},
-                                                                                                            {PARAM_PARTICLE_LIFE, 20},
-                                                                                                            {PARAM_RANDOM_DRIFT, 0},
-                                                                                                            {PARAM_ACCELERATION, 0},
-                                                                                                            {PARAM_MAX_SPEED, 20},
-                                                                                                        })
+
+    ParticleAnimation(StripState *state, bool random) : StripAnimation(state, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_PARTICLE_WIDTH, PARAM_PARTICLE_LIFE, PARAM_PARTICLE_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE})
     {
-        randomMode = random;
+        this->stripState = state;
+        this->randomMode = random;
     }
 };
 
@@ -101,12 +75,8 @@ class RainbowAnimation : public StripAnimation
 {
 public:
     void update(StripState *strip);
-    RainbowAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_RAINBOW, {
-                                                                                            {PARAM_SCROLL_SPEED, 0.5},
-                                                                                            {PARAM_RAINBOW_REPEAT, 1},
-                                                                                            {PARAM_RAINBOW_OFFSET, 0},
-                                                                                            {PARAM_BRIGHTNESS, 255},
-                                                                                        })
+
+    RainbowAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_RAINBOW_REPEAT, PARAM_RAINBOW_OFFSET, PARAM_BRIGHTNESS})
     {
     }
 };
@@ -115,28 +85,17 @@ class RandomAnimation : public StripAnimation
 {
 public:
     void update(StripState *strip);
-    RandomAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_RANDOM, {
-                                                                                          {PARAM_SCROLL_SPEED, 1.0},
-                                                                                          {PARAM_RANDOM_OFF, 0},
-                                                                                          {PARAM_BRIGHTNESS, 255},
-                                                                                      })
+    RandomAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_RANDOM, {PARAM_SCROLL_SPEED, PARAM_RANDOM_OFF, PARAM_BRIGHTNESS})
     {
     }
 };
 
 class SliderAnimation : public StripAnimation
 {
-    SliderParams params;
 
 public:
     void update(StripState *strip);
-    SliderAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_SLIDER, {
-                                                                                          {PARAM_SLIDER_POSITION, 0},
-                                                                                          {PARAM_SLIDER_WIDTH, 10},
-
-                                                                                          {PARAM_SLIDER_REPEAT, 1},
-
-                                                                                      })
+    SliderAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_SLIDER, {PARAM_SLIDER_POSITION, PARAM_SLIDER_WIDTH, PARAM_SLIDER_REPEAT})
     {
     }
 };

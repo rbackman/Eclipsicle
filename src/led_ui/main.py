@@ -32,8 +32,8 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.console = SerialConsole(port)
-        self.console.add_string_listener(self.string_received)
-        self.console.add_json_listener(self.json_received)
+        # self.console.add_string_listener(self.string_received)
+        # self.console.add_json_listener(self.json_received)
 
         self.parameter_menu = ParameterMenuWidget(self.console)
         central_widget = QWidget()
@@ -110,22 +110,22 @@ class MainWindow(QMainWindow):
 
     def send_parameter(self, param, value, boolValue=False):
         data = {
-            "type": "parameter",
+
             "param": param,
             "value": value,
-            "boolValue": boolValue
+
         }
         self.console.send_json(data)
 
-    def string_received(self, string):
-        print(f"s: {string}")
-        # Handle incoming strings if needed
+    # def string_received(self, string):
+    #     # print(f"s: {string}")
+    #     # Handle incoming strings if needed
 
-    def json_received(self, data):
-        print(f"j: {data}")
-        # Handle incoming JSON if needed
+    # def json_received(self, data):
+    #     # print(f"j: {data}")
+    #     # Handle incoming JSON if needed
 
 
 if __name__ == '__main__':
-    print("Starting ESP32 LED Controller...")
+    print("Starting ESP32 LED Controller UI...")
     start_app()

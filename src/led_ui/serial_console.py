@@ -85,11 +85,12 @@ class SerialConsole(QWidget):
                         # first check if msg is json
                         try:
                             data = json.loads(msg)
+                            print(data)
                             for listener in self.jsonListeners:
                                 listener(data)
                             self.log(msg)
                         except:
-
+                            print(msg)
                             for listener in self.stringListeners:
                                 listener(msg)
                             self.log(msg)
@@ -99,6 +100,7 @@ class SerialConsole(QWidget):
                 break
 
     def log(self, msg):
+        print(msg)
         if self.running:
             self.append_signal.emit(msg)
 

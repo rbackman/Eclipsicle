@@ -1,41 +1,34 @@
+// parameterManager.h
 #pragma once
 #include "shared.h"
 #include <ArduinoJson.h>
 
-// using ParameterChangeListener = std::function<void(parameter_message)>;
+#include <vector>
+typedef void (*ParameterChangeListener)(parameter_message parameter);
 class ParameterManager
 {
+    // parameter change listeners
+    std::vector<ParameterChangeListener> listeners;
+
 public:
     ParameterManager(std::string name, std::vector<ParameterID> filterParams = {});
-
-    int getValue(ParameterID paramID);
+    void addParameterChangeListener(ParameterChangeListener listener)
+    {
+        listeners.push_back(listener);
+    }
+    int getInt(ParameterID paramID);
     float getFloat(ParameterID paramID);
     bool getBool(ParameterID paramID);
-    void setValue(ParameterID paramID, int value);
+    void setInt(ParameterID paramID, int value);
     void setBool(ParameterID paramID, bool value);
+    void setFloat(ParameterID paramID, float value);
     bool isBoolParameter(ParameterID id);
-
+    bool isIntParameter(ParameterID id);
+    bool isFloatParameter(ParameterID id);
     IntParameter getIntParameter(ParameterID id);
     BoolParameter getBoolParameter(ParameterID id);
-    const std::string getParameterName(ParameterID type)
-    {
-        for (auto it = intParams.begin(); it != intParams.end(); ++it)
-        {
-            if (it->id == type)
-            {
-                return it->name;
-            }
-        }
+    FloatParameter getFloatParameter(ParameterID id);
 
-        for (auto it = boolParams.begin(); it != boolParams.end(); ++it)
-        {
-            if (it->id == type)
-            {
-                return it->name;
-            }
-        }
-        return "UNKNOWN";
-    }
     virtual void respondToParameterMessage(parameter_message parameter);
     bool handleJsonMessage(JsonDocument &doc);
     bool handleTextMessage(std::string message);
@@ -69,6 +62,7 @@ private:
     bool paramChanged = true;
     std::vector<BoolParameter> boolParams = {};
     std::vector<IntParameter> intParams = {};
+    std::vector<FloatParameter> floatParams = {};
     std::string name;
     // std::vector<ParameterChangeListener> listeners = {};
 };
