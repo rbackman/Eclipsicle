@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton
-from PyQt5.QtCore import pyqtSignal, QTimer
+from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton, QHBoxLayout, QCheckBox
+from PyQt5.QtCore import pyqtSignal, QTimer, Qt
+
 import serial
 import threading
 import json
@@ -57,11 +58,25 @@ class SerialConsole(QWidget):
         self.output = QTextEdit()
         self.output.setReadOnly(True)
         self.input = QLineEdit()
+        self.echo_checkbox = QCheckBox("Echo")
+        self.echo_checkbox.setChecked(False)
 
         self.input.returnPressed.connect(self.manual_send)
 
         layout.addWidget(self.output)
-        layout.addWidget(self.input)
+        hlayout = QHBoxLayout()
+
+        self.verbose_checkbox = QCheckBox('Verbose')
+        self.verbose_checkbox.setChecked(False)
+        self.verbose_checkbox.stateChanged.connect(lambda state:  self.send_cmd(
+            "verbose") if state == Qt.Checked else self.send_cmd("quiet"))
+        self.echo_checkbox.stateChanged.connect(lambda state: self.send_cmd(
+            "echo") if state == Qt.Checked else self.send_cmd("no_echo"))
+
+        hlayout.addWidget(self.input)
+        hlayout.addWidget(self.echo_checkbox)
+        hlayout.addWidget(self.verbose_checkbox)
+        layout.addLayout(hlayout)
 
         self.setLayout(layout)
 
@@ -85,12 +100,12 @@ class SerialConsole(QWidget):
                         # first check if msg is json
                         try:
                             data = json.loads(msg)
-                            print(data)
+
                             for listener in self.jsonListeners:
                                 listener(data)
                             self.log(msg)
                         except:
-                            print(msg)
+
                             for listener in self.stringListeners:
                                 listener(msg)
                             self.log(msg)
@@ -126,3 +141,17 @@ class SerialConsole(QWidget):
         self.ser.write((msg + "\n").encode())
         self.log("→ " + msg)
         self.input.clear()
+
+    def connect(self, port):
+        if self.ser and self.ser.is_open:
+            self.ser.close()
+        try:
+            self.ser = serial.Serial(port, 115200, timeout=0.1)
+            self.log(f"Connected to {port}")
+        except serial.SerialException as e:
+            self.show_error(f"Could not open serial port {port}:\n{e}")
+            return
+        except Exception as e:
+            self.show_error(
+                f"Unexpected error while connecting to {port}:\n{e}")
+            return

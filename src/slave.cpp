@@ -39,11 +39,11 @@ bool showAccel = false;
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 32, &Wire);
 #endif
 JsonDocument doc;
-SerialManager *serialManager = new SerialManager(220, SLAVE_NAME);
+SerialManager *serialManager;
 ParameterManager *parameterManager;
 
 #ifdef USE_LEDS
-LEDManager *ledManager = new LEDManager(SLAVE_NAME);
+LEDManager *ledManager;
 #endif
 
 #ifdef MESH_NET
@@ -115,35 +115,23 @@ ParameterHandler parameterHandler = [](parameter_message msg)
 #endif
 };
 
-void respondToParameterChange(parameter_message parameter)
+bool respondToParameterChange(parameter_message parameter)
 {
+  // when a parameter changes have led manager process it
 
-  ledManager->respondToParameterMessage(parameter);
+  return ledManager->respondToParameterMessage(parameter);
 }
 
 void setup()
 {
-  Serial.begin(115200);
-  parameterManager = new ParameterManager("Slave", {PARAM_DISPLAY_ACCEL});
 
+  serialManager = new SerialManager(220, SLAVE_NAME);
+  parameterManager = new ParameterManager(SLAVE_NAME, {PARAM_DISPLAY_ACCEL});
+  ledManager = new LEDManager(SLAVE_NAME);
   if (isVerbose())
   {
     sanityCheckParameters();
   }
-
-  //   struct LEDParams
-  // {
-  //     int ledPin;
-  //     int numLEDS;
-  //     int stripIndex;
-  //     LED_STATE startState;
-  //     bool reverse;
-  // };
-
-  // std::vector<LEDParams> strips = {
-  //     {128, 0, LED_STATE_SLIDER, false},
-  //     {128, 1, LED_STATE_SLIDER, false}};
-  // // {16, 2, LED_STATE_PARTICLES, false}};
 
   parameterManager->addParameterChangeListener(respondToParameterChange);
 #ifdef USE_DISPLAY
@@ -538,20 +526,11 @@ void loop()
     bool handled = false;
     if (serialManager->readJson(doc))
     {
-      // if (isVerbose())
-      // {
-      //   Serial.print("Json received: ");
-      //   serializeJson(doc, Serial);
-      //   Serial.println();
-      // }
+
       if (parameterManager->handleJsonMessage(doc))
       {
         handled = true;
       }
-      // if (ledManager->handleJsonMessage(doc))
-      // {
-      //   handled = true;
-      // }
     }
     else
     {

@@ -1,11 +1,15 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QComboBox, QHBoxLayout
 from serial.tools import list_ports
-import serial, json, time, os
+import serial
+import json
+import time
+import os
 
 CONFIG_PATH = "last_device.txt"
 
+
 class DeviceSelector(QWidget):
-    def __init__(self, on_device_ready):
+    def __init__(self, on_device_ready, current_port=None):
         super().__init__()
         self.on_device_ready = on_device_ready
         self.setWindowTitle("Select Serial Device")
@@ -18,11 +22,29 @@ class DeviceSelector(QWidget):
 
         self.scan_btn.clicked.connect(self.scan_and_label_devices)
         self.connect_btn.clicked.connect(self.try_connect)
+        connectLayout = QVBoxLayout()
+        connectLayout.addWidget(self.label)
+        connectLayout.addWidget(self.dropdown)
+        connectLayout.addWidget(self.scan_btn)
+        connectLayout.addWidget(self.connect_btn)
 
-        layout.addWidget(self.label)
-        layout.addWidget(self.dropdown)
-        layout.addWidget(self.scan_btn)
-        layout.addWidget(self.connect_btn)
+        self.connectWidget = QWidget()
+        self.connectWidget.setLayout(connectLayout)
+        if current_port:
+            self.connectWidget.setVisible(False)
+        self.connectedPortLabel = QLabel(
+            f"Connected Port: {current_port}" if current_port else "")
+
+        hlayout = QHBoxLayout()
+        hlayout.addWidget(self.connectedPortLabel)
+        self.showConnectLayout = QPushButton("Show Connection")
+        self.showConnectLayout.clicked.connect(
+            lambda: self.connectWidget.setVisible(not self.connectWidget.isVisible()))
+
+        if not current_port:
+            self.connectedPortLabel.setVisible(False)
+        layout.addWidget(self.connectWidget)
+        layout.addLayout(hlayout)
         self.setLayout(layout)
 
         self.device_info = {}  # port -> description
@@ -73,4 +95,7 @@ class DeviceSelector(QWidget):
             with open(CONFIG_PATH, "w") as f:
                 f.write(selected)
             self.on_device_ready(selected)
-            self.close()
+            self.connectedPortLabel.setText(f"Connected Port: {selected}")
+            self.connectedPortLabel.setVisible(True)
+            self.connectWidget.setVisible(False)
+            # self.close()

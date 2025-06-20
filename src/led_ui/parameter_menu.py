@@ -22,9 +22,14 @@ MENU_TREE = {
             "Slider": {"Color": {}, "Settings": {}},
             "Random": {},
         },
-        "LED": {"Master LED": {}},
+        "LED": {"Master LED": {}, "Animation Type": {}},
         "Audio": {},
-        "Debug": {"Display": {}, "Settings": {}, "Misc": {}, "LEDDbg": {}},
+        "Debug": {"Display": {}, "Settings": {}, "Misc": {}, },
+        "Animation Type": {
+            "Single Animation": {},
+            "Multi Animation": {},
+            "Point Control": {}
+        },
     }
 }
 
@@ -132,6 +137,12 @@ PARAM_MAP = {
         {"id": "PARAM_MASTER_LED_BRIGHTNESS", "type": "int", "min": 0, "max": 255},
         {"id": "PARAM_MASTER_LED_SATURATION", "type": "int", "min": 0, "max": 100},
     ],
+    "Point Control": [
+        {"id": "PARAM_CURRENT_STRIP", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_CURRENT_LED", "type": "int", "min": 0, "max": 500},
+    ],
+
+
 }
 
 # ───────────────────────────── Font‑Awesome / MDI icon table --------------------------------------------------
@@ -151,7 +162,9 @@ ICON = {
     "Display": "fa5s.desktop",
     "Settings": "fa5s.cog",
     "Misc": "fa5s.ellipsis-h",
-    "LEDDbg": "fa5s.eye",
+    "Point Control": "fa5s.eye",
+    "Single Animation": "fa5s.play",
+    "Multi Animation": "fa5s.play-circle",
 }
 
 # ───────────────────────────── Serial throttler --------------------------------------------------------------
@@ -277,7 +290,7 @@ class ParameterMenuWidget(QWidget):
         self.tree.currentItemChanged.connect(self._sel_changed)
         root = QHBoxLayout(self)
         root.addWidget(self.tree, 1)
-        root.addWidget(self.pages, 3)
+        root.addWidget(self.pages, 1)
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
 
@@ -315,7 +328,13 @@ class ParameterMenuWidget(QWidget):
                              self.console) if name in PARAM_MAP else QWidget()
             self.cache[name] = page
             self.pages.addWidget(page)
-            isMenu = name not in PARAM_MAP
-            if (isMenu):
-                self.console.send_cmd(f"menu:{name}")
+        isMenu = name not in PARAM_MAP
+        treePath = []
+        while cur and cur.parent():
+            treePath.append(cur.text(0))
+            cur = cur.parent()
+        treePath.reverse()
+        pathname = "/".join(treePath)
+
+        self.console.send_cmd(f"menu:{pathname}")
         self.pages.setCurrentWidget(self.cache[name])

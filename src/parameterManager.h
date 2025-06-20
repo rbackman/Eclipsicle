@@ -4,7 +4,7 @@
 #include <ArduinoJson.h>
 
 #include <vector>
-typedef void (*ParameterChangeListener)(parameter_message parameter);
+typedef bool (*ParameterChangeListener)(parameter_message parameter);
 class ParameterManager
 {
     // parameter change listeners
@@ -22,14 +22,12 @@ public:
     void setInt(ParameterID paramID, int value);
     void setBool(ParameterID paramID, bool value);
     void setFloat(ParameterID paramID, float value);
-    bool isBoolParameter(ParameterID id);
-    bool isIntParameter(ParameterID id);
-    bool isFloatParameter(ParameterID id);
+
     IntParameter getIntParameter(ParameterID id);
     BoolParameter getBoolParameter(ParameterID id);
     FloatParameter getFloatParameter(ParameterID id);
 
-    virtual void respondToParameterMessage(parameter_message parameter);
+    virtual bool respondToParameterMessage(parameter_message parameter);
     bool handleJsonMessage(JsonDocument &doc);
     bool handleTextMessage(std::string message);
     bool parameterChanged()

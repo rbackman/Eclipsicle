@@ -176,6 +176,20 @@ std::string getParameterName(ParameterID type)
   return name;
 }
 
+std::vector<String> splitString(const String &path, char delimiter)
+{
+  std::vector<String> result;
+  size_t start = 0;
+  size_t end = path.indexOf(delimiter);
+  while (end != -1)
+  {
+    result.push_back(path.substring(start, end));
+    start = end + 1;
+    end = path.indexOf(delimiter, start);
+  }
+  result.push_back(path.substring(start));
+  return result;
+}
 std::vector<std::string> getAnimationNames()
 {
   std::vector<std::string> names = {
@@ -197,6 +211,44 @@ std::string getAnimationName(ANIMATION_TYPE type)
   std::string name = names[type];
   name.erase(0, 15);
   return name;
+}
+
+bool isBoolParameter(ParameterID id)
+{
+  auto boolparams = getDefaultBoolParameters();
+  for (int i = 0; i < boolparams.size(); i++)
+  {
+    if (boolparams[i].id == id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isFloatParameter(ParameterID id)
+{
+  auto floatparams = getDefaultFloatParameters();
+  for (int i = 0; i < floatparams.size(); i++)
+  {
+    if (floatparams[i].id == id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+bool isIntParameter(ParameterID id)
+{
+  auto intparams = getDefaultIntParameters();
+  for (int i = 0; i < intparams.size(); i++)
+  {
+    if (intparams[i].id == id)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 void sanityCheckParameters()

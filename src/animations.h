@@ -48,6 +48,10 @@ public:
         this->stripState = state;
         this->animationType = type;
     }
+    ANIMATION_TYPE getAnimationType()
+    {
+        return animationType;
+    }
 };
 
 class ParticleAnimation : public StripAnimation

@@ -80,7 +80,7 @@ public:
 
     void update();
     String getStripState();
-    void respondToParameterMessage(parameter_message parameter);
+    bool respondToParameterMessage(parameter_message parameter);
 };
 
 #endif

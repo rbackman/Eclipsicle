@@ -34,7 +34,9 @@ SerialManager::SerialManager(int size, String name)
 
     memset(buffer, 0, bufferSize);
     Serial.begin(115200);
-
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(); // Only if needed, even if you're not connecting
+    delay(100);   // let the MAC populate
     // Serial.println("ESPNow Init Success  " + String(WiFi.macAddress()));
     Serial.printf("Starting serial on device %s  \nwith address %s /n", getName(), String(WiFi.macAddress()).c_str());
 }
@@ -54,7 +56,7 @@ void SerialManager::updateSerial()
             }
 
             char data = Serial.read();
-            if (isVerbose())
+            if (echo)
             {
                 Serial.print(data);
             }
@@ -69,7 +71,10 @@ void SerialManager::updateSerial()
             {
 
                 buffer[bufPos] = '\0'; // Null-terminate the string
-
+                if (isVerbose())
+                {
+                    Serial.println("reading json: " + String(buffer));
+                }
                 _jsonAvailable = true;
 
                 return;
@@ -77,12 +82,6 @@ void SerialManager::updateSerial()
             else if (data == '\n' and bufPos > 0 and bufPos < bufferSize - 1)
             {
 
-                if (isVerbose())
-                {
-                    Serial.println("Newline received");
-                    Serial.println("buffer size " + String(bufPos));
-                    Serial.printf("val: %s", buffer);
-                }
                 buffer[bufPos] = data;
                 buffer[bufPos + 1] = '\0'; // Null-terminate the string
 
@@ -100,6 +99,20 @@ void SerialManager::updateSerial()
                     Serial.println("verbose set to " + String(isVerbose()));
                     clearBuffer();
 
+                    return;
+                }
+                if (res == "echo")
+                {
+                    echo = true;
+                    Serial.println("echo set to " + String(echo));
+                    clearBuffer();
+                    return;
+                }
+                if (res == "no_echo")
+                {
+                    echo = false;
+                    Serial.println("echo set to " + String(echo));
+                    clearBuffer();
                     return;
                 }
                 if (res.indexOf("getMac") != -1)

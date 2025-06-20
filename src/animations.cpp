@@ -206,7 +206,7 @@ void RainbowAnimation::update(StripState *strip)
 {
     float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
     float repeat = getFloat(PARAM_RAINBOW_REPEAT);
-    float offset = getFloat(PARAM_RAINBOW_OFFSET);
+    float offset = getInt(PARAM_RAINBOW_OFFSET);
     int brightness = getInt(PARAM_BRIGHTNESS);
 
     scrollPos += scrollSpeed;

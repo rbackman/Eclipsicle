@@ -188,6 +188,10 @@ enum MenuID
     MENU_SETTINGS_DEBUG_MODE,
     MENU_MISC_DEBUG_MODE,
     MENU_LED_DEBUG_MODE,
+    MENU_ANIMATION_TYPE,
+    MENU_SINGLE_ANIMATION,
+    MENU_MULTI_ANIMATION,
+    MENU_POINT_CONTROL,
     MENU_MASTER_LED_MODE,
     MENU_SETTINGS,
     MENU_AUDIO,
@@ -198,7 +202,10 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_IDLE, {"Idle", MENU_ROOT}},
     {MENU_MAIN, {"Main", MENU_IDLE}},
     {MENU_PATTERNS, {"Patterns", MENU_MAIN}},
-
+    {MENU_ANIMATION_TYPE, {"Animation Type", MENU_MAIN}},
+    {MENU_SINGLE_ANIMATION, {"Single Animation", MENU_ANIMATION_TYPE}},
+    {MENU_MULTI_ANIMATION, {"Multi Animation", MENU_ANIMATION_TYPE}},
+    {MENU_POINT_CONTROL, {"Point Control", MENU_ANIMATION_TYPE}},
     {MENU_PARTICLES, {"Particles", MENU_PATTERNS}},
 
     {MENU_RANDOM_PARTICLES, {"RndParticles", MENU_PATTERNS}},
@@ -221,7 +228,7 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_DISPLAY_DEBUG_MODE, {"Display", MENU_DEBUG}},
     {MENU_SETTINGS_DEBUG_MODE, {"Settings", MENU_DEBUG}},
     {MENU_MISC_DEBUG_MODE, {"Misc", MENU_DEBUG}},
-    {MENU_LED_DEBUG_MODE, {"LEDDbg", MENU_DEBUG}},
+
 };
 
 struct IntParameter
@@ -328,7 +335,7 @@ static const std::vector<IntParameter> getDefaultIntParameters()
         {PARAM_RANDOM_MIN, "Min", 0, 0, 255},
         {PARAM_RANDOM_MAX, "Max", 255, 0, 255},
         {PARAM_DISPLAY_ACCEL, "Accel", 0, 0, 1},
-        {PARAM_RAINBOW_REPEAT, "Repeat", 1, 1, 10},
+
         {PARAM_RAINBOW_OFFSET, "Offset", 0, 0, 255},
         {PARAM_SOUND_SCALE, "Sound", 0, 0, 1},
         {PARAM_SCROLL_SPEED, "Speed", 0, 0, 100},
@@ -377,8 +384,15 @@ static const std::vector<FloatParameter> getDefaultFloatParameters()
         {PARAM_VELOCITY, "Vel", 0.2, 1.0, 10.0},
         {PARAM_ACCELERATION, "Accel", 0.0, -10.0, 100.0},
         {PARAM_MAX_SPEED, "MaxSpd", 1.0, 1.0, 10.0},
+        {PARAM_RAINBOW_REPEAT, "Repeat", 1, 1, 10},
     };
 }
+
+bool isBoolParameter(ParameterID id);
+
+bool isFloatParameter(ParameterID id);
+bool isIntParameter(ParameterID id);
+
 std::vector<ParameterID> getParametersForMenu(MenuID menu);
 
 std::vector<MenuID> getChildrenOfMenu(MenuID type);
@@ -386,6 +400,8 @@ std::string getMenuPath(MenuID type, MenuID root);
 const char *getMenuName(MenuID type, int MaxSize = 6);
 
 const MenuID getParentMenu(MenuID type);
+
+std::vector<String> splitString(const String &path, char delimiter);
 
 // Maximum sizes
 #define MAX_TEXT_SIZE 144
@@ -486,7 +502,6 @@ enum LED_STATE
     X(ANIMATION_TYPE_DOUBLE_RAINBOW)   \
     X(ANIMATION_TYPE_SLIDER)           \
     X(ANIMATION_TYPE_RANDOM)           \
-    X(ANIMATION_TYPE_POINT_CONTROL)    \
     X(ANIMATION_TYPE_RANDOM_PARTICLES) \
     X(ANIMATION_TYPE_IDLE)
 
@@ -526,68 +541,6 @@ struct LEDRig
     std::vector<LEDParams> strips;
 };
 
-const std::vector<LEDRig> slaves = {
-    {
-        "Eclipsicle",
-        {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
-        {
-            {164, 0, ANIMATION_TYPE_PARTICLES, false},
-            {200, 1, ANIMATION_TYPE_SLIDER, false},
-
-        },
-    },
-    {
-        "Tesseratica",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {164, 0, ANIMATION_TYPE_PARTICLES, false},
-
-        },
-    },
-    {
-        "tradeday",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {100, 0, ANIMATION_TYPE_POINT_CONTROL, false},
-        },
-    },
-    {
-        "simpled",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {164, 0, ANIMATION_TYPE_PARTICLES, false},
-
-        },
-    },
-    {
-        "Bike",
-        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
-        {
-            {48, 0, ANIMATION_TYPE_SLIDER, false},
-            {48, 1, ANIMATION_TYPE_SLIDER, false},
-            {18, 2, ANIMATION_TYPE_SLIDER, false},
-        },
-    },
-    {
-
-        "Spinner",
-        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
-        {
-            {280, 0, ANIMATION_TYPE_IDLE, false},
-            {280, 1, ANIMATION_TYPE_IDLE, false},
-        },
-    },
-
-    {
-        "Bike",
-        {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
-        {
-            {100, 0, ANIMATION_TYPE_IDLE, false},
-            {100, 1, ANIMATION_TYPE_IDLE, false},
-            {100, 2, ANIMATION_TYPE_IDLE, false},
-        },
-    }};
-
 // map to state names
 const std::map<LED_STATE, String> LED_STATE_NAMES = {
     {LED_STATE_IDLE, "IDLE"},
@@ -604,7 +557,7 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
     {ANIMATION_TYPE_SLIDER, "SLIDER"},
     {ANIMATION_TYPE_RANDOM, "RANDOM"},
-    {ANIMATION_TYPE_POINT_CONTROL, "POINT_CONTROL"},
+
     {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}};
 
 const int LED_STATE_COUNT = LED_STATE_NAMES.size();

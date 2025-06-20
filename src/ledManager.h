@@ -29,7 +29,7 @@ public:
     void toggleMode();
     String getStripState();
     int getCurrentStrip();
-    void respondToParameterMessage(parameter_message parameter);
+    bool respondToParameterMessage(parameter_message parameter);
 };
 
 #endif

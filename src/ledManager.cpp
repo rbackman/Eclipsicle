@@ -6,14 +6,79 @@
 #include "stripState.h"
 #include <FastLED.h>
 
+const std::vector<LEDRig> slaves = {
+    {
+        "Eclipsicle",
+        {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
+        {
+            {164, 0, ANIMATION_TYPE_PARTICLES, false},
+            {200, 1, ANIMATION_TYPE_SLIDER, false},
+
+        },
+    },
+    {
+        "Tesseratica",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {164, 0, ANIMATION_TYPE_PARTICLES, false},
+
+        },
+    },
+    {
+        "tradeday",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {100, 0, ANIMATION_TYPE_IDLE, false},
+        },
+    },
+    {
+        "simpled",
+        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+        {
+            {164, 0, ANIMATION_TYPE_PARTICLES, false},
+
+        },
+    },
+    {
+        "Bike",
+        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
+        {
+            {48, 0, ANIMATION_TYPE_SLIDER, false},
+            {48, 1, ANIMATION_TYPE_SLIDER, false},
+            {18, 2, ANIMATION_TYPE_SLIDER, false},
+        },
+    },
+    {
+
+        "Spinner",
+        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
+        {
+            {280, 0, ANIMATION_TYPE_IDLE, false},
+            {280, 1, ANIMATION_TYPE_IDLE, false},
+        },
+    },
+
+    {
+        "Bike",
+        {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
+        {
+            {100, 0, ANIMATION_TYPE_IDLE, false},
+            {100, 1, ANIMATION_TYPE_IDLE, false},
+            {100, 2, ANIMATION_TYPE_IDLE, false},
+        },
+    }};
+
 LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
+
     LEDRig rig;
-    for (auto i : slaves)
+    for (int i = 0; i < slaves.size(); i++)
     {
-        if (i.name == slavename)
+        LEDRig slave = slaves[i];
+
+        if (slave.name.compare(slavename) == 0)
         {
-            rig = i;
+            rig = slave;
         }
     }
     if (rig.name == "")
@@ -28,6 +93,7 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
     }
     ledMatrix = new LedMatrix();
 
+    // Serial.printf("Adding LEDManager for %s with %d strips\n", rig.name.c_str(), rig.strips.size());
     for (int i = 0; i < rig.strips.size(); i++)
     {
         LEDParams params = rig.strips[i];
@@ -72,6 +138,13 @@ void LEDManager::initStrips()
 }
 LEDManager::LEDManager(std::string name, std::vector<StripState *> strips) : ParameterManager(name.c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
+    Serial.printf("Creating LEDManager with %d strips\n", strips.size());
+    stripStates = strips; // Changed &strips to strips
+    if (strips.size() == 0)
+    {
+        Serial.println("No strips defined");
+        return;
+    }
     ledMatrix = new LedMatrix();
     for (int i = 0; i < strips.size(); i++) // Changed sizeof(strips) to strips.size()
     {
@@ -153,29 +226,38 @@ bool LEDManager::handleLEDCommand(String command)
     {
         bool res = false;
         int currentStrip = getInt(PARAM_CURRENT_STRIP);
-
+        if (isVerbose())
+        {
+            Serial.printf("\nLEDManager handling command %s for strip %d of %d\n", command.c_str(), currentStrip, stripStates.size());
+        }
         for (int i = 0; i < stripStates.size(); i++)
         {
             if (currentStrip == 0 || currentStrip == i + 1)
             {
+                // Serial.printf("stripStates handling command %s for strip %d\n", command.c_str(), i + 1);
                 if (stripStates[i]->respondToText(command))
                 {
                     res = true;
                 }
             }
         }
+        if (!res)
+        {
+            Serial.printf("LEDManager command %s not handled for %d strips\n", command.c_str(), stripStates.size());
+        }
 
         return res;
     }
 }
 
-void LEDManager::respondToParameterMessage(parameter_message parameter)
+bool LEDManager::respondToParameterMessage(parameter_message parameter)
 {
     ParameterManager::respondToParameterMessage(parameter);
     Serial.printf("LEDManager responding to parameter message %d %d %d\n", parameter.type, parameter.paramID, parameter.value);
     if (parameter.paramID == PARAM_BRIGHTNESS)
     {
         setBrightness(parameter.value);
+        return true;
     }
     else if (parameter.paramID == PARAM_CURRENT_STRIP)
     {
@@ -191,6 +273,7 @@ void LEDManager::respondToParameterMessage(parameter_message parameter)
                 stripStates[i]->isActive = false;
             }
         }
+        return true;
     }
     else
     {
@@ -198,12 +281,14 @@ void LEDManager::respondToParameterMessage(parameter_message parameter)
         // Serial.println("update current strip " + String(currentStrip));
         for (int i = 0; i < stripStates.size(); i++)
         {
-            if (currentStrip == 0 || currentStrip == i + 1)
+            if (currentStrip == i)
             {
-                stripStates[i]->respondToParameterMessage(parameter);
+                return stripStates[i]->respondToParameterMessage(parameter);
             }
         }
+        Serial.printf("LEDManager does not have strip %d\n", currentStrip);
     }
+    return false;
 }
 
 void LEDManager::setBrightness(int brightness)

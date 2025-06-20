@@ -8,7 +8,7 @@ int minr = 0;
 int maxr = 0;
 led tempColor;
 
-StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
+StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
 
 {
     leds = new CRGB[numLEDS];
@@ -68,9 +68,7 @@ void StripState::addAnimation(ANIMATION_TYPE anim)
         // ParticleAnimation particleAnimation(this, false);
         // animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
     }
-    else if (anim == ANIMATION_TYPE_POINT_CONTROL)
-    {
-    }
+
     else if (anim == ANIMATION_TYPE_RANDOM_PARTICLES)
     {
         ParticleAnimation particleAnimation(this, true);
@@ -128,119 +126,6 @@ void StripState::update()
 
     break;
 
-        break;
-        // case LED_STATE_SLIDER:
-        // {
-
-        //     int centerPos = 0;
-        //     bool useGravity = getBool(PARAM_SLIDER_GRAVITY);
-        //     bool centered = getBool(PARAM_CENTERED);
-        //     int position = getValue(PARAM_SLIDER_POSITION);
-
-        //     float multiplier = 1; // getFloat(PARAM_SLIDER_MULTIPLIER);
-        //     int width = getValue(PARAM_SLIDER_WIDTH) + beatSize;
-        //     int hueshift = getValue(PARAM_SLIDER_HUE);
-        //     float repeat = getFloat(PARAM_SLIDER_REPEAT);
-
-        //     if (useGravity)
-        //         centerPos = (position + gravityPosition) % numLEDS;
-        //     else
-        //         centerPos = position % numLEDS;
-
-        //     clearPixels();
-
-        //     int first = centerPos - width / 2;
-        //     for (int i = first; i <= first + width; i++)
-        //     {
-
-        //         int distanceFromCenter = abs(i - centerPos);
-        //         // check for overflow distance since it is a loop
-        //         // if (distanceFromCenter > numLEDS / 2)
-        //         // {
-        //         //     distanceFromCenter = numLEDS - distanceFromCenter;
-        //         // }
-        //         if (centered)
-        //         {
-        //             distanceFromCenter = abs(i - numLEDS / 2 - centerPos);
-        //         }
-        //         if (invertLEDs)
-        //         {
-        //             distanceFromCenter = width - distanceFromCenter;
-        //         }
-
-        //         // // If pixel is outside the width, clear it
-        //         // if (distanceFromCenter > width * multiplier)
-        //         // {
-        //         //     clearPixel(i);
-        //         // }
-        //         // else
-        //         // {
-
-        //         // Calculate the hue for each pixel, based on its position relative to the center
-        //         // The hue cycles 'repeat' times over the width of the strip
-
-        //         float hue = fmod(hueshift + distanceFromCenter * repeat * (360.0 / width), 360.0);
-        //         float fade = 1 - (distanceFromCenter / (width * multiplier));
-        //         colorFromHSV(tempColor, hue / 360.0, 1, fade);
-        //         setPixel(i, tempColor);
-        //         // }
-        //     }
-        // }
-        // break;
-
-        break;
-
-        // case LED_STATE_DOUBLE_RAINBOW:
-        // {
-        //     float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
-        //     scrollPos += scrollSpeed;
-
-        //     for (int i = 0; i < numLEDS; i += 2)
-        //     {
-        //         int val = i + scrollPos;
-        //         colorFromHSV(tempColor, float(val) / float(numLEDS), 1, 1);
-        //         setPixel(i, tempColor);
-        //     }
-
-        //     // TODO: use a second slider to drive a second scrollSpeed and use that here
-        //     for (int i = 1; i < numLEDS; i += 2)
-        //     {
-        //         int val = i + scrollPos;
-        //         colorFromHSV(tempColor, 1 - (float(val) / float(numLEDS)), 1, 1);
-        //         setPixel(i, tempColor);
-        //     }
-        // }
-        // break;
-
-        // case LED_STATE_RANDOM:
-        // {
-        //     int randomMin = getValue(PARAM_RANDOM_MIN);
-        //     int randomMax = getValue(PARAM_RANDOM_MAX);
-        //     int randomOn = getValue(PARAM_RANDOM_ON);
-        //     int randomOff = getValue(PARAM_RANDOM_OFF);
-
-        //     val = 0;
-        //     minr = min(randomMin, randomMax);
-        //     maxr = max(randomMin, randomMax);
-        //     for (int i = 0; i < numLEDS; i++)
-        //     {
-        //         if (random(0, 100) > randomOn)
-        //         {
-        //             if (random(0, 100) > randomOff)
-        //             {
-        //                 val = random(minr, maxr);
-        //                 colorFromHSV(tempColor, float(val) / float(255), 1, 1);
-        //                 setPixel(i, tempColor);
-        //             }
-        //             else
-        //             {
-        //                 clearPixel(i);
-        //             }
-        //         }
-        //     }
-        // }
-        // break;
-
     case LED_STATE_POINT_CONTROL:
     {
 
@@ -248,25 +133,47 @@ void StripState::update()
 
         int pointHue = getInt(PARAM_HUE);
         int pointBrightness = getInt(PARAM_BRIGHTNESS);
-        clearPixels();
 
-        if (isActive)
-        {
-            // Serial.printf("point control strip %s   %d \n", getName().c_str(), pointPosition);
+        // Serial.printf("point control strip %s   %d \n", getName().c_str(), pointPosition);
 
-            colorFromHSV(tempColor, float(pointHue) / float(255), 1, float(pointBrightness) / float(255));
-            setPixel(pointPosition, tempColor);
-        }
-        else
-        {
-
-            clearPixels();
-        }
+        colorFromHSV(tempColor, float(pointHue) / float(255), 1, float(pointBrightness) / float(255));
+        setPixel(pointPosition, tempColor);
     }
     break;
     default:
         break;
     }
+}
+enum MatchType
+{
+    MATCH_TYPE_NONE,
+    MATCH_TYPE_STARTS_WITH,
+    MATCH_TYPE_ENDS_WITH,
+    MATCH_TYPE_CONTAINS,
+    MATCH_TYPE_EQUALS
+};
+bool listContainsString(const std::vector<String> &list, const String &str, MatchType matchType = MATCH_TYPE_EQUALS)
+{
+    for (const auto &item : list)
+    {
+        if (matchType == MATCH_TYPE_STARTS_WITH && item.startsWith(str))
+        {
+            return true;
+        }
+        else if (matchType == MATCH_TYPE_ENDS_WITH && item.endsWith(str))
+        {
+            return true;
+        }
+        else if (matchType == MATCH_TYPE_CONTAINS && item.indexOf(str) != -1)
+        {
+            return true;
+        }
+        else if (matchType == MATCH_TYPE_EQUALS && item.equals(str))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void StripState::setAll(led tcol)
@@ -283,57 +190,88 @@ bool StripState::respondToText(String command)
 
     if (command.startsWith("menu:"))
     {
-        String menuName = command.substring(5);
-        menuName.trim();
-        menuName.toLowerCase();
+        String menuTree = command.substring(5);
+        menuTree.trim();
+        menuTree.toLowerCase();
+        Serial.printf("Menu tree: %s\n", menuTree.c_str());
+        auto menuTreeList = splitString(menuTree, '/');
         ANIMATION_TYPE animType = ANIMATION_TYPE_NONE;
-        if (menuName.startsWith("part"))
+        if (listContainsString(menuTreeList, "particles"))
         {
 
             animType = ANIMATION_TYPE_PARTICLES;
         }
-        else if (menuName.startsWith("rand") || menuName.startsWith("random"))
-        {
-
-            animType = ANIMATION_TYPE_RANDOM;
-        }
-        else if (menuName == "slider")
-        {
-
-            animType = ANIMATION_TYPE_SLIDER;
-        }
-        else if (menuName.startsWith("rain"))
+        else if (listContainsString(menuTreeList, "rainbow"))
         {
 
             animType = ANIMATION_TYPE_RAINBOW;
         }
+        else if (listContainsString(menuTreeList, "random", MATCH_TYPE_STARTS_WITH))
+        {
 
-        else if (menuName.startsWith("double"))
+            animType = ANIMATION_TYPE_RANDOM;
+        }
+        else if (listContainsString(menuTreeList, "slider"))
+        {
+
+            animType = ANIMATION_TYPE_SLIDER;
+        }
+
+        else if (listContainsString(menuTreeList, "double", MATCH_TYPE_STARTS_WITH))
         {
             animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
         }
-        else if (menuName == "idle")
+        else if (listContainsString(menuTreeList, "idle"))
         {
-
             animType = ANIMATION_TYPE_IDLE;
         }
-        else if (menuName == "rndparticles")
+        else if (listContainsString(menuTreeList, "rndpart", MATCH_TYPE_STARTS_WITH))
         {
             animType = ANIMATION_TYPE_RANDOM_PARTICLES;
         }
-        else if (menuName == "leddbg")
+
+        else if (listContainsString(menuTreeList, "slider"))
         {
-            animType = ANIMATION_TYPE_POINT_CONTROL;
+            animType = ANIMATION_TYPE_SLIDER;
+        }
+
+        else if (listContainsString(menuTreeList, "double", MATCH_TYPE_STARTS_WITH))
+        {
+            animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
+        }
+        else if (listContainsString(menuTreeList, "idle"))
+        {
+            animType = ANIMATION_TYPE_IDLE;
+            return true;
+        }
+        else if (listContainsString(menuTreeList, "point", MATCH_TYPE_STARTS_WITH))
+        {
+            ledState = LED_STATE_POINT_CONTROL;
+            animations.clear();
+            if (verbose)
+            {
+                Serial.printf("Set LED state to POINT_CONTROL\n");
+            }
+            return true;
         }
 
         else
         {
+            Serial.printf("Unknown animation type %s\n", command.c_str());
             return false;
         }
+        if (animType == animations[0]->getAnimationType())
+        {
 
+            return true;
+        }
         setAnimation(animType);
 
-        Serial.printf("Set LED State:%d  %s \n", animType, getAnimationName(animType));
+        if (isVerbose())
+        {
+            Serial.printf("Set animation %s\n", getAnimationName(animType).c_str());
+        }
+
         return true;
     }
     return false;
@@ -385,23 +323,18 @@ void StripState::clearPixel(int index)
         leds[index] = CRGB(0, 0, 0);
 }
 
-void StripState::respondToParameterMessage(parameter_message parameter)
+bool StripState::respondToParameterMessage(parameter_message parameter)
 {
-    ParameterManager::respondToParameterMessage(parameter);
 
     if (parameter.paramID == PARAM_BEAT)
     {
         beatSize = parameter.value;
     }
-    if (ledState == LED_STATE_POINT_CONTROL && parameter.paramID == PARAM_CURRENT_LED)
-    {
-        // Serial.printf("point control strip %s   %d \n", getName().c_str(), parameter.value);
-    }
 
     if (ledState == LED_STATE_SINGLE_ANIMATION && parameter.paramID == PARAM_ANIMATION_TYPE)
     {
         animations.clear();
-        addAnimation((ANIMATION_TYPE)parameter.value);
+        setAnimation((ANIMATION_TYPE)parameter.value);
         currentAnimation = 0;
     }
     else if (ledState == LED_STATE_MULTI_ANIMATION && parameter.paramID == PARAM_ANIMATION_TYPE)
@@ -411,8 +344,24 @@ void StripState::respondToParameterMessage(parameter_message parameter)
     }
     if (currentAnimation < animations.size())
     {
-        animations[currentAnimation]->respondToParameterMessage(parameter);
+        Serial.printf("sending parameter message to animation  %d %d  %d of %d\n", currentAnimation, parameter.paramID, parameter.value, animations.size());
+        if (animations[currentAnimation]->respondToParameterMessage(parameter))
+        {
+            return true;
+        }
     }
+
+    bool stripTookParam = ParameterManager::respondToParameterMessage(parameter);
+    if (stripTookParam)
+    {
+        Serial.printf("Strip %d took parameter %d %d\n", stripIndex, parameter.paramID, parameter.value);
+        return true;
+    }
+    else
+    {
+        Serial.printf("Strip %d did not take parameter %d %d\n", stripIndex, parameter.paramID, parameter.value);
+    }
+    return false;
 }
 
 #endif
