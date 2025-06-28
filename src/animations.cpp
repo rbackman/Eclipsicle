@@ -1,9 +1,21 @@
 // animations.cpp
 #include "animations.h"
 #include "shared.h"
+#include "stripState.h"
 
 led animationColor;
 int animCount = 0;
+
+float clamp(float value, float min, float max)
+{
+    return std::max(min, std::min(max, value));
+}
+void StripAnimation::setPixel(int index, led color)
+{
+
+    stripState->setPixel(index + startLED, color);
+}
+
 void ParticleAnimation::updateRandomParticles()
 {
 
@@ -26,23 +38,40 @@ void ParticleAnimation::updateRandomParticles()
     }
     updateParticles();
 }
-
-void ParticleAnimation::fadeParticleTail(int position, int width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction)
+void ParticleAnimation::fadeParticleTail(float position, float width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction)
 {
-    for (int j = 0; j < width; j++)
+    int start = floor(position - direction * (width - 1));
+    int end = ceil(position);
+
+    for (int i = start; direction > 0 ? i <= end : i >= end; i += direction)
     {
-        int index = position - j * direction;
-        if (index >= 0 && index < stripState->getNumLEDS())
+        if (i < 0 || i >= numLEDs())
+            continue;
+
+        float dist = (position - i * direction); // distance from head
+        float t = dist / width;
+
+        if (t < 0.0 || t > 1.0)
+            continue;
+
+        float fade;
+        if (t < 0.2f)
         {
-            const int hue = interpolate(hueStart, hueEnd, (float)j / width);
-
-            // Logarithmic decay for brightness
-            float fadeFactor = log(1 + fadeSpeed * j) / log(1 + fadeSpeed * width);
-            int adjustedBrightness = brightness * (1.0 - fadeFactor);
-
-            colorFromHSV(animationColor, hue / 360.0, 1.0, adjustedBrightness / 255.0);
-            stripState->setPixel(index, animationColor);
+            // Head: fade in quickly
+            fade = t / 0.2f;
         }
+        else
+        {
+            // Tail: fade out smoothly
+            fade = 1.0f - ((t - 0.2f) / 0.8f);
+            fade = pow(fade, fadeSpeed); // apply fade curve
+        }
+
+        float adjustedBrightness = brightness * fade;
+
+        float hue = interpolate(hueStart, hueEnd, t);
+        colorFromHSV(animationColor, hue / 360.0, 1.0, adjustedBrightness / 255.0);
+        setPixel(i, animationColor);
     }
 }
 void ParticleAnimation::updateParticles()
@@ -60,10 +89,13 @@ void ParticleAnimation::updateParticles()
     int randomDrift = getInt(PARAM_RANDOM_DRIFT);
     float acceleration = getFloat(PARAM_ACCELERATION);
     float maxSpeed = getFloat(PARAM_MAX_SPEED);
-    // int velocity = getValue(PARAM_VELOCITY);
-    // %d %d %d %d %d %d %d %d %d\n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
-    // Serial.printf("Update all particles hue start:%d \n  hue end:%d \n brightness:%d \n fade:%d \n width:%d \n life:%d \n randomDrift:%d \n acceleration:%d \n maxSpeed:%d \n velocity:%d \n", hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed, velocity);
-    for (int i = 0; i < 10; i++)
+
+    if (animCount++ > 1000)
+    {
+        Serial.printf("Particle animation time scale: %f cycle: %d hueStart: %d hueEnd: %d brightness: %d fade: %d width: %d life: %d randomDrift: %d acceleration: %f maxSpeed: %f\n", timeScale, cycle, hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed);
+        animCount = 0;
+    }
+    for (int i = 0; i < NUM_PARTICLES; i++)
     {
         auto particle = &particles[i];
         if (particle->active)
@@ -82,14 +114,14 @@ void ParticleAnimation::updateParticles()
     }
     // update all particles
 
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < NUM_PARTICLES; i++)
     {
         auto particle = &particles[i];
         if (particle->active)
         {
 
-            particle->position += particle->velocity * timeScale / 100.0;
-            particle->velocity += particle->acceleration * timeScale / 100.0;
+            particle->position += particle->velocity * timeScale;
+            particle->velocity += particle->acceleration;
             if (particle->velocity > particle->maxSpeed)
             {
                 particle->velocity = particle->maxSpeed;
@@ -138,11 +170,11 @@ void ParticleAnimation::updateParticles()
             if (particle->position < -width)
             {
                 if (cycle)
-                    particle->position = stripState->getNumLEDS() + width;
+                    particle->position = numLEDs() + width;
                 else
                     particle->active = false;
             }
-            else if (particle->position >= stripState->getNumLEDS() + width)
+            else if (particle->position >= numLEDs() + width)
             {
                 if (cycle)
                     particle->position = -width;
@@ -174,7 +206,7 @@ void ParticleAnimation::spawnParticle(int position, float velocity, int hueStart
 {
 
     bool used = false;
-    for (int i = 0; i < 10; i++)
+    for (int i = 0; i < NUM_PARTICLES; i++)
     {
         if (!particles[i].active)
         {
@@ -202,7 +234,7 @@ void ParticleAnimation::spawnParticle(int position, float velocity, int hueStart
     }
 }
 
-void RainbowAnimation::update(StripState *strip)
+void RainbowAnimation::update()
 {
     float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
     float repeat = getFloat(PARAM_RAINBOW_REPEAT);
@@ -210,35 +242,20 @@ void RainbowAnimation::update(StripState *strip)
     int brightness = getInt(PARAM_BRIGHTNESS);
 
     scrollPos += scrollSpeed;
-    if (animCount++ > 100)
-    {
-        if (isVerbose())
-        {
-            Serial.printf("Rainbow animation scroll speed: %f repeat: %f offset: %f brightness: %d\n", scrollSpeed, repeat, offset, brightness);
-        }
-        animCount = 0;
-    }
-    for (int i = 0; i < strip->getNumLEDS(); i++)
+
+    for (int i = 0; i < numLEDs(); i++)
     {
         int val = i + scrollPos;
-        float hue = fmod(offset + (float(val) / float(strip->getNumLEDS())) * repeat * 360.0, 360.0);
+        float hue = fmod(offset + (float(val) / float(numLEDs())) * repeat * 360.0, 360.0);
         colorFromHSV(animationColor, hue / 360.0, 1, brightness / 255.0);
-        strip->setPixel(i, animationColor);
+        setPixel(i, animationColor);
     }
 }
-void ParticleAnimation::update(StripState *strip)
+void ParticleAnimation::update()
 {
     int spawnRate = getInt(PARAM_SPAWN_RATE);
     float timeScale = getFloat(PARAM_TIME_SCALE);
 
-    // if (animCount++ > 100)
-    // {
-    //     if (isVerbose())
-    //     {
-    //         Serial.printf("Spawn rate: %d timeScale: %f\n", spawnRate, timeScale);
-    //     }
-    //     animCount = 0;
-    // }
     if (timeScale != 0)
     {
         int ranVal = random(0, 100);
@@ -259,7 +276,8 @@ void ParticleAnimation::update(StripState *strip)
     }
 }
 
-void RandomAnimation::update(StripState *strip)
+void RandomAnimation::update()
+
 {
     float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
     int randomOff = getInt(PARAM_RANDOM_OFF);
@@ -272,13 +290,60 @@ void RandomAnimation::update(StripState *strip)
         Serial.printf("Random animation scroll speed: %f random off: %d brightness: %d\n", scrollSpeed, randomOff, brightness);
         animCount = 0;
     }
-    for (int i = 0; i < strip->getNumLEDS(); i++)
+    for (int i = 0; i < numLEDs(); i++)
     {
         int val = i + scrollPos;
         if (random(0, 100) > randomOff)
         {
-            colorFromHSV(animationColor, float(val) / float(strip->getNumLEDS()), 1, brightness / 255.0);
-            strip->setPixel(i, animationColor);
+            colorFromHSV(animationColor, float(val) / float(numLEDs()), 1, brightness / 255.0);
+            setPixel(i, animationColor);
         }
+    }
+}
+
+void SliderAnimation::update()
+{
+    //  slider animation is just a gradient that positioned in the middle of the strip with a width and hue and repeat factor
+    int position = numLEDs() / 2;
+    int width = getInt(PARAM_SLIDER_WIDTH);
+    float repeat = getFloat(PARAM_SLIDER_REPEAT);
+    int brightness = getInt(PARAM_BRIGHTNESS);
+    int hue = getInt(PARAM_HUE);
+
+    for (int i = 0; i < numLEDs(); i++)
+    {
+        int val = i - position;
+        if (val < 0)
+            val = -val;
+
+        if (val > width / 2)
+        {
+            setPixel(i, {0, 0, 0}); // turn off pixel
+        }
+        else
+        {
+            float t = float(val) / float(width / 2);
+            float hueValue = fmod(hue + t * repeat * 360.0, 360.0);
+            colorFromHSV(animationColor, hueValue / 360.0, 1, brightness / 255.0);
+            setPixel(i, animationColor);
+        }
+    }
+}
+
+void DoubleRainbowAnimation::update()
+{
+    float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
+    float repeat = getFloat(PARAM_RAINBOW_REPEAT);
+    float offset = getInt(PARAM_RAINBOW_OFFSET);
+    int brightness = getInt(PARAM_BRIGHTNESS);
+
+    scrollPos += scrollSpeed;
+
+    for (int i = 0; i < numLEDs(); i++)
+    {
+        int val = i + scrollPos;
+        float hue = fmod(offset + (float(val) / float(numLEDs())) * repeat * 360.0, 360.0);
+        colorFromHSV(animationColor, hue / 360.0, 1, brightness / 255.0);
+        setPixel(i, animationColor);
     }
 }

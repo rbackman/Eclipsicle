@@ -102,7 +102,7 @@ ParameterHandler parameterHandler = [](parameter_message msg)
 {
   if (msg.paramID == PARAM_DISPLAY_ACCEL)
   {
-    showAccel = msg.value != 0;
+    showAccel = msg.boolValue;
   }
 
   parameterManager->respondToParameterMessage(msg);
@@ -196,20 +196,94 @@ void setup()
   Serial.println(ESP.getFreeHeap());
 }
 
-void processCmd(String command)
+static void confirmParameters()
+{
+  Serial.println("Confirming parameters...");
+  auto paramJson = JsonDocument();
+  paramJson["type"] = "parameters";
+  paramJson["data"] = JsonObject();
+  auto data = paramJson["data"];
+
+  auto paramList = getParameterNames();
+  for (const auto &bParam : getDefaultBoolParameters())
+  {
+    auto name = paramList[bParam.id];
+    data[name] = bParam.id;
+  }
+
+  for (const auto &iParam : getDefaultIntParameters())
+  {
+    auto name = paramList[iParam.id];
+    data[name] = iParam.id;
+  }
+
+  for (const auto &fParam : getDefaultFloatParameters())
+  {
+    auto name = paramList[fParam.id];
+    data[name] = fParam.id;
+  }
+
+  serializeJson(paramJson, Serial);
+  Serial.println(";");
+}
+
+bool processCmd(String command)
 {
 
   if (command == "verbose")
   {
     setVerbose(true);
     Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
-    return;
+    return true;
   }
   if (command == "quiet")
   {
     setVerbose(false);
     Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
-    return;
+    return true;
+  }
+  if (command.startsWith("p:"))
+  {
+    // command is in form "p:PARAM_ID:VALUE"
+    int colonIndex = command.indexOf(':');
+    if (colonIndex == -1)
+    {
+      Serial.println("Invalid command format. Expected 'p:PARAM_ID:VALUE'");
+      return false;
+    }
+    auto parts = splitString(command, ':');
+    int paramID = parts[1].toInt();
+    String value = parts[2];
+    ParameterID pid = (ParameterID)paramID;
+
+    parameter_message parameter;
+    parameter.paramID = pid;
+    parameter.type = MESSAGE_TYPE_PARAMETER;
+
+    if (isIntParameter(pid))
+    {
+      parameter.value = value.toInt();
+    }
+    else if (isFloatParameter(pid))
+    {
+      parameter.floatValue = value.toFloat();
+    }
+    else if (isBoolParameter(pid))
+    {
+      parameter.boolValue = (value == "true" || value == "1");
+    }
+    else
+    {
+      Serial.println("Unknown parameter ID: " + String(paramID));
+      return false;
+    }
+    parameterHandler(parameter);
+  }
+  if (command == "confirmParameters")
+  {
+    confirmParameters();
+
+    return true;
   }
   // ledManager->handleLEDCommand(command);
   // meshManager->handleMeshCommand(command);
@@ -371,6 +445,7 @@ void processCmd(String command)
   //   verbose = !verbose;
   //   Serial.println("Verbose: " + String(verbose));
   // }
+  return false; // command was not handled
 }
 int lastDisplayUpdate = 0;
 int displayFrameRate = 10;
@@ -494,32 +569,22 @@ void loop()
     if (command.length() == 0)
       return;
 
-    processCmd(command);
+    if (processCmd(command))
+    {
+      return; // command was handled
+    }
 #ifdef USE_LEDS
+
     ledManager->handleLEDCommand(command);
 #endif
 
 #ifdef USE_MOTOR
     if (motorManager->handleMotorCommand(command))
-#else
-    if (false)
-#endif
     {
-      Serial.println("Motor command handled");
+      return; // command was handled by motor manager
     }
-    // #ifdef USE_LEDS
-    //     else if (ledManager->handleLEDCommand(command))
-    //     {
-    //       // Serial.println("Led command handled");
-    //     }
 
-    // #endif
-
-    // else
-    // {
-    //   if (isVerbose())
-    //     Serial.println("Command not handled" + command);
-    // }
+#endif
   }
   else if (serialManager->jsonAvailable())
   {

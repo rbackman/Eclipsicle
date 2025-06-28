@@ -1,8 +1,9 @@
 //   animations.h
 #pragma once
 #include "shared.h"
-#include "stripState.h"
+#include "parameterManager.h"
 
+class StripState;
 struct Particle
 {
     bool active = false;
@@ -21,9 +22,6 @@ struct Particle
     int width;
 };
 
-// Forward declaration to fix 'StripState' does not name a type error
-class StripState;
-
 struct SliderParams
 {
     int position;
@@ -36,29 +34,47 @@ struct SliderParams
 class StripAnimation : public ParameterManager
 {
     ANIMATION_TYPE animationType;
+    StripState *stripState;
 
 protected:
-    StripState *stripState;
     int scrollPos = 0;
+    int startLED = -1;
+    int endLED = -1;
 
 public:
-    virtual void update(StripState *strip) = 0;
-    StripAnimation(StripState *state, ANIMATION_TYPE type, std::vector<ParameterID> params) : ParameterManager(getAnimationName(type), params)
+    virtual void update() = 0;
+    StripAnimation(StripState *state, int startLED, int endLED, ANIMATION_TYPE type, std::vector<ParameterID> params) : ParameterManager(getAnimationName(type), params)
     {
         this->stripState = state;
         this->animationType = type;
+        this->startLED = startLED;
+        this->endLED = endLED;
     }
     ANIMATION_TYPE getAnimationType()
     {
         return animationType;
     }
+    int numLEDs()
+    {
+        return this->endLED - this->startLED + 1;
+    }
+    int getStartLED()
+    {
+        return startLED;
+    }
+    int getEndLED()
+    {
+        return endLED;
+    }
+    void setPixel(int index, led color);
 };
 
+#define NUM_PARTICLES 20
 class ParticleAnimation : public StripAnimation
 {
-    Particle particles[10];
+    Particle particles[NUM_PARTICLES];
     bool randomMode = false;
-    void fadeParticleTail(int position, int width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction);
+    void fadeParticleTail(float position, float width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction);
 
     void spawnParticle(int position, float velocity, int hueStart, int hueEnd, int brightness, int width, int life);
     void spawnParticle();
@@ -66,11 +82,11 @@ class ParticleAnimation : public StripAnimation
     void updateParticles();
 
 public:
-    void update(StripState *strip);
+    void update();
 
-    ParticleAnimation(StripState *state, bool random) : StripAnimation(state, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_PARTICLE_WIDTH, PARAM_PARTICLE_LIFE, PARAM_PARTICLE_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE})
+    ParticleAnimation(StripState *state, bool random, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_PARTICLE_WIDTH, PARAM_PARTICLE_LIFE, PARAM_PARTICLE_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE})
     {
-        this->stripState = state;
+
         this->randomMode = random;
     }
 };
@@ -78,9 +94,9 @@ public:
 class RainbowAnimation : public StripAnimation
 {
 public:
-    void update(StripState *strip);
+    void update();
 
-    RainbowAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_RAINBOW_REPEAT, PARAM_RAINBOW_OFFSET, PARAM_BRIGHTNESS})
+    RainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_RAINBOW_REPEAT, PARAM_RAINBOW_OFFSET, PARAM_BRIGHTNESS})
     {
     }
 };
@@ -88,8 +104,18 @@ public:
 class RandomAnimation : public StripAnimation
 {
 public:
-    void update(StripState *strip);
-    RandomAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_RANDOM, {PARAM_SCROLL_SPEED, PARAM_RANDOM_OFF, PARAM_BRIGHTNESS})
+    void update();
+    RandomAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_RANDOM, {PARAM_SCROLL_SPEED, PARAM_RANDOM_OFF, PARAM_BRIGHTNESS})
+    {
+    }
+};
+
+class DoubleRainbowAnimation : public StripAnimation
+{
+
+public:
+    void update();
+    DoubleRainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_DOUBLE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_RAINBOW_REPEAT, PARAM_RAINBOW_OFFSET, PARAM_BRIGHTNESS})
     {
     }
 };
@@ -98,8 +124,8 @@ class SliderAnimation : public StripAnimation
 {
 
 public:
-    void update(StripState *strip);
-    SliderAnimation(StripState *state) : StripAnimation(state, ANIMATION_TYPE_SLIDER, {PARAM_SLIDER_POSITION, PARAM_SLIDER_WIDTH, PARAM_SLIDER_REPEAT})
+    void update();
+    SliderAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_SLIDER, {PARAM_SLIDER_POSITION, PARAM_SLIDER_WIDTH, PARAM_SLIDER_REPEAT, PARAM_BRIGHTNESS, PARAM_HUE})
     {
     }
 };

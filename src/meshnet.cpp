@@ -6,68 +6,6 @@
 #include <vector>
 #include "meshnet.h"
 
-const std::vector<LEDRig> slaves = {
-    {
-        "Eclipsicle",
-        {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
-        {
-            {164, 0, ANIMATION_TYPE_PARTICLES, false},
-            {200, 1, ANIMATION_TYPE_SLIDER, false},
-
-        },
-    },
-    {
-        "Tesseratica",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {164, 0, ANIMATION_TYPE_PARTICLES, false},
-
-        },
-    },
-    {
-        "tradeday",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {100, 0, ANIMATION_TYPE_IDLE, false},
-        },
-    },
-    {
-        "simpled",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {164, 0, ANIMATION_TYPE_PARTICLES, false},
-
-        },
-    },
-    {
-        "Bike",
-        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
-        {
-            {48, 0, ANIMATION_TYPE_SLIDER, false},
-            {48, 1, ANIMATION_TYPE_SLIDER, false},
-            {18, 2, ANIMATION_TYPE_SLIDER, false},
-        },
-    },
-    {
-
-        "Spinner",
-        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
-        {
-            {280, 0, ANIMATION_TYPE_IDLE, false},
-            {280, 1, ANIMATION_TYPE_IDLE, false},
-        },
-    },
-
-    {
-        "Bike",
-        {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
-        {
-            {100, 0, ANIMATION_TYPE_IDLE, false},
-            {100, 1, ANIMATION_TYPE_IDLE, false},
-            {100, 2, ANIMATION_TYPE_IDLE, false},
-        },
-    }};
-
 void printMacAddress(const uint8_t *macAddress)
 {
     char macStr[18];

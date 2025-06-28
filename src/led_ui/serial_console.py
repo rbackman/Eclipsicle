@@ -96,20 +96,30 @@ class SerialConsole(QWidget):
                 if self.ser.in_waiting:
                     msg = self.ser.readline().decode(errors='ignore').strip()
                     if msg and self.running:
+                        if msg.endswith(";"):
+                            msg = msg[:-1]
+                            print("parsing json")
 
-                        # first check if msg is json
-                        try:
-                            data = json.loads(msg)
+                            try:
+                                data = json.loads(msg)
+                                print(
+                                    f"Received JSON: send to listeners {len(self.jsonListeners)}  \n")
+                                handled = False
+                                for listener in self.jsonListeners:
+                                    if (listener(data)):
+                                        handled = True
+                                        break
+                                if not handled:
+                                    self.log(f"Unhandled JSON: {data}")
 
-                            for listener in self.jsonListeners:
-                                listener(data)
-                            self.log(msg)
-                        except:
-
+                            except json.JSONDecodeError as e:
+                                print("failed to parse json ", e)
+                                print(msg)
+                                pass
+                        else:
                             for listener in self.stringListeners:
                                 listener(msg)
                             self.log(msg)
-                            pass
             except Exception as e:
                 print(f"Serial read error: {e}")
                 break
@@ -126,7 +136,8 @@ class SerialConsole(QWidget):
         msg = json.dumps(data)
         jsonstring = msg+";"
         self.ser.write(jsonstring.encode())
-        self.log("→ " + jsonstring)
+        if self.echo_checkbox.isChecked():
+            self.log("→ " + jsonstring)
 
     def send_cmd(self, data):
         if not self.ser or not self.ser.is_open:
@@ -134,7 +145,8 @@ class SerialConsole(QWidget):
             return
 
         self.ser.write((data + "\n").encode())
-        self.log("→ " + data)
+        if self.echo_checkbox.isChecked():
+            self.log("→ " + data)
 
     def manual_send(self):
         msg = self.input.text()

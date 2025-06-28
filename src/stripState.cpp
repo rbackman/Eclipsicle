@@ -8,7 +8,19 @@ int minr = 0;
 int maxr = 0;
 led tempColor;
 
-StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), invertLEDs(invert)
+ANIMATION_TYPE getAnimationTypeFromName(const String &name)
+{
+    for (const auto &pair : ANIMATION_TYPE_NAMES)
+    {
+        if (pair.second.equalsIgnoreCase(name))
+        {
+            return pair.first;
+        }
+    }
+    return ANIMATION_TYPE_NONE;
+}
+
+StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX)
 
 {
     leds = new CRGB[numLEDS];
@@ -34,46 +46,47 @@ String StripState::getStripState()
     return getLedStateName(ledState);
 }
 
-void StripState::addAnimation(ANIMATION_TYPE anim)
+std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int startLED, int endLED, std::map<ParameterID, float> params)
 {
-    if (ledState == LED_STATE_SINGLE_ANIMATION)
+    switch (animType)
     {
-        animations.clear();
+    case ANIMATION_TYPE_PARTICLES:
+        return std::make_unique<ParticleAnimation>(stripState, false, startLED, endLED);
+    case ANIMATION_TYPE_RAINBOW:
+        return std::make_unique<RainbowAnimation>(stripState, startLED, endLED);
+    case ANIMATION_TYPE_DOUBLE_RAINBOW:
+        return std::make_unique<DoubleRainbowAnimation>(stripState, startLED, endLED);
+    case ANIMATION_TYPE_SLIDER:
+        return std::make_unique<SliderAnimation>(stripState, startLED, endLED);
+    case ANIMATION_TYPE_RANDOM:
+        return std::make_unique<RandomAnimation>(stripState, startLED, endLED);
+    case ANIMATION_TYPE_RANDOM_PARTICLES:
+        return std::make_unique<ParticleAnimation>(stripState, true, startLED, endLED);
+    default:
+        throw std::invalid_argument("Unknown animation type");
     }
-    if (anim == ANIMATION_TYPE_PARTICLES)
-    {
-        ParticleAnimation particleAnimation(this, false);
-        Serial.println("Adding particle animation");
-        animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
-    }
-    else if (anim == ANIMATION_TYPE_RAINBOW)
-    {
-        RainbowAnimation rainbowAnimation(this);
-        Serial.println("Adding rainbow animation");
-        animations.emplace_back(std::make_unique<RainbowAnimation>(rainbowAnimation));
-    }
-    else if (anim == ANIMATION_TYPE_DOUBLE_RAINBOW)
-    {
-    }
-    else if (anim == ANIMATION_TYPE_SLIDER)
-    {
-    }
-    else if (anim == ANIMATION_TYPE_RANDOM)
-    {
-        RandomAnimation randomAnimation(this);
-        animations.emplace_back(std::make_unique<RandomAnimation>(randomAnimation));
-    }
-    else if (anim == ANIMATION_TYPE_IDLE)
-    {
-        // ParticleAnimation particleAnimation(this, false);
-        // animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
-    }
+}
+void StripState::addAnimation(ANIMATION_TYPE anim, int startLED, int endLED, std::map<ParameterID, float> params)
+{
 
-    else if (anim == ANIMATION_TYPE_RANDOM_PARTICLES)
+    StripAnimation *currentAnim = nullptr;
+
+    if (startLED < 0)
     {
-        ParticleAnimation particleAnimation(this, true);
-        animations.emplace_back(std::make_unique<ParticleAnimation>(particleAnimation));
+        startLED = 0;
     }
+    if (endLED < 0 || endLED >= numLEDS)
+    {
+        endLED = numLEDS - 1;
+    }
+    auto animation = makeAnimation(this, anim, startLED, endLED, params);
+    if (animation == nullptr)
+    {
+        Serial.println("Failed to create animation");
+        return;
+    }
+    animation.get()->setParameters(params);
+    animations.emplace_back(std::move(animation));
 }
 void StripState::update()
 {
@@ -106,21 +119,13 @@ void StripState::update()
         break;
 
     case LED_STATE_SINGLE_ANIMATION:
+
     case LED_STATE_MULTI_ANIMATION:
     {
-        if (animations.size() > 0)
+
+        for (int i = 0; i < animations.size(); i++)
         {
-            if (ledState == LED_STATE_SINGLE_ANIMATION)
-            {
-                animations[currentAnimation].get()->update(this);
-            }
-            else
-            {
-                for (int i = 0; i < animations.size(); i++)
-                {
-                    animations[i].get()->update(this);
-                }
-            }
+            animations[i].get()->update();
         }
     }
 
@@ -175,7 +180,17 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
     }
     return false;
 }
-
+void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params)
+{
+    if (index < 0 || index >= animations.size())
+    {
+        Serial.printf("Invalid animation index %d\n", index);
+        return;
+    }
+    int start = animations[index]->getStartLED();
+    int end = animations[index]->getEndLED();
+    animations[index] = makeAnimation(this, animType, start, end, params);
+}
 void StripState::setAll(led tcol)
 {
     for (int i = 0; i < numLEDS; i++)
@@ -187,91 +202,207 @@ bool StripState::respondToText(String command)
 {
 
     bool verbose = isVerbose();
+    // if (command.startsWith("menu:"))
+    // {
+    //     String menuTree = command.substring(5);
+    //     menuTree.trim();
+    //     menuTree.toLowerCase();
+    //     Serial.printf("Menu tree: %s\n", menuTree.c_str());
+    //     auto menuTreeList = splitString(menuTree, '/');
+    //     ANIMATION_TYPE animType = ANIMATION_TYPE_NONE;
 
-    if (command.startsWith("menu:"))
+    //     if (listContainsString(menuTreeList, "patterns"))
+    //     {
+    //         if (listContainsString(menuTreeList, "particles"))
+    //         {
+    //             animType = ANIMATION_TYPE_PARTICLES;
+    //         }
+    //         else if (listContainsString(menuTreeList, "rainbow"))
+    //         {
+    //             animType = ANIMATION_TYPE_RAINBOW;
+    //         }
+    //         else if (listContainsString(menuTreeList, "random", MATCH_TYPE_STARTS_WITH))
+    //         {
+    //             animType = ANIMATION_TYPE_RANDOM;
+    //         }
+    //         else if (listContainsString(menuTreeList, "slider"))
+    //         {
+    //             animType = ANIMATION_TYPE_SLIDER;
+    //         }
+
+    //         else if (listContainsString(menuTreeList, "double", MATCH_TYPE_STARTS_WITH))
+    //         {
+    //             animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
+    //         }
+    //         else if (listContainsString(menuTreeList, "idle"))
+    //         {
+    //             animType = ANIMATION_TYPE_IDLE;
+    //         }
+    //         else if (listContainsString(menuTreeList, "rndpart", MATCH_TYPE_STARTS_WITH))
+    //         {
+    //             animType = ANIMATION_TYPE_RANDOM_PARTICLES;
+    //         }
+
+    //         else if (listContainsString(menuTreeList, "slider"))
+    //         {
+    //             animType = ANIMATION_TYPE_SLIDER;
+    //         }
+
+    //         else if (listContainsString(menuTreeList, "double", MATCH_TYPE_STARTS_WITH))
+    //         {
+    //             animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
+    //         }
+    //         else if (listContainsString(menuTreeList, "idle"))
+    //         {
+    //             animType = ANIMATION_TYPE_IDLE;
+    //             return true;
+    //         }
+    //         else if (listContainsString(menuTreeList, "point", MATCH_TYPE_STARTS_WITH))
+    //         {
+    //             ledState = LED_STATE_POINT_CONTROL;
+    //             animations.clear();
+    //             if (verbose)
+    //             {
+    //                 Serial.printf("Set LED state to POINT_CONTROL\n");
+    //             }
+    //             return true;
+    //         }
+
+    //         else
+    //         {
+    //             Serial.printf("Unknown animation type %s\n", command.c_str());
+    //             return false;
+    //         }
+    //         if (animType == animations[0]->getAnimationType())
+    //         {
+    //             return true;
+    //         }
+    //         setAnimation(animType);
+    //     }
+    //     if (isVerbose())
+    //     {
+    //         Serial.printf("Set animation %s\n", getAnimationName(animType).c_str());
+    //     }
+
+    //     return true;
+    // }
+    if (command.startsWith("setanimation:"))
     {
-        String menuTree = command.substring(5);
-        menuTree.trim();
-        menuTree.toLowerCase();
-        Serial.printf("Menu tree: %s\n", menuTree.c_str());
-        auto menuTreeList = splitString(menuTree, '/');
-        ANIMATION_TYPE animType = ANIMATION_TYPE_NONE;
-        if (listContainsString(menuTreeList, "particles"))
-        {
+        ledState = LED_STATE_SINGLE_ANIMATION;
+        auto animparts = splitString(command, ':');
+        auto animName = animparts[1];
+        animName.trim();
 
-            animType = ANIMATION_TYPE_PARTICLES;
-        }
-        else if (listContainsString(menuTreeList, "rainbow"))
+        ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
+        if (animType == ANIMATION_TYPE_NONE)
         {
-
-            animType = ANIMATION_TYPE_RAINBOW;
-        }
-        else if (listContainsString(menuTreeList, "random", MATCH_TYPE_STARTS_WITH))
-        {
-
-            animType = ANIMATION_TYPE_RANDOM;
-        }
-        else if (listContainsString(menuTreeList, "slider"))
-        {
-
-            animType = ANIMATION_TYPE_SLIDER;
+            Serial.printf("Unknown animation type %s\n", animName.c_str());
+            return false;
         }
 
-        else if (listContainsString(menuTreeList, "double", MATCH_TYPE_STARTS_WITH))
+        if (animparts.size() == 4)
         {
-            animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
-        }
-        else if (listContainsString(menuTreeList, "idle"))
-        {
-            animType = ANIMATION_TYPE_IDLE;
-        }
-        else if (listContainsString(menuTreeList, "rndpart", MATCH_TYPE_STARTS_WITH))
-        {
-            animType = ANIMATION_TYPE_RANDOM_PARTICLES;
-        }
-
-        else if (listContainsString(menuTreeList, "slider"))
-        {
-            animType = ANIMATION_TYPE_SLIDER;
-        }
-
-        else if (listContainsString(menuTreeList, "double", MATCH_TYPE_STARTS_WITH))
-        {
-            animType = ANIMATION_TYPE_DOUBLE_RAINBOW;
-        }
-        else if (listContainsString(menuTreeList, "idle"))
-        {
-            animType = ANIMATION_TYPE_IDLE;
-            return true;
-        }
-        else if (listContainsString(menuTreeList, "point", MATCH_TYPE_STARTS_WITH))
-        {
-            ledState = LED_STATE_POINT_CONTROL;
-            animations.clear();
-            if (verbose)
+            int startLED = animparts[2].toInt();
+            int endLED = animparts[3].toInt();
+            setAnimation(animType, startLED, endLED);
+            if (isVerbose())
             {
-                Serial.printf("Set LED state to POINT_CONTROL\n");
+                Serial.printf("Set animation %s from %d to %d \n", getAnimationName(animType).c_str(), startLED, endLED);
+            }
+        }
+        else if (animparts.size() == 2)
+        {
+
+            setAnimation(animType, 0, getNumLEDS() - 1);
+            if (isVerbose())
+            {
+                Serial.printf("Set animation %s\n", getAnimationName(animType).c_str());
+            }
+        }
+
+        return true;
+    }
+
+    if (command.startsWith("replaceanimation:"))
+    {
+
+        auto animparts = splitString(command, ':');
+        if (animparts.size() < 3)
+        {
+            Serial.printf("Invalid replaceanimation command %s\n", command.c_str());
+            return false;
+        }
+        auto animName = animparts[2];
+        animName.trim();
+        ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
+        auto whichPart = animparts[1];
+        whichPart.trim();
+        if (whichPart.equalsIgnoreCase("all"))
+        {
+            if (isVerbose())
+                Serial.printf("Replacing all %d animations with %s\n", animations.size(), animName.c_str());
+
+            for (int i = 0; i < animations.size(); i++)
+            {
+                replaceAnimation(i, animType);
+            }
+            if (isVerbose())
+            {
+                for (int i = 0; i < animations.size(); i++)
+                {
+                    auto &anim = animations[i];
+                    Serial.printf("Replaced animation at index %d with %s %d %d\n", i, getAnimationName(anim->getAnimationType()).c_str(), anim->getStartLED(), anim->getEndLED());
+                }
             }
             return true;
         }
-
         else
         {
-            Serial.printf("Unknown animation type %s\n", command.c_str());
-            return false;
-        }
-        if (animType == animations[0]->getAnimationType())
-        {
 
+            int index = whichPart.toInt();
+            if (index < 0 || index >= animations.size())
+            {
+                Serial.printf("Invalid animation index %d\n", index);
+                return false;
+            }
+            if (animType == ANIMATION_TYPE_NONE)
+            {
+                Serial.printf("Unknown animation type %s\n", animName.c_str());
+                return false;
+            }
+            replaceAnimation(index, animType);
+            if (isVerbose())
+            {
+                Serial.printf("Replaced animation at index %d with %s\n", index, getAnimationName(animType).c_str());
+            }
             return true;
         }
-        setAnimation(animType);
-
-        if (isVerbose())
+    }
+    if (command.startsWith("addanimation:"))
+    {
+        ledState = LED_STATE_MULTI_ANIMATION;
+        auto animparts = splitString(command, ':');
+        if (animparts.size() < 2)
         {
-            Serial.printf("Set animation %s\n", getAnimationName(animType).c_str());
+            Serial.printf("Invalid addanimation command %s\n", command.c_str());
+            return false;
         }
-
+        auto animName = animparts[1];
+        animName.trim();
+        ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
+        if (animType == ANIMATION_TYPE_NONE)
+        {
+            Serial.printf("Unknown animation type %s\n", animName.c_str());
+            return false;
+        }
+        int startLED = 0;
+        int endLED = getNumLEDS() - 1;
+        if (animparts.size() == 4)
+        {
+            startLED = animparts[2].toInt();
+            endLED = animparts[3].toInt();
+        }
+        addAnimation(animType, startLED, endLED);
         return true;
     }
     return false;
@@ -294,33 +425,18 @@ void StripState::setPixel(int index, led color)
         Serial.printf("Invalid LED index %d\n", ledIndex);
         return;
     }
-    if (invertLEDs)
-        leds[numLEDS - ledIndex - 1] = CRGB(color.r, color.g, color.b);
-
-    else
-    {
-
-        leds[ledIndex] = CRGB(color.r, color.g, color.b);
-        // Serial.printf("Set Pixel %d %d %d %d\n", index, color.r, color.g, color.b);
-    }
+    leds[ledIndex] = CRGB(color.r, color.g, color.b);
 }
 void StripState::setPixel(int index, int r, int g, int b)
 {
 
-    if (invertLEDs)
-
-        leds[numLEDS - index - 1] = CRGB(r, g, b);
-
-    else
-        leds[index] = CRGB(r, g, b);
+    leds[index] = CRGB(r, g, b);
 }
 void StripState::clearPixel(int index)
 {
     bool invert = getBool(PARAM_INVERT);
-    if (invert)
-        leds[numLEDS - index - 1] = CRGB(0, 0, 0);
-    else
-        leds[index] = CRGB(0, 0, 0);
+
+    leds[index] = CRGB(0, 0, 0);
 }
 
 bool StripState::respondToParameterMessage(parameter_message parameter)
@@ -344,23 +460,22 @@ bool StripState::respondToParameterMessage(parameter_message parameter)
     }
     if (currentAnimation < animations.size())
     {
-        Serial.printf("sending parameter message to animation  %d %d  %d of %d\n", currentAnimation, parameter.paramID, parameter.value, animations.size());
-        if (animations[currentAnimation]->respondToParameterMessage(parameter))
+        bool animationTookParam = false;
+        for (int i = 0; i < animations.size(); i++)
+        {
+            if (animations[i]->respondToParameterMessage(parameter))
+            {
+                animationTookParam = true;
+            }
+        }
+        if (animationTookParam)
         {
             return true;
         }
     }
 
     bool stripTookParam = ParameterManager::respondToParameterMessage(parameter);
-    if (stripTookParam)
-    {
-        Serial.printf("Strip %d took parameter %d %d\n", stripIndex, parameter.paramID, parameter.value);
-        return true;
-    }
-    else
-    {
-        Serial.printf("Strip %d did not take parameter %d %d\n", stripIndex, parameter.paramID, parameter.value);
-    }
+
     return false;
 }
 

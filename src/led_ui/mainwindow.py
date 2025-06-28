@@ -3,7 +3,7 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget,
-    QPushButton, QLabel, QSlider, QCheckBox, QColorDialog, QHBoxLayout
+    QPushButton, QLabel, QSlider, QCheckBox, QColorDialog, QHBoxLayout, QSpinBox, QComboBox
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
@@ -18,10 +18,10 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.console = SerialConsole(port)
-        # self.console.add_string_listener(self.string_received)
-        # self.console.add_json_listener(self.json_received)
 
         self.parameter_menu = ParameterMenuWidget(self.console)
+
+        self.console.add_json_listener(self.parameter_menu.json_received)
         central_widget = QWidget()
         main_layout = QVBoxLayout()
 

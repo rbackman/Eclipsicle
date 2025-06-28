@@ -16,18 +16,18 @@ int interpolate(int from, int to, float t)
 {
   return from + (to - from) * t;
 }
-std::vector<ParameterID> getParametersForMenu(MenuID menu)
-{
-  std::vector<ParameterID> menuParams = {};
-  for (auto it = parameterMenuList.begin(); it != parameterMenuList.end(); ++it)
-  {
-    if (it->first == menu)
-    {
-      menuParams.push_back(it->second);
-    }
-  }
-  return menuParams;
-}
+// std::vector<ParameterID> getParametersForMenu(MenuID menu)
+// {
+//   std::vector<ParameterID> menuParams = {};
+//   for (auto it = parameterMenuList.begin(); it != parameterMenuList.end(); ++it)
+//   {
+//     if (it->first == menu)
+//     {
+//       menuParams.push_back(it->second);
+//     }
+//   }
+//   return menuParams;
+// }
 const char *getMenuName(MenuID type, int MaxSize)
 {
   auto it = menuTypeMap.find(type);
@@ -304,24 +304,5 @@ void sanityCheckParameters()
   if (missingParams == 0)
   {
     Serial.println("All parameters accounted for");
-  }
-
-  auto menus = parameterMenuList;
-  // make sure each parameter is used in a menu
-  for (int i = 0; i < names.size(); i++)
-  {
-    bool found = false;
-    for (auto menu : menus)
-    {
-      if (menu.second == i)
-      {
-        found = true;
-        break;
-      }
-    }
-    if (!found)
-    {
-      Serial.printf("Parameter %s not found in a menu\n", names[i].c_str());
-    }
   }
 }

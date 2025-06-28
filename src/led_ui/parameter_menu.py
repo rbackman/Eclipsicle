@@ -1,15 +1,24 @@
-import sys
+
 import json
-from collections import deque
+
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
+    QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QStackedWidget, QLabel, QSlider, QCheckBox, QColorDialog, QPushButton,
-    QHeaderView
+    QHeaderView, QSpinBox
 )
-from PyQt5.QtCore import Qt, QTimer
+
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor
 import qtawesome as qta           # pip install qtawesome
+from debounceSlider import DebouncedSlider
+from floatSlider import FloatSliderWithSpinBox
 from serial_console import SerialConsole
+from shared import get_param_name
+
+#  this maps from parameter name to their id
+
+ParameterMap: dict[str, int] = {}
+
 
 # ───────────────────────────── MENU + PARAM ------------------------------------------------------------------
 # (unchanged skeleton – plug your full MENU_TREE and PARAM_MAP here)
@@ -27,62 +36,16 @@ MENU_TREE = {
         "Debug": {"Display": {}, "Settings": {}, "Misc": {}, },
         "Animation Type": {
             "Single Animation": {},
-            "Multi Animation": {},
+            "Multi Animation": {
+                "Current Strip": {},
+                "All Strips": {},
+            },
+
             "Point Control": {}
         },
     }
 }
 
-
-# #define PARAMETER_LIST             \
-#     X(PARAM_HUE)                   \
-#     X(PARAM_HUE_END)               \
-#     X(PARAM_BRIGHTNESS)            \
-#     X(PARAM_PARTICLE_WIDTH)        \
-#     X(PARAM_PARTICLE_FADE)         \
-#     X(PARAM_PARTICLE_UPDATE_ALL)   \
-#     X(PARAM_SLIDER_WIDTH)          \
-#     X(PARAM_SLIDER_GRAVITY)        \
-#     X(PARAM_VELOCITY)              \
-#     X(PARAM_MAX_SPEED)             \
-#     X(PARAM_ACCELERATION)          \
-#     X(PARAM_RANDOM_DRIFT)          \
-#     X(PARAM_TIME_SCALE)            \
-#     X(PARAM_SLIDER_REPEAT)         \
-#     X(PARAM_RAINBOW_REPEAT)        \
-#     X(PARAM_RAINBOW_OFFSET)        \
-#     X(PARAM_SLIDER_POSITION)       \
-#     X(PARAM_SLIDER_HUE)            \
-#     X(PARAM_SPAWN_RATE)            \
-#     X(PARAM_PARTICLE_LIFE)         \
-#     X(PARAM_SOUND_SCALE)           \
-#     X(PARAM_SCROLL_SPEED)          \
-#     X(PARAM_SLIDER_MULTIPLIER)     \
-#     X(PARAM_RANDOM_ON)             \
-#     X(PARAM_RANDOM_OFF)            \
-#     X(PARAM_RANDOM_MIN)            \
-#     X(PARAM_RANDOM_MAX)            \
-#     X(PARAM_INVERT)                \
-#     X(PARAM_CENTERED)              \
-#     X(PARAM_BLACK_AND_WHITE)       \
-#     X(PARAM_LOOP_ANIM)             \
-#     X(PARAM_CYCLE)                 \
-#     X(PARAM_SEQUENCE)              \
-#     X(PARAM_SHOW_FPS)              \
-#     X(PARAM_DISPLAY_ACCEL)         \
-#     X(PARAM_RECORD_AUDIO)          \
-#     X(PARAM_CURRENT_STRIP)         \
-#     X(PARAM_CURRENT_LED)           \
-#     X(PARAM_MASTER_LED_HUE)        \
-#     X(PARAM_MASTER_LED_BRIGHTNESS) \
-#     X(PARAM_MASTER_LED_SATURATION) \
-#     X(PARAM_MASTER_VOLUME)         \
-#     X(PARAM_MOTOR_SPEED)           \
-#     X(PARAM_BEAT)                  \
-#     X(PARAM_BEAT_MAX_SIZE)         \
-#     X(PARAM_BEAT_FADE)             \
-#     X(PARAM_ANIMATION_TYPE)        \
-#     X(PARAM_UNKNOWN)
 
 PARAM_MAP = {
     "Color": [
@@ -97,9 +60,10 @@ PARAM_MAP = {
         {"id": "PARAM_RANDOM_OFF", "type": "int", "min": 0, "max": 100},
     ],
     "Speed": [
-        {"id": "PARAM_TIME_SCALE", "type": "float", "min": 0, "max": 2},
+        {"id": "PARAM_TIME_SCALE", "type": "float", "min": 0, "max": 5},
         {"id": "PARAM_ACCELERATION", "type": "float", "min": 0, "max": 10},
     ],
+
     "Life": [
         {"id": "PARAM_PARTICLE_LIFE", "type": "int", "min": 0, "max": 100},
         {"id": "PARAM_PARTICLE_FADE", "type": "int", "min": 0, "max": 100},
@@ -109,6 +73,11 @@ PARAM_MAP = {
         {"id": "PARAM_SLIDER_WIDTH", "type": "int", "min": 1, "max": 100},
         {"id": "PARAM_SLIDER_GRAVITY", "type": "int", "min": 0, "max": 100},
 
+        {"id": "PARAM_SLIDER_REPEAT", "type": "float", "min": 0, "max": 5},
+
+        {"id": "PARAM_SLIDER_POSITION", "type": "int", "min": 0, "max": 100},
+        {"id": "PARAM_HUE", "type": "color"},
+        {"id": "PARAM_SLIDER_MULTIPLIER", "type": "float", "min": 0, "max": 10},
 
     ],
     "Master LED": [
@@ -167,57 +136,36 @@ ICON = {
     "Multi Animation": "fa5s.play-circle",
 }
 
+
+def checkParameters(params):
+    """Check if the parameters are valid."""
+
+    for name, prm in params.items():
+        # print(f"  {name} : {prm}\n")
+        ParameterMap[name] = prm
+    print("parameters added to map:")
+    mapAsString = json.dumps(ParameterMap, indent=2)
+    print(mapAsString)
+    # save the map to a file
+    with open("parameter_map.json", "w") as f:
+        f.write(mapAsString)
+
+
+def loadParameters():
+    """Load the parameters from a file."""
+    try:
+        with open("parameter_map.json", "r") as f:
+            data = f.read()
+            if data:
+                global ParameterMap
+                ParameterMap = json.loads(data)
+                print("Loaded parameters from file:")
+                print(ParameterMap)
+    except FileNotFoundError:
+        print("No parameter map file found, using empty map.")
+    except json.JSONDecodeError as e:
+        print(f"Error decoding parameter map: {e}")
 # ───────────────────────────── Serial throttler --------------------------------------------------------------
-
-
-class DebouncedSlider(QWidget):
-    def __init__(self, param, console: SerialConsole):
-        super().__init__()
-        self.param = param
-        self.console = console
-
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(param['min'], param['max'])
-        self.label = QLabel(f"{param['id']}: {self.slider.value()}")
-
-        self.timer = QTimer(self)
-        self.timer.setSingleShot(True)
-        self.timer.setInterval(100)    # wait 100 ms after last move
-        self.timer.timeout.connect(self._flush)
-
-        self.slider.valueChanged.connect(self._on_change)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.label)
-        layout.addWidget(self.slider)
-
-    def _on_change(self, v):
-        self.label.setText(f"{self.param['id']}: {v}")
-        self.timer.start()             # reset/start the 100 ms timer
-
-    def _flush(self):
-        v = self.slider.value()
-        self.console.send_json(
-            {"param": self.param['id'], "value": v})
-
-
-class ThrottledSerial:
-    def __init__(self, console: SerialConsole, interval_ms: int = 30):
-        self.console = console
-        self.q: deque[dict] = deque()
-        self.timer = QTimer()
-        self.timer.setInterval(interval_ms)
-        self.timer.timeout.connect(self._tick)
-        self.timer.start()
-
-    def send_json(self, obj: dict):
-        self.q.append(obj)
-
-    def _tick(self):
-        if self.q:
-            self.console.send_json(self.q.popleft())
-
-# ───────────────────────────── Parameter page ----------------------------------------------------------------
 
 
 class ParamPage(QWidget):
@@ -229,8 +177,10 @@ class ParamPage(QWidget):
         for prm in params:
             kind = prm["type"]
             if kind == "int":
-                lbl = QLabel(f"{prm['id']}: 0")
-                sld = DebouncedSlider(prm, self.console)
+                lbl = QLabel(f"{get_param_name(prm['id'])}: 0")
+                sld = DebouncedSlider(prm)
+                sld.sendSignal.connect(
+                    lambda v,   p=prm: self._send(p['id'], v))
                 lay.addWidget(lbl)
                 lay.addWidget(sld)
             elif kind == "bool":
@@ -239,18 +189,26 @@ class ParamPage(QWidget):
                     lambda s, p=prm: self._send(p['id'], bool(s)))
                 lay.addWidget(cb)
             elif kind == "color":
+                color_box = QLabel()
+                color_box.setFixedSize(24, 24)
+                color_box.setStyleSheet(
+                    "background: black; border: 1px solid #aaa;")
                 btn = QPushButton(qta.icon("fa5s.paint-brush"),
-                                  f"{prm['id']}: pick …")
-                btn.clicked.connect(lambda _, p=prm: self._pick(p['id']))
-                lay.addWidget(btn)
+                                  get_param_name(prm['id']))
+                btn.clicked.connect(
+                    lambda _, p=prm, b=color_box: self._pick(p['id'], b))
+
+                hbox = QHBoxLayout()
+                hbox.addWidget(btn)
+                hbox.addWidget(color_box)
+                lay.addLayout(hbox)
             elif kind == "float":
-                lbl = QLabel(f"{prm['id']}: 0.0")
-                sld = QSlider(Qt.Horizontal)
-                sld.setRange(int(prm['min'] * 100), int(prm['max'] * 100))
-                sld.valueChanged.connect(
-                    lambda v, l=lbl, p=prm: self._upd_float(l, p, v))
-                lay.addWidget(lbl)
-                lay.addWidget(sld)
+                widget = FloatSliderWithSpinBox(prm)
+                widget.sendSignal.connect(
+                    lambda v, p=prm: self._send(p['id'], v))
+                lay.addWidget(widget)
+
+        loadParameters()
 
     def _upd_int(self, lbl, prm, v):
         lbl.setText(f"{prm['id']}: {v}")
@@ -264,15 +222,98 @@ class ParamPage(QWidget):
         cb.setText(f"{prm['id']}: {bool(s)}")
         self._send(prm['id'], bool(s))
 
-    def _pick(self, pid):
+    def _pick(self, pid, color_box):
         c = QColorDialog.getColor()
         if c.isValid():
-            self._send(pid, int(c.hueF() * 360))
+            hue = int(c.hueF() * 360)
+            color_box.setStyleSheet(
+                f"background: {c.name()}; border: 1px solid #aaa;")
+            self._send(pid, hue)
 
-    def _send(self, name, val): self.console.send_json(
-        {"param": name, "value": val})
+    def _send(self, name, val):
+        if (len(ParameterMap)):
+            # send short version if available
+            cmd = "p:" + str(ParameterMap[name]) + ":" + str(val)
+
+            self.console.send_cmd(cmd)
+        else:
+            self.console.send_json({"param": name, "value": val})
+
 
 # ───────────────────────────── Main widget -------------------------------------------------------------------
+
+
+class AnimationSendWidget(QWidget):
+    # a widget that has a button and options to send single animation, overwrite, start led,end led or full strip
+    def __init__(self, console):
+        super().__init__()
+        self.console = console
+        self.init_ui()
+
+    def init_ui(self):
+        self.layout = QHBoxLayout()
+        self.setLayout(self.layout)
+        self.led_selectLayout = QHBoxLayout()
+        self.led_selectWidget = QWidget()
+        self.led_selectWidget.setLayout(self.led_selectLayout)
+        self.layout.addWidget(self.led_selectWidget)
+
+        self.startLEDSSpinbox = QSpinBox()
+        self.startLEDSSpinbox.setRange(0, 255)
+        self.endLEDSSpinbox = QSpinBox()
+        self.endLEDSSpinbox.setRange(0, 255)
+        self.startLEDSSpinbox.setValue(0)
+        self.endLEDSSpinbox.setValue(255)
+
+        self.led_selectLayout.addWidget(QLabel("Start LED:"))
+        self.led_selectLayout.addWidget(self.startLEDSSpinbox)
+        self.led_selectLayout.addWidget(QLabel("End LED:"))
+        self.led_selectLayout.addWidget(self.endLEDSSpinbox)
+        self.led_selectWidget.setVisible(False)
+        self.overwrite_toggle = QCheckBox("Overwrite Animation")
+        self.overwrite_toggle.setChecked(False)
+        self.layout.addWidget(self.overwrite_toggle)
+        self.partial_animation_toggle = QCheckBox("Partial Animation")
+        self.partial_animation_toggle.setChecked(False)
+        self.partial_animation_toggle.stateChanged.connect(
+            lambda state: self.led_selectWidget.setVisible(state == Qt.Checked))
+        self.layout.addWidget(self.partial_animation_toggle)
+        self.animation_label = QLabel("Animation: None")
+        self.layout.addWidget(self.animation_label)
+        self.send_animation_btn = QPushButton("Send Animation Command")
+        self.send_animation_btn.clicked.connect(self.send_animation_cmd)
+        self.layout.addWidget(self.send_animation_btn)
+        self.setLayout(self.layout)
+        self.setWindowTitle("Animation Sender")
+        self.resize(300, 100)
+        self.setStyleSheet("background-color: #f0f0f0;")
+
+    def set_animation(self, animation):
+        self.animation_label.setText(f"Animation: {animation}")
+
+    def send_animation_cmd(self):
+
+        animation = self.animation_label.text().split(": ")[1]
+        overwrite = self.overwrite_toggle.isChecked()
+        if overwrite:
+            if self.partial_animation_toggle.isChecked():
+                start_led = self.startLEDSSpinbox.value()
+                end_led = self.endLEDSSpinbox.value()
+
+                self.console.send_cmd(
+                    f"setanimation:{animation}:{start_led}:{end_led}")
+
+            else:
+                self.console.send_cmd(f"setanimation:{animation}")
+        else:
+            if self.partial_animation_toggle.isChecked():
+                start_led = self.startLEDSSpinbox.value()
+                end_led = self.endLEDSSpinbox.value()
+
+                self.console.send_cmd(
+                    f"addanimation:{animation}:{start_led}:{end_led}")
+            else:
+                self.console.send_cmd(f"replaceanimation:all:{animation}")
 
 
 class ParameterMenuWidget(QWidget):
@@ -288,9 +329,19 @@ class ParameterMenuWidget(QWidget):
 
         self._build_tree()
         self.tree.currentItemChanged.connect(self._sel_changed)
-        root = QHBoxLayout(self)
-        root.addWidget(self.tree, 1)
-        root.addWidget(self.pages, 1)
+        root = QVBoxLayout(self)
+        root.setAlignment(Qt.AlignTop)
+        paramHLayout = QHBoxLayout()
+        root.addLayout(paramHLayout)
+        self.animationSender = AnimationSendWidget(console)
+        root.addWidget(self.animationSender)
+        paramHLayout.addWidget(self.tree, 1)
+        paramHLayout.addWidget(self.pages, 1)
+        self.confirm = QPushButton("Confirm")
+        self.confirm.setIcon(qta.icon("fa5s.check"))
+        self.confirm.clicked.connect(
+            lambda: self.console.send_cmd("confirmParameters"))
+        paramHLayout.addWidget(self.confirm)
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
 
@@ -317,24 +368,49 @@ class ParameterMenuWidget(QWidget):
         leaf = root.child(0)
         while leaf and leaf.childCount():
             leaf = leaf.child(0)
-        self.tree.setCurrentItem(leaf)
+        # self.tree.setCurrentItem(leaf)
+
+    def get_tree_path(self, item: QTreeWidgetItem):
+        """Get the full path of the item in the tree."""
+        path = []
+        while item:
+            path.append(item.text(0))
+            item = item.parent()
+        return list(reversed(path))
 
     def _sel_changed(self, cur, _prev):
         if not cur:
             return
         name = cur.text(0)
+
         if name not in self.cache:
             page = ParamPage(PARAM_MAP.get(name, []),
                              self.console) if name in PARAM_MAP else QWidget()
             self.cache[name] = page
             self.pages.addWidget(page)
-        isMenu = name not in PARAM_MAP
-        treePath = []
-        while cur and cur.parent():
-            treePath.append(cur.text(0))
-            cur = cur.parent()
-        treePath.reverse()
+
+        treePath = self.get_tree_path(cur)
+        isPatternType = treePath[-2] == "Patterns"
+
+        if isPatternType:
+            # if it has the word patterns in it, show the animation sender
+
+            self.animationSender.setVisible(True)
+            self.animationSender.set_animation(treePath[-1])
+
+        else:
+            self.animationSender.setVisible(False)
+
         pathname = "/".join(treePath)
 
         self.console.send_cmd(f"menu:{pathname}")
         self.pages.setCurrentWidget(self.cache[name])
+
+    def json_received(self, obj: dict):
+        """Handle incoming JSON data."""
+        if obj["type"] == "parameters" and "data" in obj:
+
+            data = obj["data"]
+            checkParameters(data)
+            return True
+        return False

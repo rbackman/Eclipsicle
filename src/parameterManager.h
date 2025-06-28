@@ -5,6 +5,7 @@
 
 #include <vector>
 typedef bool (*ParameterChangeListener)(parameter_message parameter);
+
 class ParameterManager
 {
     // parameter change listeners
@@ -22,7 +23,28 @@ public:
     void setInt(ParameterID paramID, int value);
     void setBool(ParameterID paramID, bool value);
     void setFloat(ParameterID paramID, float value);
+    void setParameters(std::map<ParameterID, float> params)
+    {
 
+        for (const auto &param : params)
+        {
+            if (isFloatParameter(param.first))
+            {
+
+                setFloat(param.first, param.second);
+            }
+            else if (isIntParameter(param.first))
+            {
+
+                setInt(param.first, (int)param.second);
+            }
+            else if (isBoolParameter(param.first))
+            {
+
+                setBool(param.first, (bool)param.second);
+            }
+        }
+    }
     IntParameter getIntParameter(ParameterID id);
     BoolParameter getBoolParameter(ParameterID id);
     FloatParameter getFloatParameter(ParameterID id);
