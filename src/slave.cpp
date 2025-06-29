@@ -195,32 +195,48 @@ void setup()
   Serial.println("Free memory Setup: ");
   Serial.println(ESP.getFreeHeap());
 }
-
 static void confirmParameters()
 {
   Serial.println("Confirming parameters...");
-  auto paramJson = JsonDocument();
+
+  JsonDocument paramJson; // adjust size as needed
   paramJson["type"] = "parameters";
-  paramJson["data"] = JsonObject();
-  auto data = paramJson["data"];
+  JsonObject data = paramJson["data"].to<JsonObject>();
 
   auto paramList = getParameterNames();
+
   for (const auto &bParam : getDefaultBoolParameters())
   {
-    auto name = paramList[bParam.id];
-    data[name] = bParam.id;
+    const char *name = paramList[bParam.id].c_str();
+    JsonObject obj = data[name].to<JsonObject>();
+    obj["id"] = bParam.id;
+    obj["type"] = "bool";
+    obj["value"] = bParam.value;
+    obj["name"] = bParam.name;
   }
 
   for (const auto &iParam : getDefaultIntParameters())
   {
-    auto name = paramList[iParam.id];
-    data[name] = iParam.id;
+    const char *name = paramList[iParam.id].c_str();
+    JsonObject obj = data[name].to<JsonObject>();
+    obj["id"] = iParam.id;
+    obj["type"] = "int";
+    obj["value"] = iParam.value;
+    obj["name"] = iParam.name;
+    obj["min"] = iParam.min;
+    obj["max"] = iParam.max;
   }
 
   for (const auto &fParam : getDefaultFloatParameters())
   {
-    auto name = paramList[fParam.id];
-    data[name] = fParam.id;
+    const char *name = paramList[fParam.id].c_str();
+    JsonObject obj = data[name].to<JsonObject>();
+    obj["id"] = fParam.id;
+    obj["type"] = "float";
+    obj["value"] = fParam.value;
+    obj["name"] = fParam.name;
+    obj["min"] = fParam.min;
+    obj["max"] = fParam.max;
   }
 
   serializeJson(paramJson, Serial);

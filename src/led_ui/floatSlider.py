@@ -11,10 +11,10 @@ from shared import get_param_name
 class FloatSliderWithSpinBox(QWidget):
     sendSignal = pyqtSignal(float)
 
-    def __init__(self, param):
+    def __init__(self, paramname, param):
         super().__init__()
         self.param = param
-
+        self.paramname = paramname
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(int(param['min'] * 100), int(param['max'] * 100))
 
@@ -23,7 +23,7 @@ class FloatSliderWithSpinBox(QWidget):
         self.spin.setRange(param['min'], param['max'])
         self.spin.setSingleStep(0.01)
 
-        self.label = QLabel(get_param_name(param['id']))
+        self.label = QLabel(get_param_name(self.paramname))
 
         self.slider.valueChanged.connect(self._on_slider_change)
         self.spin.valueChanged.connect(self._on_spin_change)

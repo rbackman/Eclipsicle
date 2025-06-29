@@ -18,7 +18,8 @@ private:
     int currentAnimation = 0;
     int gravityPosition = 0;
     int numLEDS = 128;
-
+    int simulateCount = -1;
+    int counter = 0;
     float beatSize = 0;
 
     float scrollPos = 0;
@@ -28,6 +29,7 @@ private:
 
 public:
     bool isActive = true;
+
     CRGB *leds;
     StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX);
 
@@ -36,7 +38,10 @@ public:
         numLEDS = num;
     }
     void addAnimation(ANIMATION_TYPE animis, int startLED = -1, int endLED = -1, std::map<ParameterID, float> params = {});
-
+    void setSimulate(int simulateCount)
+    {
+        this->simulateCount = simulateCount;
+    }
     void setAnimation(ANIMATION_TYPE animType, int startLED = -1, int endLED = -1, std::map<ParameterID, float> params = {})
     {
         ledState = LED_STATE_SINGLE_ANIMATION;

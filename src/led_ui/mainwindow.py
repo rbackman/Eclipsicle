@@ -5,11 +5,13 @@ from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget,
     QPushButton, QLabel, QSlider, QCheckBox, QColorDialog, QHBoxLayout, QSpinBox, QComboBox
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor
+
 from parameter_menu import ParameterMenuWidget
 from serial_console import SerialConsole
 from device_selector import DeviceSelector
+from ledsimwidget import LEDSimWidget
 
 
 class MainWindow(QMainWindow):
@@ -22,9 +24,11 @@ class MainWindow(QMainWindow):
         self.parameter_menu = ParameterMenuWidget(self.console)
 
         self.console.add_json_listener(self.parameter_menu.json_received)
+        self.led_sim_widget = LEDSimWidget(self.console)
+        self.console.add_string_listener(self.led_sim_widget.process_string)
         central_widget = QWidget()
         main_layout = QVBoxLayout()
-
+        main_layout.addWidget(self.led_sim_widget)
         main_layout.addWidget(self.parameter_menu)
 
         self.console.setVisible(False)

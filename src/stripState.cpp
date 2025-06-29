@@ -20,6 +20,26 @@ ANIMATION_TYPE getAnimationTypeFromName(const String &name)
     return ANIMATION_TYPE_NONE;
 }
 
+String rleCompresssCRGB(const CRGB *leds, int numLEDS)
+{
+    String result;
+    int count = 1;
+
+    for (int i = 0; i < numLEDS; i++)
+    {
+        if (i < numLEDS - 1 && leds[i] == leds[i + 1])
+        {
+            count++;
+        }
+        else
+        {
+            result += String(leds[i].r) + "," + String(leds[i].g) + "," + String(leds[i].b) + ":" + String(count) + ";";
+            count = 1;
+        }
+    }
+    return result;
+}
+
 StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX)
 
 {
@@ -90,6 +110,7 @@ void StripState::addAnimation(ANIMATION_TYPE anim, int startLED, int endLED, std
 }
 void StripState::update()
 {
+    counter++;
     clearPixels();
     if (beatSize > 0.1)
     {
@@ -147,6 +168,15 @@ void StripState::update()
     break;
     default:
         break;
+    }
+
+    if (simulateCount > 0)
+    {
+        if (counter % simulateCount == 0)
+        {
+            String compressed = rleCompresssCRGB(leds, numLEDS);
+            Serial.printf("sim:%s\n", compressed.c_str());
+        }
     }
 }
 enum MatchType
@@ -286,6 +316,22 @@ bool StripState::respondToText(String command)
 
     //     return true;
     // }
+    if (command.startsWith("simulate:"))
+    {
+        auto simParts = splitString(command, ':');
+        if (simParts.size() != 2)
+        {
+            Serial.printf("Invalid simulate command %s\n", command.c_str());
+            return false;
+        }
+        int simulate = simParts[1].toInt();
+        setSimulate(simulate);
+        if (isVerbose())
+        {
+            Serial.printf("Set simulate to %d\n", simulate);
+        }
+        return true;
+    }
     if (command.startsWith("setanimation:"))
     {
         ledState = LED_STATE_SINGLE_ANIMATION;

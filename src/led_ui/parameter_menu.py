@@ -48,68 +48,31 @@ MENU_TREE = {
 
 
 PARAM_MAP = {
-    "Color": [
-        {"id": "PARAM_HUE", "type": "color"},
-        {"id": "PARAM_HUE_END", "type": "int", "min": 0, "max": 360},
-        {"id": "PARAM_PARTICLE_WIDTH", "type": "int", "min": 1, "max": 60},
-    ],
-    "Random": [
-        {"id": "PARAM_RANDOM_MIN", "type": "int", "min": 0, "max": 255},
-        {"id": "PARAM_RANDOM_MAX", "type": "int", "min": 0, "max": 255},
-        {"id": "PARAM_RANDOM_ON", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_RANDOM_OFF", "type": "int", "min": 0, "max": 100},
-    ],
-    "Speed": [
-        {"id": "PARAM_TIME_SCALE", "type": "float", "min": 0, "max": 5},
-        {"id": "PARAM_ACCELERATION", "type": "float", "min": 0, "max": 10},
-    ],
+    "Color": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_PARTICLE_WIDTH"],
 
-    "Life": [
-        {"id": "PARAM_PARTICLE_LIFE", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_PARTICLE_FADE", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_SPAWN_RATE", "type": "int", "min": 0, "max": 100},
-    ],
-    "Slider": [
-        {"id": "PARAM_SLIDER_WIDTH", "type": "int", "min": 1, "max": 100},
-        {"id": "PARAM_SLIDER_GRAVITY", "type": "int", "min": 0, "max": 100},
+    "Random": ["PARAM_RANDOM_MIN", "PARAM_RANDOM_MAX",
+               "PARAM_RANDOM_ON", "PARAM_RANDOM_OFF"
 
-        {"id": "PARAM_SLIDER_REPEAT", "type": "float", "min": 0, "max": 5},
+               ],
+    "Speed": ["PARAM_TIME_SCALE", "PARAM_ACCELERATION"
 
-        {"id": "PARAM_SLIDER_POSITION", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_HUE", "type": "color"},
-        {"id": "PARAM_SLIDER_MULTIPLIER", "type": "float", "min": 0, "max": 10},
 
-    ],
-    "Master LED": [
-        {"id": "PARAM_MASTER_LED_HUE", "type": "color"},
-        {"id": "PARAM_MASTER_LED_BRIGHTNESS", "type": "int", "min": 0, "max": 255},
-        {"id": "PARAM_MASTER_LED_SATURATION", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_MASTER_VOLUME", "type": "int", "min": 0, "max": 100},
-    ],
-    "Display": [
-        {"id": "PARAM_SHOW_FPS", "type": "bool"},
-        {"id": "PARAM_DISPLAY_ACCEL", "type": "bool"},
-        {"id": "PARAM_RECORD_AUDIO", "type": "bool"},
-    ],
-    "Misc": [
-        {"id": "PARAM_INVERT", "type": "bool"},
-        {"id": "PARAM_CENTERED", "type": "bool"},
-        {"id": "PARAM_BLACK_AND_WHITE", "type": "bool"},
-        {"id": "PARAM_LOOP_ANIM", "type": "bool"},
-        {"id": "PARAM_CYCLE", "type": "bool"},
-        {"id": "PARAM_SEQUENCE", "type": "bool"},
-    ],
-    "Settings": [
-        {"id": "PARAM_CURRENT_STRIP", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_CURRENT_LED", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_MASTER_LED_HUE", "type": "int", "min": 0, "max": 360},
-        {"id": "PARAM_MASTER_LED_BRIGHTNESS", "type": "int", "min": 0, "max": 255},
-        {"id": "PARAM_MASTER_LED_SATURATION", "type": "int", "min": 0, "max": 100},
-    ],
-    "Point Control": [
-        {"id": "PARAM_CURRENT_STRIP", "type": "int", "min": 0, "max": 100},
-        {"id": "PARAM_CURRENT_LED", "type": "int", "min": 0, "max": 500},
-    ],
+              ],
+
+    "Life": ["PARAM_PARTICLE_LIFE", "PARAM_PARTICLE_FADE", "PARAM_SPAWN_RATE"],
+
+    "Slider": ["PARAM_SLIDER_WIDTH", "PARAM_SLIDER_GRAVITY",
+               "PARAM_SLIDER_REPEAT", "PARAM_SLIDER_POSITION",
+               "PARAM_SLIDER_MULTIPLIER", "PARAM_HUE", "PARAM_HUE_END"],
+
+
+    "Misc": ["PARAM_CYCLE", "PARAM_SEQUENCE", "PARAM_INVERT",
+             "PARAM_CENTERED", "PARAM_BLACK_AND_WHITE", "PARAM_LOOP_ANIM"],
+
+    "Settings": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"],
+
+    "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"],
+
 
 
 }
@@ -142,10 +105,10 @@ def checkParameters(params):
 
     for name, prm in params.items():
         # print(f"  {name} : {prm}\n")
-        ParameterMap[name] = prm
+        ParameterMap[name] = prm["id"]
     print("parameters added to map:")
-    mapAsString = json.dumps(ParameterMap, indent=2)
-    print(mapAsString)
+    mapAsString = json.dumps(params, indent=2)
+
     # save the map to a file
     with open("parameter_map.json", "w") as f:
         f.write(mapAsString)
@@ -160,7 +123,7 @@ def loadParameters():
                 global ParameterMap
                 ParameterMap = json.loads(data)
                 print("Loaded parameters from file:")
-                print(ParameterMap)
+                # print(ParameterMap)
     except FileNotFoundError:
         print("No parameter map file found, using empty map.")
     except json.JSONDecodeError as e:
@@ -174,19 +137,27 @@ class ParamPage(QWidget):
         self.console = console
         lay = QVBoxLayout(self)
         lay.setAlignment(Qt.AlignTop)
-        for prm in params:
+        print(f"Creating parameter page with { params} parameters\n")
+        for prmname in params:
+            prm = params[prmname]
             kind = prm["type"]
+            shortname = get_param_name(prmname)
+            print(
+                f"Adding parameter:{shortname}  id:{prm['id']} of type {kind}\n")
             if kind == "int":
-                lbl = QLabel(f"{get_param_name(prm['id'])}: 0")
-                sld = DebouncedSlider(prm)
+                # lbl = QLabel(f"{shortname}: 0")
+                sld = DebouncedSlider(prmname, prm)
+                sld.setRange(prm.get("min", 0), prm.get("max", 100))
+                sld.setValue(prm.get("value", 0))
                 sld.sendSignal.connect(
                     lambda v,   p=prm: self._send(p['id'], v))
-                lay.addWidget(lbl)
+
                 lay.addWidget(sld)
             elif kind == "bool":
-                cb = QCheckBox(prm["id"])
+                cb = QCheckBox(shortname)
                 cb.stateChanged.connect(
                     lambda s, p=prm: self._send(p['id'], bool(s)))
+                cb.setChecked(prm.get("value", False))
                 lay.addWidget(cb)
             elif kind == "color":
                 color_box = QLabel()
@@ -194,21 +165,24 @@ class ParamPage(QWidget):
                 color_box.setStyleSheet(
                     "background: black; border: 1px solid #aaa;")
                 btn = QPushButton(qta.icon("fa5s.paint-brush"),
-                                  get_param_name(prm['id']))
+                                  shortname)
                 btn.clicked.connect(
                     lambda _, p=prm, b=color_box: self._pick(p['id'], b))
-
+                btn.setToolTip("Pick a color")
+                btn.setStyleSheet("text-align: left;")
+                hue = prm.get("value", 0)
+                color_box.setStyleSheet(
+                    f"background: hsl({hue}, 100%, 50%); border: 1px solid #aaa;")
+                color_box.setToolTip(f"Current hue: {hue}")
                 hbox = QHBoxLayout()
                 hbox.addWidget(btn)
                 hbox.addWidget(color_box)
                 lay.addLayout(hbox)
             elif kind == "float":
-                widget = FloatSliderWithSpinBox(prm)
+                widget = FloatSliderWithSpinBox(prmname, prm)
                 widget.sendSignal.connect(
                     lambda v, p=prm: self._send(p['id'], v))
                 lay.addWidget(widget)
-
-        loadParameters()
 
     def _upd_int(self, lbl, prm, v):
         lbl.setText(f"{prm['id']}: {v}")
@@ -230,14 +204,14 @@ class ParamPage(QWidget):
                 f"background: {c.name()}; border: 1px solid #aaa;")
             self._send(pid, hue)
 
-    def _send(self, name, val):
+    def _send(self, pid, val):
         if (len(ParameterMap)):
             # send short version if available
-            cmd = "p:" + str(ParameterMap[name]) + ":" + str(val)
+            cmd = "p:" + str(pid) + ":" + str(val)
 
             self.console.send_cmd(cmd)
         else:
-            self.console.send_json({"param": name, "value": val})
+            self.console.send_json({"param": pid, "value": val})
 
 
 # ───────────────────────────── Main widget -------------------------------------------------------------------
@@ -344,6 +318,7 @@ class ParameterMenuWidget(QWidget):
         paramHLayout.addWidget(self.confirm)
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
+        loadParameters()
 
     # helper to build icon safely
     def _qta_icon(self, key):
@@ -384,8 +359,45 @@ class ParameterMenuWidget(QWidget):
         name = cur.text(0)
 
         if name not in self.cache:
-            page = ParamPage(PARAM_MAP.get(name, []),
-                             self.console) if name in PARAM_MAP else QWidget()
+            pmap = PARAM_MAP.get(name, [])
+            data = {}
+            print(
+                f"Loading parameters for {name} with map: {pmap} {ParameterMap}   \n")
+            for prm in pmap:
+                if prm in ParameterMap:
+                    pdata = ParameterMap[prm]
+                    dtype = pdata.get("type", "int")
+                    if dtype == "int":
+                        data[prm] = {
+                            "id": pdata.get("id", 0),
+                            "type":  'int',
+                            "value": pdata.get("value", 0),
+                            "min":  pdata.get("min", 0),
+                            "max":  pdata.get("max", 255)
+                        }
+                    elif dtype == "bool":
+                        data[prm] = {
+                            "id": pdata.get("id", 0),
+                            "type": 'bool',
+                            "value": pdata.get("value", False)
+                        }
+                    elif dtype == "color":
+                        data[prm] = {
+                            "id": pdata.get("id", 0),
+                            "type": 'color',
+                            "value": pdata.get("value", 0)
+                        }
+                    elif dtype == "float":
+                        data[prm] = {
+                            "id": pdata.get("id", 0),
+                            "type": 'float',
+                            "value": pdata.get("value", 0.0),
+                            "min": pdata.get("min", 0.0),
+                            "max": pdata.get("max", 1.0)
+                        }
+
+            page = ParamPage(data,
+                             self.console) if data else QWidget()
             self.cache[name] = page
             self.pages.addWidget(page)
 

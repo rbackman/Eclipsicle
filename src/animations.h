@@ -74,6 +74,7 @@ class ParticleAnimation : public StripAnimation
 {
     Particle particles[NUM_PARTICLES];
     bool randomMode = false;
+
     void fadeParticleTail(float position, float width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction);
 
     void spawnParticle(int position, float velocity, int hueStart, int hueEnd, int brightness, int width, int life);

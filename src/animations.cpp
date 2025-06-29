@@ -92,7 +92,8 @@ void ParticleAnimation::updateParticles()
 
     if (animCount++ > 1000)
     {
-        Serial.printf("Particle animation time scale: %f cycle: %d hueStart: %d hueEnd: %d brightness: %d fade: %d width: %d life: %d randomDrift: %d acceleration: %f maxSpeed: %f\n", timeScale, cycle, hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed);
+        if (isVerbose())
+            Serial.printf("Particle animation time scale: %f cycle: %d hueStart: %d hueEnd: %d brightness: %d fade: %d width: %d life: %d randomDrift: %d acceleration: %f maxSpeed: %f\n", timeScale, cycle, hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed);
         animCount = 0;
     }
     for (int i = 0; i < NUM_PARTICLES; i++)
@@ -103,7 +104,7 @@ void ParticleAnimation::updateParticles()
             particle->hueStart = hueStart;
             particle->hueEnd = hueEnd;
             particle->brightness = brightness;
-            particle->fade = fade;
+            particle->fade = fade / 100.0; // convert to 0-1 range
             particle->width = width;
             particle->life = life;
             particle->randomDrift = randomDrift;
@@ -120,7 +121,7 @@ void ParticleAnimation::updateParticles()
         if (particle->active)
         {
 
-            particle->position += particle->velocity * timeScale;
+            particle->position += particle->velocity * timeScale / 10.0;
             particle->velocity += particle->acceleration;
             if (particle->velocity > particle->maxSpeed)
             {
@@ -159,13 +160,13 @@ void ParticleAnimation::updateParticles()
             {
                 particle->velocity = particle->maxSpeed;
             }
-            // if (particle->randomDrift > 0)
-            // {
-            //     if (random(0, 100) < particle->randomDrift)
-            //     {
-            //         particle->acceleration = -particle->acceleration;
-            //     }
-            // }
+            if (particle->randomDrift > 0)
+            {
+                if (random(0, 100) < particle->randomDrift)
+                {
+                    particle->acceleration = -particle->acceleration;
+                }
+            }
 
             if (particle->position < -width)
             {
@@ -199,8 +200,14 @@ void ParticleAnimation::spawnParticle()
     int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
     int life = getInt(PARAM_PARTICLE_LIFE);
+    if (random(0, 100) < 50)
+    {
 
-    spawnParticle(0, velocity, hueStart, hueEnd, brightness, width, life);
+        spawnParticle(numLEDs(), -velocity, hueStart, hueEnd, brightness, width, life);
+        return;
+    }
+    else
+        spawnParticle(0, velocity, hueStart, hueEnd, brightness, width, life);
 };
 void ParticleAnimation::spawnParticle(int position, float velocity, int hueStart, int hueEnd, int brightness, int width, int life)
 {

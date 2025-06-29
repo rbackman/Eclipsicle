@@ -131,6 +131,8 @@ void ParameterManager::setBool(ParameterID id, bool val)
         {
             boolParams[i].value = val;
             paramChanged = true;
+            if (isVerbose())
+                Serial.printf("updating parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
             return;
         }
     }
@@ -144,6 +146,8 @@ void ParameterManager::setFloat(ParameterID id, float val)
         {
             floatParams[i].value = val;
             paramChanged = true;
+            if (isVerbose())
+                Serial.printf("updating parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
             return;
         }
     }
@@ -165,7 +169,31 @@ float ParameterManager::getFloat(ParameterID id)
     Serial.printf("Error Float Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
     return 0;
 }
-
+bool ParameterManager::hasParameter(ParameterID paramID)
+{
+    for (const auto &param : intParams)
+    {
+        if (param.id == paramID)
+        {
+            return true;
+        }
+    }
+    for (const auto &param : floatParams)
+    {
+        if (param.id == paramID)
+        {
+            return true;
+        }
+    }
+    for (const auto &param : boolParams)
+    {
+        if (param.id == paramID)
+        {
+            return true;
+        }
+    }
+    return false;
+}
 int ParameterManager::getInt(ParameterID id)
 {
     for (int i = 0; i < intParams.size(); i++)
@@ -217,24 +245,30 @@ bool ParameterManager::respondToParameterMessage(parameter_message parameter)
             }
         }
     }
+    //  check if this manager has the parameter
+    if (parameter.paramID == PARAM_UNKNOWN)
+    {
+        Serial.printf("Error: Parameter not found %d %s for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), name.c_str());
+        return false;
+    }
+    if (hasParameter(parameter.paramID) == false)
+    {
+        return false;
+    }
     if (isBoolParameter(parameter.paramID))
     {
-        if (isVerbose())
-            Serial.printf("Set bool parameter %d %s to %s for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), parameter.boolValue ? "true" : "false", name.c_str());
         setBool(parameter.paramID, parameter.boolValue);
         return true;
     }
     else if (isFloatParameter(parameter.paramID))
     {
-        if (isVerbose())
-            Serial.printf("Set float parameter %d %s to %f for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), parameter.value, name.c_str());
+
         setFloat(parameter.paramID, parameter.floatValue);
         return true;
     }
     else if (isIntParameter(parameter.paramID))
     {
-        if (isVerbose())
-            Serial.printf("Set int parameter %d %s to %d for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), parameter.value, name.c_str());
+
         setInt(parameter.paramID, parameter.value);
         return true;
     }

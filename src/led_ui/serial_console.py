@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton, QHBoxLayout, QCheckBox
+from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton, QHBoxLayout, QCheckBox, QSpinBox
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 
 import serial
@@ -9,6 +9,9 @@ import typing
 
 class SerialConsole(QWidget):
     append_signal = pyqtSignal(str)
+    string_signal = pyqtSignal(str)
+    json_signal = pyqtSignal(dict)
+
     motorToCheck = 0
     motors = ["dowel", "drill", "x_axis"]
     stringListeners: list[typing.Callable] = []
@@ -19,7 +22,8 @@ class SerialConsole(QWidget):
 
         self.ser = None
         self.running = False  # Start off
-
+        self.string_signal.connect(self.broadcast_string)
+        self.json_signal.connect(self.broadcast_json)
         try:
             self.ser = serial.Serial(port, baudrate=baud, timeout=timeout)
         except serial.SerialException as e:
@@ -76,6 +80,7 @@ class SerialConsole(QWidget):
         hlayout.addWidget(self.input)
         hlayout.addWidget(self.echo_checkbox)
         hlayout.addWidget(self.verbose_checkbox)
+
         layout.addLayout(hlayout)
 
         self.setLayout(layout)
@@ -96,32 +101,26 @@ class SerialConsole(QWidget):
                 if self.ser.in_waiting:
                     msg = self.ser.readline().decode(errors='ignore').strip()
                     if msg and self.running:
-                        if msg.endswith(";"):
+                        if msg.startswith("sim:"):
+                            self.string_signal.emit(msg)
+
+                        elif msg.endswith(";"):
                             msg = msg[:-1]
-                            print("parsing json")
 
                             try:
                                 data = json.loads(msg)
-                                print(
-                                    f"Received JSON: send to listeners {len(self.jsonListeners)}  \n")
-                                handled = False
-                                for listener in self.jsonListeners:
-                                    if (listener(data)):
-                                        handled = True
-                                        break
-                                if not handled:
-                                    self.log(f"Unhandled JSON: {data}")
+
+                                self.json_signal.emit(data)
 
                             except json.JSONDecodeError as e:
-                                print("failed to parse json ", e)
-                                print(msg)
+                                self.log("failed to parse json ", e)
+                                self.log(msg)
                                 pass
                         else:
-                            for listener in self.stringListeners:
-                                listener(msg)
+                            self.string_signal.emit(msg)
                             self.log(msg)
             except Exception as e:
-                print(f"Serial read error: {e}")
+                self.log(f"Serial read error: {e}")
                 break
 
     def log(self, msg):
@@ -147,6 +146,21 @@ class SerialConsole(QWidget):
         self.ser.write((data + "\n").encode())
         if self.echo_checkbox.isChecked():
             self.log("→ " + data)
+
+    def broadcast_string(self, msg: str):
+        for listener in self.stringListeners:
+            try:
+                listener(msg)
+            except Exception as e:
+                print(f"Error for [{msg}] in string listener: {e} ")
+
+    def broadcast_json(self, data: dict):
+        for listener in self.jsonListeners:
+            try:
+                if listener(data):
+                    break
+            except Exception as e:
+                print(f"Error in JSON listener: {e}")
 
     def manual_send(self):
         msg = self.input.text()

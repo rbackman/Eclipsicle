@@ -17,6 +17,7 @@ public:
     {
         listeners.push_back(listener);
     }
+    bool hasParameter(ParameterID paramID);
     int getInt(ParameterID paramID);
     float getFloat(ParameterID paramID);
     bool getBool(ParameterID paramID);
