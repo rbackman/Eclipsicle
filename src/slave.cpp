@@ -134,8 +134,13 @@ void setup()
   ledManager = new LEDManager(SLAVE_NAME);
   configManager.loadParameters(parameterManager);
   configManager.loadParameters(ledManager);
-  for (auto strip : ledManager->getStrips()) {
+  for (auto strip : ledManager->getStrips())
+  {
     configManager.loadParameters(strip);
+    for (auto &anim : strip->getAnimations())
+    {
+      configManager.loadParameters(anim.get());
+    }
   }
   if (isVerbose())
   {
@@ -310,19 +315,23 @@ bool processCmd(String command)
 
     return true;
   }
-  if (command == "saveDefaults") {
+  if (command == "saveDefaults")
+  {
     configManager.saveParameters(parameterManager);
     configManager.saveParameters(ledManager);
-    for (auto strip : ledManager->getStrips()) {
+    for (auto strip : ledManager->getStrips())
+    {
       configManager.saveParameters(strip);
     }
     Serial.println("Defaults saved");
     return true;
   }
-  if (command == "loadDefaults") {
+  if (command == "loadDefaults")
+  {
     configManager.loadParameters(parameterManager);
     configManager.loadParameters(ledManager);
-    for (auto strip : ledManager->getStrips()) {
+    for (auto strip : ledManager->getStrips())
+    {
       configManager.loadParameters(strip);
     }
     Serial.println("Defaults loaded");

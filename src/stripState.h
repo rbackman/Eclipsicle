@@ -100,6 +100,10 @@ public:
     {
         return animations.size();
     }
+    std::vector<std::unique_ptr<StripAnimation>> getAnimations()
+    {
+        return animations;
+    }
     bool respondToParameterMessage(parameter_message parameter);
 };
 

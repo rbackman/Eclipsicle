@@ -1,0 +1,352 @@
+{
+  "PARAM_INVERT": {
+    "id": 26,
+    "type": "bool",
+    "value": false,
+    "name": "Invert"
+  },
+  "PARAM_CENTERED": {
+    "id": 27,
+    "type": "bool",
+    "value": false,
+    "name": "Centered"
+  },
+  "PARAM_BLACK_AND_WHITE": {
+    "id": 28,
+    "type": "bool",
+    "value": false,
+    "name": "B&W"
+  },
+  "PARAM_LOOP_ANIM": {
+    "id": 29,
+    "type": "bool",
+    "value": false,
+    "name": "Loop"
+  },
+  "PARAM_CYCLE": {
+    "id": 30,
+    "type": "bool",
+    "value": false,
+    "name": "Cycle"
+  },
+  "PARAM_SEQUENCE": {
+    "id": 31,
+    "type": "bool",
+    "value": false,
+    "name": "Seq"
+  },
+  "PARAM_SHOW_FPS": {
+    "id": 32,
+    "type": "bool",
+    "value": false,
+    "name": "FPS"
+  },
+  "PARAM_SLIDER_GRAVITY": {
+    "id": 7,
+    "type": "float",
+    "value": 0,
+    "name": "Gravity",
+    "min": 0,
+    "max": 1
+  },
+  "PARAM_RECORD_AUDIO": {
+    "id": 34,
+    "type": "bool",
+    "value": false,
+    "name": "Record"
+  },
+  "PARAM_PARTICLE_UPDATE_ALL": {
+    "id": 5,
+    "type": "bool",
+    "value": true,
+    "name": "UpdateAll"
+  },
+  "PARAM_HUE": {
+    "id": 0,
+    "type": "int",
+    "value": 60,
+    "name": "Hue",
+    "min": 0,
+    "max": 360
+  },
+  "PARAM_HUE_END": {
+    "id": 1,
+    "type": "int",
+    "value": 120,
+    "name": "HueEnd",
+    "min": 0,
+    "max": 360
+  },
+  "PARAM_PARTICLE_WIDTH": {
+    "id": 3,
+    "type": "int",
+    "value": 5,
+    "name": "Width",
+    "min": 1,
+    "max": 60
+  },
+  "PARAM_RANDOM_DRIFT": {
+    "id": 11,
+    "type": "int",
+    "value": 0,
+    "name": "Drift",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_ANIMATION_TYPE": {
+    "id": 45,
+    "type": "int",
+    "value": 0,
+    "name": "AnimType",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_SPAWN_RATE": {
+    "id": 17,
+    "type": "int",
+    "value": 21,
+    "name": "Spawn",
+    "min": 1,
+    "max": 40
+  },
+  "PARAM_BRIGHTNESS": {
+    "id": 2,
+    "type": "int",
+    "value": 50,
+    "name": "Brightness",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_PARTICLE_FADE": {
+    "id": 4,
+    "type": "int",
+    "value": 100,
+    "name": "Fade",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_PARTICLE_LIFE": {
+    "id": 18,
+    "type": "int",
+    "value": -1,
+    "name": "Life",
+    "min": -1,
+    "max": 100
+  },
+  "PARAM_SLIDER_POSITION": {
+    "id": 16,
+    "type": "int",
+    "value": 0,
+    "name": "Pos",
+    "min": -255,
+    "max": 255
+  },
+  "PARAM_RANDOM_ON": {
+    "id": 22,
+    "type": "int",
+    "value": 30,
+    "name": "On",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_RANDOM_OFF": {
+    "id": 23,
+    "type": "int",
+    "value": 30,
+    "name": "Off",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_RANDOM_MIN": {
+    "id": 24,
+    "type": "int",
+    "value": 0,
+    "name": "Min",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_RANDOM_MAX": {
+    "id": 25,
+    "type": "int",
+    "value": 255,
+    "name": "Max",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_DISPLAY_ACCEL": {
+    "id": 33,
+    "type": "int",
+    "value": 0,
+    "name": "Accel",
+    "min": 0,
+    "max": 1
+  },
+  "PARAM_RAINBOW_OFFSET": {
+    "id": 15,
+    "type": "int",
+    "value": 0,
+    "name": "Offset",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_SOUND_SCALE": {
+    "id": 19,
+    "type": "float",
+    "value": 1,
+    "name": "Sound",
+    "min": 0,
+    "max": 1
+  },
+  "PARAM_SLIDER_MULTIPLIER": {
+    "id": 21,
+    "type": "float",
+    "value": 1,
+    "name": "Mult",
+    "min": 0,
+    "max": 1
+  },
+  "PARAM_CURRENT_STRIP": {
+    "id": 35,
+    "type": "int",
+    "value": 0,
+    "name": "CurrentStrip",
+    "min": 0,
+    "max": 3
+  },
+  "PARAM_CURRENT_LED": {
+    "id": 36,
+    "type": "int",
+    "value": 1,
+    "name": "CurrentLED",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_MASTER_LED_HUE": {
+    "id": 37,
+    "type": "int",
+    "value": 60,
+    "name": "Hue",
+    "min": 0,
+    "max": 360
+  },
+  "PARAM_MASTER_LED_BRIGHTNESS": {
+    "id": 38,
+    "type": "int",
+    "value": 50,
+    "name": "Brightness",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_MASTER_LED_SATURATION": {
+    "id": 39,
+    "type": "int",
+    "value": 255,
+    "name": "Saturation",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_MASTER_VOLUME": {
+    "id": 40,
+    "type": "int",
+    "value": 0,
+    "name": "Volume",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_MOTOR_SPEED": {
+    "id": 41,
+    "type": "int",
+    "value": 0,
+    "name": "Speed",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_BEAT": {
+    "id": 42,
+    "type": "int",
+    "value": 0,
+    "name": "Beat",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_BEAT_MAX_SIZE": {
+    "id": 43,
+    "type": "int",
+    "value": 30,
+    "name": "MaxSize",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_BEAT_FADE": {
+    "id": 44,
+    "type": "int",
+    "value": 50,
+    "name": "Fade",
+    "min": 0,
+    "max": 255
+  },
+  "PARAM_SCROLL_SPEED": {
+    "id": 20,
+    "type": "float",
+    "value": 1,
+    "name": "Speed",
+    "min": 0,
+    "max": 100
+  },
+  "PARAM_TIME_SCALE": {
+    "id": 12,
+    "type": "float",
+    "value": 8.959,
+    "name": "Time",
+    "min": 0.1,
+    "max": 20
+  },
+  "PARAM_SLIDER_REPEAT": {
+    "id": 13,
+    "type": "float",
+    "value": 0.9,
+    "name": "Repeat",
+    "min": 0.1,
+    "max": 10
+  },
+  "PARAM_VELOCITY": {
+    "id": 8,
+    "type": "float",
+    "value": 20,
+    "name": "Vel",
+    "min": -100,
+    "max": 100
+  },
+  "PARAM_ACCELERATION": {
+    "id": 10,
+    "type": "float",
+    "value": -1.879,
+    "name": "Accel",
+    "min": -10,
+    "max": 100
+  },
+  "PARAM_MAX_SPEED": {
+    "id": 9,
+    "type": "float",
+    "value": 1,
+    "name": "MaxSpd",
+    "min": 1,
+    "max": 10
+  },
+  "PARAM_RAINBOW_REPEAT": {
+    "id": 14,
+    "type": "float",
+    "value": 1,
+    "name": "Repeat",
+    "min": 1,
+    "max": 10
+  },
+  "PARAM_SLIDER_WIDTH": {
+    "id": 6,
+    "type": "float",
+    "value": 0.6,
+    "name": "Width",
+    "min": 0.1,
+    "max": 2
+  }
+}
