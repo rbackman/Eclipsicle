@@ -11,6 +11,7 @@
 #include "sensors.h"
 #include "serial.h"
 #include "shared.h"
+#include "config.h"
 #ifdef USE_MOTOR
 #include "motors.h"
 #endif
@@ -45,6 +46,8 @@ ParameterManager *parameterManager;
 #ifdef USE_LEDS
 LEDManager *ledManager;
 #endif
+
+ConfigManager configManager;
 
 #ifdef MESH_NET
 MeshnetManager *meshManager;
@@ -126,8 +129,14 @@ void setup()
 {
 
   serialManager = new SerialManager(220, SLAVE_NAME);
+  configManager.begin();
   parameterManager = new ParameterManager(SLAVE_NAME, {PARAM_DISPLAY_ACCEL});
   ledManager = new LEDManager(SLAVE_NAME);
+  configManager.loadParameters(parameterManager);
+  configManager.loadParameters(ledManager);
+  for (auto strip : ledManager->getStrips()) {
+    configManager.loadParameters(strip);
+  }
   if (isVerbose())
   {
     sanityCheckParameters();
@@ -299,6 +308,24 @@ bool processCmd(String command)
   {
     confirmParameters();
 
+    return true;
+  }
+  if (command == "saveDefaults") {
+    configManager.saveParameters(parameterManager);
+    configManager.saveParameters(ledManager);
+    for (auto strip : ledManager->getStrips()) {
+      configManager.saveParameters(strip);
+    }
+    Serial.println("Defaults saved");
+    return true;
+  }
+  if (command == "loadDefaults") {
+    configManager.loadParameters(parameterManager);
+    configManager.loadParameters(ledManager);
+    for (auto strip : ledManager->getStrips()) {
+      configManager.loadParameters(strip);
+    }
+    Serial.println("Defaults loaded");
     return true;
   }
   // ledManager->handleLEDCommand(command);

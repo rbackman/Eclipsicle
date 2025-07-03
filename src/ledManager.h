@@ -29,6 +29,7 @@ public:
     void toggleMode();
     String getStripState();
     int getCurrentStrip();
+    std::vector<StripState*> &getStrips() { return stripStates; }
     bool respondToParameterMessage(parameter_message parameter);
 };
 

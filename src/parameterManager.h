@@ -66,6 +66,10 @@ public:
     {
         return name;
     }
+
+    const std::vector<IntParameter> &getIntParameters() const { return intParams; }
+    const std::vector<BoolParameter> &getBoolParameters() const { return boolParams; }
+    const std::vector<FloatParameter> &getFloatParameters() const { return floatParams; }
     ParameterID getParameterID(std::string name)
     {
         auto pnames = getParameterNames();

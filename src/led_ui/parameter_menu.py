@@ -4,7 +4,7 @@ import json
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QStackedWidget, QLabel, QSlider, QCheckBox, QColorDialog, QPushButton,
-    QHeaderView, QSpinBox
+    QHeaderView, QSpinBox, QFileDialog
 )
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
@@ -15,9 +15,9 @@ from debounceSlider import DebouncedSlider
 from serial_console import SerialConsole
 from shared import get_param_name
 
-#  this maps from parameter name to their id
-
-ParameterMap: dict[str, int] = {}
+#  map from parameter name to full parameter info
+ParameterMap: dict[str, dict] = {}
+ParameterIDMap: dict[int, str] = {}
 
 
 # ───────────────────────────── MENU + PARAM ------------------------------------------------------------------
@@ -84,8 +84,8 @@ def checkParameters(params):
     """Check if the parameters are valid."""
 
     for name, prm in params.items():
-        # print(f"  {name} : {prm}\n")
-        ParameterMap[name] = prm["id"]
+        ParameterMap[name] = prm
+        ParameterIDMap[prm["id"]] = name
     print("parameters added to map:")
     mapAsString = json.dumps(params, indent=2)
 
@@ -100,8 +100,9 @@ def loadParameters():
         with open("parameter_map.json", "r") as f:
             data = f.read()
             if data:
-                global ParameterMap
+                global ParameterMap, ParameterIDMap
                 ParameterMap = json.loads(data)
+                ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
                 print("Loaded parameters from file:")
                 # print(ParameterMap)
     except FileNotFoundError:
@@ -186,10 +187,11 @@ class ParamPage(QWidget):
             self._send(pid, hue)
 
     def _send(self, pid, val):
+        if pid in ParameterIDMap:
+            ParameterMap[ParameterIDMap[pid]]["value"] = val
         if (len(ParameterMap)):
             # send short version if available
             cmd = "p:" + str(pid) + ":" + str(val)
-
             self.console.send_cmd(cmd)
         else:
             self.console.send_json({"param": pid, "value": val})
@@ -297,6 +299,12 @@ class ParameterMenuWidget(QWidget):
         self.confirm.clicked.connect(
             lambda: self.console.send_cmd("confirmParameters"))
         paramHLayout.addWidget(self.confirm)
+        self.saveBtn = QPushButton("Save Profile")
+        self.saveBtn.clicked.connect(self.save_profile)
+        paramHLayout.addWidget(self.saveBtn)
+        self.loadBtn = QPushButton("Load Profile")
+        self.loadBtn.clicked.connect(self.load_profile)
+        paramHLayout.addWidget(self.loadBtn)
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
         loadParameters()
@@ -431,3 +439,26 @@ class ParameterMenuWidget(QWidget):
             checkParameters(data)
             return True
         return False
+
+    def save_profile(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Save Parameter Profile", "", "JSON Files (*.json)")
+        if path:
+            with open(path, "w") as f:
+                json.dump(ParameterMap, f, indent=2)
+            self.console.send_cmd("saveDefaults")
+
+    def load_profile(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Load Parameter Profile", "", "JSON Files (*.json)")
+        if path:
+            with open(path, "r") as f:
+                data = json.load(f)
+            ParameterMap.clear()
+            ParameterMap.update(data)
+            global ParameterIDMap
+            ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
+            self.cache.clear()
+            while self.pages.count():
+                w = self.pages.widget(0)
+                self.pages.removeWidget(w)
+                w.deleteLater()
+            print(f"Loaded profile {path}")
