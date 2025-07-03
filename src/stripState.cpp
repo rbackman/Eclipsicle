@@ -33,14 +33,18 @@ String rleCompresssCRGB(const CRGB *leds, int numLEDS)
         }
         else
         {
-            result += String(leds[i].r) + "," + String(leds[i].g) + "," + String(leds[i].b) + ":" + String(count) + ";";
+            // send just the hue value
+            int hue = 0;
+            CHSV hsv = rgb2hsv_approximate(leds[i]);
+
+            result += String(hsv.hue) + "," + String(hsv.value) + ":" + String(count) + ";";
             count = 1;
         }
     }
     return result;
 }
 
-StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX)
+StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX)
 
 {
     leds = new CRGB[numLEDS];
@@ -158,11 +162,10 @@ void StripState::update()
         int pointPosition = (int)getInt(PARAM_CURRENT_LED);
 
         int pointHue = getInt(PARAM_HUE);
-        int pointBrightness = getInt(PARAM_BRIGHTNESS);
 
         // Serial.printf("point control strip %s   %d \n", getName().c_str(), pointPosition);
 
-        colorFromHSV(tempColor, float(pointHue) / float(255), 1, float(pointBrightness) / float(255));
+        colorFromHSV(tempColor, float(pointHue) / float(255), 1, 255);
         setPixel(pointPosition, tempColor);
     }
     break;
@@ -175,7 +178,7 @@ void StripState::update()
         if (counter % simulateCount == 0)
         {
             String compressed = rleCompresssCRGB(leds, numLEDS);
-            Serial.printf("sim:%s\n", compressed.c_str());
+            Serial.printf("\nsim:%s\n", compressed.c_str());
         }
     }
 }

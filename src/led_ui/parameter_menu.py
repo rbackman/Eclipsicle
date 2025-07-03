@@ -11,7 +11,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor
 import qtawesome as qta           # pip install qtawesome
 from debounceSlider import DebouncedSlider
-from floatSlider import FloatSliderWithSpinBox
+
 from serial_console import SerialConsole
 from shared import get_param_name
 
@@ -25,11 +25,21 @@ ParameterMap: dict[str, int] = {}
 MENU_TREE = {
     "Main": {
         "Patterns": {
-            "Particles": {"Color": {}, "Speed": {}, "Life": {}},
-            "Rainbow": {},
-            "Double Rainbow": {},
-            "Slider": {"Color": {}, "Settings": {}},
-            "Random": {},
+            "Particles": {
+                "Color": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_PARTICLE_WIDTH", "PARAM_BRIGHTNESS"],
+                "Speed": ["PARAM_TIME_SCALE", "PARAM_ACCELERATION", "PARAM_VELOCITY"],
+                "Life": ["PARAM_PARTICLE_LIFE", "PARAM_PARTICLE_FADE", "PARAM_SPAWN_RATE"]
+            },
+            "Rainbow": ["PARAM_RAINBOW_REPEAT", "PARAM_RAINBOW_OFFSET",
+                        "PARAM_TIME_SCALE", "PARAM_SCROLL_SPEED", "PARAM_BRIGHTNESS"],
+            "Double Rainbow": ["PARAM_TIME_SCALE"],
+            "Slider":  ["PARAM_SLIDER_WIDTH", "PARAM_SLIDER_GRAVITY",
+                        "PARAM_SLIDER_REPEAT", "PARAM_SLIDER_POSITION",
+                        "PARAM_SLIDER_MULTIPLIER", "PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS"],
+            "Random": ["PARAM_RANDOM_MIN", "PARAM_RANDOM_MAX",
+                       "PARAM_RANDOM_ON", "PARAM_RANDOM_OFF", "PARAM_BRIGHTNESS"
+
+                       ],
         },
         "LED": {"Master LED": {}, "Animation Type": {}},
         "Audio": {},
@@ -41,41 +51,11 @@ MENU_TREE = {
                 "All Strips": {},
             },
 
-            "Point Control": {}
+            "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"]
         },
     }
 }
 
-
-PARAM_MAP = {
-    "Color": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_PARTICLE_WIDTH"],
-
-    "Random": ["PARAM_RANDOM_MIN", "PARAM_RANDOM_MAX",
-               "PARAM_RANDOM_ON", "PARAM_RANDOM_OFF"
-
-               ],
-    "Speed": ["PARAM_TIME_SCALE", "PARAM_ACCELERATION"
-
-
-              ],
-
-    "Life": ["PARAM_PARTICLE_LIFE", "PARAM_PARTICLE_FADE", "PARAM_SPAWN_RATE"],
-
-    "Slider": ["PARAM_SLIDER_WIDTH", "PARAM_SLIDER_GRAVITY",
-               "PARAM_SLIDER_REPEAT", "PARAM_SLIDER_POSITION",
-               "PARAM_SLIDER_MULTIPLIER", "PARAM_HUE", "PARAM_HUE_END"],
-
-
-    "Misc": ["PARAM_CYCLE", "PARAM_SEQUENCE", "PARAM_INVERT",
-             "PARAM_CENTERED", "PARAM_BLACK_AND_WHITE", "PARAM_LOOP_ANIM"],
-
-    "Settings": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"],
-
-    "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"],
-
-
-
-}
 
 # ───────────────────────────── Font‑Awesome / MDI icon table --------------------------------------------------
 # Use Font‑Awesome 5 solid (fa5s) by default to avoid “Invalid font prefix” errors.
@@ -137,7 +117,7 @@ class ParamPage(QWidget):
         self.console = console
         lay = QVBoxLayout(self)
         lay.setAlignment(Qt.AlignTop)
-        print(f"Creating parameter page with { params} parameters\n")
+        # print(f"Creating parameter page with { params} parameters\n")
         for prmname in params:
             prm = params[prmname]
             kind = prm["type"]
@@ -147,10 +127,9 @@ class ParamPage(QWidget):
             if kind == "int":
                 # lbl = QLabel(f"{shortname}: 0")
                 sld = DebouncedSlider(prmname, prm)
-                sld.setRange(prm.get("min", 0), prm.get("max", 100))
-                sld.setValue(prm.get("value", 0))
-                sld.sendSignal.connect(
-                    lambda v,   p=prm: self._send(p['id'], v))
+
+                sld.sendInt.connect(
+                    lambda v,   p=prm:  self._send(p['id'], v))
 
                 lay.addWidget(sld)
             elif kind == "bool":
@@ -179,18 +158,20 @@ class ParamPage(QWidget):
                 hbox.addWidget(color_box)
                 lay.addLayout(hbox)
             elif kind == "float":
-                widget = FloatSliderWithSpinBox(prmname, prm)
-                widget.sendSignal.connect(
+
+                sld = DebouncedSlider(prmname, prm, "float")
+
+                sld.sendFloat.connect(
                     lambda v, p=prm: self._send(p['id'], v))
-                lay.addWidget(widget)
+                lay.addWidget(sld)
 
     def _upd_int(self, lbl, prm, v):
         lbl.setText(f"{prm['id']}: {v}")
         self._send(prm['id'], v)
 
     def _upd_float(self, lbl, prm, v):
-        lbl.setText(f"{prm['id']}: {v / 100:.2f}")
-        self._send(prm['id'], v / 100)
+        lbl.setText(f"{prm['id']}: {v / 1000:.2f}")
+        self._send(prm['id'], v / 1000)
 
     def _upd_bool(self, cb, prm, s):
         cb.setText(f"{prm['id']}: {bool(s)}")
@@ -329,6 +310,8 @@ class ParameterMenuWidget(QWidget):
 
     def _build_tree(self):
         def add(node, branch):
+            if not isinstance(branch, dict):
+                return
             for name, sub in branch.items():
                 itm = QTreeWidgetItem([name])
                 itm.setIcon(0, self._qta_icon(ICON.get(name)))
@@ -357,52 +340,66 @@ class ParameterMenuWidget(QWidget):
         if not cur:
             return
         name = cur.text(0)
-
-        if name not in self.cache:
-            pmap = PARAM_MAP.get(name, [])
-            data = {}
-            print(
-                f"Loading parameters for {name} with map: {pmap} {ParameterMap}   \n")
-            for prm in pmap:
-                if prm in ParameterMap:
-                    pdata = ParameterMap[prm]
-                    dtype = pdata.get("type", "int")
-                    if dtype == "int":
-                        data[prm] = {
-                            "id": pdata.get("id", 0),
-                            "type":  'int',
-                            "value": pdata.get("value", 0),
-                            "min":  pdata.get("min", 0),
-                            "max":  pdata.get("max", 255)
-                        }
-                    elif dtype == "bool":
-                        data[prm] = {
-                            "id": pdata.get("id", 0),
-                            "type": 'bool',
-                            "value": pdata.get("value", False)
-                        }
-                    elif dtype == "color":
-                        data[prm] = {
-                            "id": pdata.get("id", 0),
-                            "type": 'color',
-                            "value": pdata.get("value", 0)
-                        }
-                    elif dtype == "float":
-                        data[prm] = {
-                            "id": pdata.get("id", 0),
-                            "type": 'float',
-                            "value": pdata.get("value", 0.0),
-                            "min": pdata.get("min", 0.0),
-                            "max": pdata.get("max", 1.0)
-                        }
-
-            page = ParamPage(data,
-                             self.console) if data else QWidget()
-            self.cache[name] = page
-            self.pages.addWidget(page)
-
         treePath = self.get_tree_path(cur)
         isPatternType = treePath[-2] == "Patterns"
+
+        # use treepath to look for an array in MENU_TREE
+        treedata = MENU_TREE
+        for part in treePath:
+            if part in treedata:
+                treedata = treedata[part]
+            else:
+                print(f"Path {treePath} not found in MENU_TREE")
+                return
+        # if the last part is a list, it is a pattern type
+        if isinstance(treedata, list):
+            # has parameters so make a page
+            if name not in self.cache:
+                # pmap = PARAM_MAP.get(name, [])
+                data = {}
+
+                for prm in treedata:
+                    if prm in ParameterMap:
+                        pdata = ParameterMap[prm]
+                        dtype = pdata.get("type", "int")
+                        if dtype == "int":
+                            data[prm] = {
+                                "id": pdata.get("id", 0),
+                                "type":  'int',
+                                "value": pdata.get("value", 0),
+                                "min":  pdata.get("min", 0),
+                                "max":  pdata.get("max", 255)
+                            }
+                        elif dtype == "bool":
+                            data[prm] = {
+                                "id": pdata.get("id", 0),
+                                "type": 'bool',
+                                "value": pdata.get("value", False)
+                            }
+                        elif dtype == "color":
+                            data[prm] = {
+                                "id": pdata.get("id", 0),
+                                "type": 'color',
+                                "value": pdata.get("value", 0)
+                            }
+                        elif dtype == "float":
+                            data[prm] = {
+                                "id": pdata.get("id", 0),
+                                "type": 'float',
+                                "value": pdata.get("value", 0.0),
+                                "min": pdata.get("min", 0.0),
+                                "max": pdata.get("max", 1.0)
+                            }
+                    else:
+                        print(f"Parameter {prm} not found in ParameterMap")
+                        continue
+
+                print(
+                    f"Loading parameters for {name} with map: {treedata}  \n {data}   \n")
+                page = ParamPage(data,
+                                 self.console) if data else QWidget()
+                self.cache[name] = page
+                self.pages.addWidget(page)
 
         if isPatternType:
             # if it has the word patterns in it, show the animation sender
@@ -416,7 +413,15 @@ class ParameterMenuWidget(QWidget):
         pathname = "/".join(treePath)
 
         self.console.send_cmd(f"menu:{pathname}")
-        self.pages.setCurrentWidget(self.cache[name])
+        if name in self.cache:
+            # if we have a page for this name, show it
+            print(f"Showing cached page for {name}")
+            self.pages.setCurrentWidget(self.cache[name])
+            self.pages.show()
+        else:
+            # otherwise show an empty page
+            print(f"No cached page for {name}, showing empty page")
+            self.pages.hide()
 
     def json_received(self, obj: dict):
         """Handle incoming JSON data."""

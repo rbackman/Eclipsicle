@@ -16,7 +16,7 @@ class LEDSimWidget(QWidget):
         self.led_count = 0
         self.simCountSpinbox = QSpinBox()
         self.simCountSpinbox.setRange(-1, 10000)
-        self.simCountSpinbox.setValue(100)
+        self.simCountSpinbox.setValue(1)
 
         self.simulate_checkbox = QCheckBox('Simulate')
         self.simulate_checkbox.setChecked(False)
@@ -51,8 +51,11 @@ class LEDSimWidget(QWidget):
         for segment in data.split(";"):
             if segment:
                 color, count = segment.split(":")
-                r, g, b = map(int, color.split(","))
-                leds.extend([QColor(g, r, b)] * int(count))
+                hc, vc = color.split(",")
+                hue = int(hc)
+                value = int(vc)
+                color = QColor.fromHsv(hue, 255, value)
+                leds.extend([color] * int(count))
         return leds
 
     def draw_leds(self):
