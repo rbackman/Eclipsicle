@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QCheckBox, QSpinBox, QHBoxLayout
+from PyQt5.QtWidgets import QWidget, QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QCheckBox, QSpinBox, QHBoxLayout
 from PyQt5.QtCore import Qt, pyqtSignal, QRectF, QSize
 from PyQt5.QtGui import QColor, QBrush, QPen, QPainter
 
@@ -18,19 +18,30 @@ class LEDSimWidget(QWidget):
         self.simCountSpinbox.setRange(-1, 10000)
         self.simCountSpinbox.setValue(1)
 
+        # hidden checkbox used for menu-driven simulation toggle
         self.simulate_checkbox = QCheckBox('Simulate')
         self.simulate_checkbox.setChecked(False)
-        self.simulate_checkbox.stateChanged.connect(lambda state: self.console.send_cmd(
-            f"simulate:{self.simCountSpinbox.value()}") if state == Qt.Checked else self.console.send_cmd("simulate:-1"))
+        self.simulate_checkbox.stateChanged.connect(self._sim_state_changed)
+        self.simulate_checkbox.setVisible(False)
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHint(QPainter.Antialiasing)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setMaximumHeight(64)
-        self.layout.addWidget(self.simulate_checkbox)
+        # checkbox isn't added to layout so users toggle via menu
         self.layout.addWidget(self.simCountSpinbox)
         self.layout.addWidget(self.view)
+        self._sim_state_changed(self.simulate_checkbox.checkState())
+
+    def _sim_state_changed(self, state):
+        enabled = state == Qt.Checked
+        if enabled:
+            self.console.send_cmd(
+                f"simulate:{self.simCountSpinbox.value()}")
+        else:
+            self.console.send_cmd("simulate:-1")
+        self.setVisible(enabled)
 
     def process_string(self, string):
         if string.startswith("sim:"):
