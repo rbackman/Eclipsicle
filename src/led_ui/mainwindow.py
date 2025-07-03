@@ -3,7 +3,8 @@
 import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget,
-    QPushButton, QLabel, QSlider, QCheckBox, QColorDialog, QHBoxLayout, QSpinBox, QComboBox
+    QPushButton, QLabel, QSlider, QCheckBox, QColorDialog, QHBoxLayout,
+    QSpinBox, QComboBox, QMenuBar, QAction
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor
@@ -41,8 +42,55 @@ class MainWindow(QMainWindow):
             lambda port: self.console.connect(port), port))
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
+        self._create_menu_bar()
         self.setWindowTitle('ESP32 LED Controller')
         self.resize(800, 600)
+
+    def _create_menu_bar(self):
+        menu_bar = self.menuBar()
+
+        file_menu = menu_bar.addMenu('File')
+        save_action = QAction('Save Profile', self)
+        save_action.triggered.connect(self.parameter_menu.save_profile)
+        file_menu.addAction(save_action)
+
+        confirm_action = QAction('Confirm Parameters', self)
+        confirm_action.triggered.connect(
+            lambda: self.console.send_cmd('confirmParameters'))
+        file_menu.addAction(confirm_action)
+
+        view_menu = menu_bar.addMenu('View')
+        self.sim_action = QAction('Show Simulation', self, checkable=True)
+        self.sim_action.setChecked(False)
+        self.sim_action.triggered.connect(self.toggle_simulation)
+        view_menu.addAction(self.sim_action)
+
+        self.console_action = QAction('Show Console', self, checkable=True)
+        self.console_action.setChecked(False)
+        self.console_action.triggered.connect(self.toggle_console)
+        view_menu.addAction(self.console_action)
+
+        options_menu = menu_bar.addMenu('Options')
+        self.verbose_action = QAction('Verbose', self, checkable=True)
+        self.verbose_action.setChecked(False)
+        self.verbose_action.triggered.connect(
+            lambda checked: self.console.verbose_checkbox.setChecked(checked))
+        options_menu.addAction(self.verbose_action)
+
+        self.echo_action = QAction('Echo', self, checkable=True)
+        self.echo_action.setChecked(False)
+        self.echo_action.triggered.connect(
+            lambda checked: self.console.echo_checkbox.setChecked(checked))
+        options_menu.addAction(self.echo_action)
+
+        # keep menu actions in sync with console widgets
+        self.console.verbose_checkbox.stateChanged.connect(
+            lambda state: self.verbose_action.setChecked(bool(state)))
+        self.console.echo_checkbox.stateChanged.connect(
+            lambda state: self.echo_action.setChecked(bool(state)))
+        self.led_sim_widget.simulate_checkbox.stateChanged.connect(
+            lambda state: self.sim_action.setChecked(state == Qt.Checked))
+
 
     def update_brightness(self, label, value):
         label.setText(f'Brightness: {value}')
@@ -61,7 +109,23 @@ class MainWindow(QMainWindow):
         self.console.send_cmd(cmd)
 
     def toggle_console(self):
-        self.console.setVisible(not self.console.isVisible())
+        if isinstance(self.sender(), QAction):
+            visible = self.sender().isChecked()
+        else:
+            visible = not self.console.isVisible()
+        self.console.setVisible(visible)
+        if hasattr(self, 'console_action'):
+            self.console_action.setChecked(visible)
+
+    def toggle_simulation(self):
+        if isinstance(self.sender(), QAction):
+            enabled = self.sender().isChecked()
+        else:
+            enabled = not self.led_sim_widget.simulate_checkbox.isChecked()
+        self.led_sim_widget.simulate_checkbox.setChecked(enabled)
+        self.led_sim_widget.setVisible(enabled)
+        if hasattr(self, 'sim_action'):
+            self.sim_action.setChecked(enabled)
 
     def send_parameter(self, param, value, boolValue=False):
         data = {

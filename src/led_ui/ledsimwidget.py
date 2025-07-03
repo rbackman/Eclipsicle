@@ -20,8 +20,7 @@ class LEDSimWidget(QWidget):
 
         self.simulate_checkbox = QCheckBox('Simulate')
         self.simulate_checkbox.setChecked(False)
-        self.simulate_checkbox.stateChanged.connect(lambda state: self.console.send_cmd(
-            f"simulate:{self.simCountSpinbox.value()}") if state == Qt.Checked else self.console.send_cmd("simulate:-1"))
+        self.simulate_checkbox.stateChanged.connect(self._sim_state_changed)
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHint(QPainter.Antialiasing)
@@ -31,6 +30,16 @@ class LEDSimWidget(QWidget):
         self.layout.addWidget(self.simulate_checkbox)
         self.layout.addWidget(self.simCountSpinbox)
         self.layout.addWidget(self.view)
+        self._sim_state_changed(self.simulate_checkbox.checkState())
+
+    def _sim_state_changed(self, state):
+        enabled = state == Qt.Checked
+        if enabled:
+            self.console.send_cmd(
+                f"simulate:{self.simCountSpinbox.value()}")
+        else:
+            self.console.send_cmd("simulate:-1")
+        self.setVisible(enabled)
 
     def process_string(self, string):
         if string.startswith("sim:"):
