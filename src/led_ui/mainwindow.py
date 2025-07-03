@@ -33,10 +33,6 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.parameter_menu)
 
         self.console.setVisible(False)
-        self.toggle_console_btn = QPushButton("Toggle Console")
-        self.toggle_console_btn.clicked.connect(self.toggle_console)
-
-        main_layout.addWidget(self.toggle_console_btn)
         main_layout.addWidget(self.console)
         main_layout.addWidget(DeviceSelector(
             lambda port: self.console.connect(port), port))
@@ -53,6 +49,10 @@ class MainWindow(QMainWindow):
         save_action = QAction('Save Profile', self)
         save_action.triggered.connect(self.parameter_menu.save_profile)
         file_menu.addAction(save_action)
+
+        load_action = QAction('Load From Disk', self)
+        load_action.triggered.connect(self.parameter_menu.load_profile)
+        file_menu.addAction(load_action)
 
         confirm_action = QAction('Confirm Parameters', self)
         confirm_action.triggered.connect(

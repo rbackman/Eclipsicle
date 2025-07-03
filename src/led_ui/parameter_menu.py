@@ -303,14 +303,7 @@ class ParameterMenuWidget(QWidget):
         pRoot.addWidget(self.animationSender)
         paramHLayout.addWidget(self.tree, 1)
         paramHLayout.addWidget(self.pages, 1)
-        self.confirm = QPushButton("Confirm")
-        self.confirm.setIcon(qta.icon("fa5s.check"))
-        self.confirm.clicked.connect(
-            lambda: self.console.send_cmd("confirmParameters"))
-        paramHLayout.addWidget(self.confirm)
-        self.saveBtn = QPushButton("Save Profile")
-        self.saveBtn.clicked.connect(self.save_profile)
-        paramHLayout.addWidget(self.saveBtn)
+        # confirm and save buttons are now in the main menu
         self.tabs.addTab(paramTab, "Parameters")
 
         # Data tab -------------------------------------------------------
@@ -319,9 +312,7 @@ class ParameterMenuWidget(QWidget):
         self.dataList = QListWidget()
         self.dataList.itemDoubleClicked.connect(self._data_double_clicked)
         dRoot.addWidget(self.dataList)
-        self.loadBtn = QPushButton("Load From Disk")
-        self.loadBtn.clicked.connect(self.load_profile)
-        dRoot.addWidget(self.loadBtn)
+        # load from disk action moved to the File menu
         self.tabs.addTab(dataTab, "Data")
 
         self.setWindowTitle("ESP32 Pattern Controller")
