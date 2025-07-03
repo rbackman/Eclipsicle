@@ -476,6 +476,28 @@ void StripState::setPixel(int index, led color)
     }
     leds[ledIndex] = CRGB(color.r, color.g, color.b);
 }
+
+void StripState::blendPixel(int index, led color)
+{
+    int ledIndex = (index % numLEDS + numLEDS) % numLEDS;
+    if (ledIndex < 0 || ledIndex >= numLEDS)
+    {
+        Serial.printf("Invalid LED index %d\n", ledIndex);
+        return;
+    }
+    int r = leds[ledIndex].r + color.r;
+    int g = leds[ledIndex].g + color.g;
+    int b = leds[ledIndex].b + color.b;
+
+    if (r > 255)
+        r = 255;
+    if (g > 255)
+        g = 255;
+    if (b > 255)
+        b = 255;
+
+    leds[ledIndex] = CRGB(r, g, b);
+}
 void StripState::setPixel(int index, int r, int g, int b)
 {
 

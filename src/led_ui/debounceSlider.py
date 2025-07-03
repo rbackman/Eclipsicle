@@ -49,7 +49,8 @@ class DebouncedSlider(QWidget):
 
         self.timer = QTimer(self)
         self.timer.setSingleShot(True)
-        self.timer.setInterval(100)
+        # Lower interval for more responsive UI updates
+        self.timer.setInterval(50)
         self.timer.timeout.connect(self._flush)
 
         self.slider.valueChanged.connect(self._on_change)

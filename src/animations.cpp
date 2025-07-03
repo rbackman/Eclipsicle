@@ -13,7 +13,14 @@ float clamp(float value, float min, float max)
 void StripAnimation::setPixel(int index, led color)
 {
 
-    stripState->setPixel(index + startLED, color);
+    if (stripState->getAnimationCount() > 1)
+    {
+        stripState->blendPixel(index + startLED, color);
+    }
+    else
+    {
+        stripState->setPixel(index + startLED, color);
+    }
 }
 
 void ParticleAnimation::updateRandomParticles()
