@@ -4,13 +4,15 @@ import json
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QStackedWidget, QLabel, QSlider, QCheckBox, QColorDialog, QPushButton,
-    QHeaderView, QSpinBox, QFileDialog
+    QHeaderView, QSpinBox, QFileDialog, QListWidget, QTabWidget
 )
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor
 import qtawesome as qta           # pip install qtawesome
 from debounceSlider import DebouncedSlider
+import os
+import time
 
 from serial_console import SerialConsole
 from shared import get_param_name
@@ -286,12 +288,19 @@ class ParameterMenuWidget(QWidget):
 
         self._build_tree()
         self.tree.currentItemChanged.connect(self._sel_changed)
+
+        self.tabs = QTabWidget()
         root = QVBoxLayout(self)
-        root.setAlignment(Qt.AlignTop)
+        root.addWidget(self.tabs)
+
+        # Parameter tab ---------------------------------------------------
+        paramTab = QWidget()
+        pRoot = QVBoxLayout(paramTab)
+        pRoot.setAlignment(Qt.AlignTop)
         paramHLayout = QHBoxLayout()
-        root.addLayout(paramHLayout)
+        pRoot.addLayout(paramHLayout)
         self.animationSender = AnimationSendWidget(console)
-        root.addWidget(self.animationSender)
+        pRoot.addWidget(self.animationSender)
         paramHLayout.addWidget(self.tree, 1)
         paramHLayout.addWidget(self.pages, 1)
         self.confirm = QPushButton("Confirm")
@@ -302,12 +311,23 @@ class ParameterMenuWidget(QWidget):
         self.saveBtn = QPushButton("Save Profile")
         self.saveBtn.clicked.connect(self.save_profile)
         paramHLayout.addWidget(self.saveBtn)
-        self.loadBtn = QPushButton("Load Profile")
+        self.tabs.addTab(paramTab, "Parameters")
+
+        # Data tab -------------------------------------------------------
+        dataTab = QWidget()
+        dRoot = QVBoxLayout(dataTab)
+        self.dataList = QListWidget()
+        self.dataList.itemDoubleClicked.connect(self._data_double_clicked)
+        dRoot.addWidget(self.dataList)
+        self.loadBtn = QPushButton("Load From Disk")
         self.loadBtn.clicked.connect(self.load_profile)
-        paramHLayout.addWidget(self.loadBtn)
+        dRoot.addWidget(self.loadBtn)
+        self.tabs.addTab(dataTab, "Data")
+
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
         loadParameters()
+        self.refresh_data_files()
 
     # helper to build icon safely
     def _qta_icon(self, key):
@@ -441,24 +461,50 @@ class ParameterMenuWidget(QWidget):
         return False
 
     def save_profile(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Save Parameter Profile", "", "JSON Files (*.json)")
-        if path:
-            with open(path, "w") as f:
-                json.dump(ParameterMap, f, indent=2)
-            self.console.send_cmd("saveDefaults")
+        os.makedirs("data", exist_ok=True)
+        timestamp = time.strftime("%Y%m%d_%H%M%S")
+        path = os.path.join("data", f"profile_{timestamp}.json")
+        with open(path, "w") as f:
+            json.dump(ParameterMap, f, indent=2)
+        self.console.send_cmd("saveDefaults")
+        self.refresh_data_files()
 
     def load_profile(self):
         path, _ = QFileDialog.getOpenFileName(self, "Load Parameter Profile", "", "JSON Files (*.json)")
         if path:
-            with open(path, "r") as f:
-                data = json.load(f)
-            ParameterMap.clear()
-            ParameterMap.update(data)
-            global ParameterIDMap
-            ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
-            self.cache.clear()
-            while self.pages.count():
-                w = self.pages.widget(0)
-                self.pages.removeWidget(w)
-                w.deleteLater()
-            print(f"Loaded profile {path}")
+            self.load_profile_file(path)
+
+    # ------------------------------------------------------------------
+    def load_profile_file(self, path:str):
+        with open(path, "r") as f:
+            data = json.load(f)
+        ParameterMap.clear()
+        ParameterMap.update(data)
+        global ParameterIDMap
+        ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
+        self.cache.clear()
+        while self.pages.count():
+            w = self.pages.widget(0)
+            self.pages.removeWidget(w)
+            w.deleteLater()
+        print(f"Loaded profile {path}")
+        self.refresh_data_files()
+        self.apply_parameter_values()
+
+    def refresh_data_files(self):
+        os.makedirs("data", exist_ok=True)
+        self.dataList.clear()
+        for fname in sorted(os.listdir("data")):
+            if fname.endswith(".json"):
+                self.dataList.addItem(fname)
+
+    def _data_double_clicked(self, item):
+        path = os.path.join("data", item.text())
+        self.load_profile_file(path)
+
+    def apply_parameter_values(self):
+        for prm in ParameterMap.values():
+            pid = prm.get("id")
+            val = prm.get("value")
+            cmd = f"p:{pid}:{val}"
+            self.console.send_cmd(cmd)
