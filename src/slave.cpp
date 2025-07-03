@@ -39,7 +39,7 @@ bool showAccel = false;
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 32, &Wire);
 #endif
 JsonDocument doc;
-SerialManager *serialManager = new SerialManager(120, SLAVE_NAME);
+SerialManager *serialManager;
 ParameterManager *parameterManager;
 
 #ifdef USE_LEDS
@@ -102,7 +102,7 @@ ParameterHandler parameterHandler = [](parameter_message msg)
 {
   if (msg.paramID == PARAM_DISPLAY_ACCEL)
   {
-    showAccel = msg.value != 0;
+    showAccel = msg.boolValue;
   }
 
   parameterManager->respondToParameterMessage(msg);
@@ -115,31 +115,25 @@ ParameterHandler parameterHandler = [](parameter_message msg)
 #endif
 };
 
+bool respondToParameterChange(parameter_message parameter)
+{
+  // when a parameter changes have led manager process it
+
+  return ledManager->respondToParameterMessage(parameter);
+}
+
 void setup()
 {
-  Serial.begin(115200);
-  parameterManager = new ParameterManager("Slave", {PARAM_DISPLAY_ACCEL});
 
+  serialManager = new SerialManager(220, SLAVE_NAME);
+  parameterManager = new ParameterManager(SLAVE_NAME, {PARAM_DISPLAY_ACCEL});
+  ledManager = new LEDManager(SLAVE_NAME);
   if (isVerbose())
   {
     sanityCheckParameters();
   }
 
-  //   struct LEDParams
-  // {
-  //     int ledPin;
-  //     int numLEDS;
-  //     int stripIndex;
-  //     LED_STATE startState;
-  //     bool reverse;
-  // };
-
-  // std::vector<LEDParams> strips = {
-  //     {128, 0, LED_STATE_SLIDER, false},
-  //     {128, 1, LED_STATE_SLIDER, false}};
-  // // {16, 2, LED_STATE_PARTICLES, false}};
-  ledManager = new LEDManager(SLAVE_NAME);
-
+  parameterManager->addParameterChangeListener(respondToParameterChange);
 #ifdef USE_DISPLAY
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C))
@@ -201,21 +195,111 @@ void setup()
   Serial.println("Free memory Setup: ");
   Serial.println(ESP.getFreeHeap());
 }
+static void confirmParameters()
+{
+  Serial.println("Confirming parameters...");
 
-void processCmd(String command)
+  JsonDocument paramJson; // adjust size as needed
+  paramJson["type"] = "parameters";
+  JsonObject data = paramJson["data"].to<JsonObject>();
+
+  auto paramList = getParameterNames();
+
+  for (const auto &bParam : getDefaultBoolParameters())
+  {
+    const char *name = paramList[bParam.id].c_str();
+    JsonObject obj = data[name].to<JsonObject>();
+    obj["id"] = bParam.id;
+    obj["type"] = "bool";
+    obj["value"] = bParam.value;
+    obj["name"] = bParam.name;
+  }
+
+  for (const auto &iParam : getDefaultIntParameters())
+  {
+    const char *name = paramList[iParam.id].c_str();
+    JsonObject obj = data[name].to<JsonObject>();
+    obj["id"] = iParam.id;
+    obj["type"] = "int";
+    obj["value"] = iParam.value;
+    obj["name"] = iParam.name;
+    obj["min"] = iParam.min;
+    obj["max"] = iParam.max;
+  }
+
+  for (const auto &fParam : getDefaultFloatParameters())
+  {
+    const char *name = paramList[fParam.id].c_str();
+    JsonObject obj = data[name].to<JsonObject>();
+    obj["id"] = fParam.id;
+    obj["type"] = "float";
+    obj["value"] = fParam.value;
+    obj["name"] = fParam.name;
+    obj["min"] = fParam.min;
+    obj["max"] = fParam.max;
+  }
+
+  serializeJson(paramJson, Serial);
+  Serial.println(";");
+}
+
+bool processCmd(String command)
 {
 
   if (command == "verbose")
   {
     setVerbose(true);
     Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
-    return;
+    return true;
   }
   if (command == "quiet")
   {
     setVerbose(false);
     Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
-    return;
+    return true;
+  }
+  if (command.startsWith("p:"))
+  {
+    // command is in form "p:PARAM_ID:VALUE"
+    int colonIndex = command.indexOf(':');
+    if (colonIndex == -1)
+    {
+      Serial.println("Invalid command format. Expected 'p:PARAM_ID:VALUE'");
+      return false;
+    }
+    auto parts = splitString(command, ':');
+    int paramID = parts[1].toInt();
+    String value = parts[2];
+    ParameterID pid = (ParameterID)paramID;
+
+    parameter_message parameter;
+    parameter.paramID = pid;
+    parameter.type = MESSAGE_TYPE_PARAMETER;
+
+    if (isIntParameter(pid))
+    {
+      parameter.value = value.toInt();
+    }
+    else if (isFloatParameter(pid))
+    {
+      parameter.floatValue = value.toFloat();
+    }
+    else if (isBoolParameter(pid))
+    {
+      parameter.boolValue = (value == "true" || value == "1");
+    }
+    else
+    {
+      Serial.println("Unknown parameter ID: " + String(paramID));
+      return false;
+    }
+    parameterHandler(parameter);
+  }
+  if (command == "confirmParameters")
+  {
+    confirmParameters();
+
+    return true;
   }
   // ledManager->handleLEDCommand(command);
   // meshManager->handleMeshCommand(command);
@@ -377,6 +461,7 @@ void processCmd(String command)
   //   verbose = !verbose;
   //   Serial.println("Verbose: " + String(verbose));
   // }
+  return false; // command was not handled
 }
 int lastDisplayUpdate = 0;
 int displayFrameRate = 10;
@@ -499,51 +584,40 @@ void loop()
     String command = serialManager->readString();
     if (command.length() == 0)
       return;
-    Serial.println("Command: " + command);
-    processCmd(command);
+
+    if (processCmd(command))
+    {
+      return; // command was handled
+    }
 #ifdef USE_LEDS
+
     ledManager->handleLEDCommand(command);
 #endif
 
 #ifdef USE_MOTOR
     if (motorManager->handleMotorCommand(command))
-#else
-    if (false)
-#endif
     {
-      Serial.println("Motor command handled");
+      return; // command was handled by motor manager
     }
-    // #ifdef USE_LEDS
-    //     else if (ledManager->handleLEDCommand(command))
-    //     {
-    //       // Serial.println("Led command handled");
-    //     }
 
-    // #endif
-
-    // else
-    // {
-    //   if (isVerbose())
-    //     Serial.println("Command not handled" + command);
-    // }
+#endif
   }
   else if (serialManager->jsonAvailable())
   {
-
+    bool handled = false;
     if (serialManager->readJson(doc))
     {
-      if (isVerbose())
+
+      if (parameterManager->handleJsonMessage(doc))
       {
-        Serial.print("Json received: ");
-        serializeJson(doc, Serial);
-        Serial.println();
+        handled = true;
       }
-      parameterManager->handleJsonMessage(doc);
-      ledManager->handleJsonMessage(doc);
     }
     else
     {
       Serial.println("Json not handled");
+      serializeJson(doc, Serial);
+      Serial.println();
     }
   }
 #ifdef USE_LEDS

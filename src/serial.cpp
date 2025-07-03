@@ -34,7 +34,9 @@ SerialManager::SerialManager(int size, String name)
 
     memset(buffer, 0, bufferSize);
     Serial.begin(115200);
-
+    WiFi.mode(WIFI_STA);
+    WiFi.begin(); // Only if needed, even if you're not connecting
+    delay(100);   // let the MAC populate
     // Serial.println("ESPNow Init Success  " + String(WiFi.macAddress()));
     Serial.printf("Starting serial on device %s  \nwith address %s /n", getName(), String(WiFi.macAddress()).c_str());
 }
@@ -49,38 +51,30 @@ void SerialManager::updateSerial()
             if (bufPos >= bufferSize - 1)
             {
                 // If the buffer is full, reset it:
-                Serial.println("WARNING! buffer full reseting buffer bufPos=" + bufPos);
+                Serial.println("WARNING! buffer full, bufPos=" + String(bufPos));
                 clearBuffer();
             }
 
             char data = Serial.read();
-            if (isVerbose())
+            if (echo)
             {
                 Serial.print(data);
             }
 
             if (data == 27)
             {
-                if (isVerbose())
-                {
-                    Serial.println(" Escape pressed, clearing buffer");
-                    Serial.println(String(buffer));
-                }
 
                 clearBuffer();
             }
 
             else if (data == ';' and bufPos > 0 and bufPos < bufferSize - 2)
             {
+
+                buffer[bufPos] = '\0'; // Null-terminate the string
                 if (isVerbose())
                 {
-
-                    Serial.println("\nJSON received");
-                    Serial.println("buffer size " + String(bufPos));
-                    Serial.printf("val: %s\n", buffer);
+                    Serial.println("reading json: " + String(buffer));
                 }
-                buffer[bufPos] = '\0'; // Null-terminate the string
-
                 _jsonAvailable = true;
 
                 return;
@@ -88,12 +82,6 @@ void SerialManager::updateSerial()
             else if (data == '\n' and bufPos > 0 and bufPos < bufferSize - 1)
             {
 
-                if (isVerbose())
-                {
-                    Serial.println("Newline received");
-                    Serial.println("buffer size " + String(bufPos));
-                    Serial.printf("val: %s", buffer);
-                }
                 buffer[bufPos] = data;
                 buffer[bufPos + 1] = '\0'; // Null-terminate the string
 
@@ -111,6 +99,20 @@ void SerialManager::updateSerial()
                     Serial.println("verbose set to " + String(isVerbose()));
                     clearBuffer();
 
+                    return;
+                }
+                if (res == "echo")
+                {
+                    echo = true;
+                    Serial.println("echo set to " + String(echo));
+                    clearBuffer();
+                    return;
+                }
+                if (res == "no_echo")
+                {
+                    echo = false;
+                    Serial.println("echo set to " + String(echo));
+                    clearBuffer();
                     return;
                 }
                 if (res.indexOf("getMac") != -1)
@@ -182,16 +184,25 @@ bool SerialManager::readJson(JsonDocument &doc)
     _jsonAvailable = false;
 
     // Serial.println("Current Buffer as strinf:" + String(buffer));
-    auto error = deserializeJson(doc, buffer);
+    //  just use the first split of ; to decode json
+    char *jsonString = strtok(buffer, ";");
+    if (jsonString == nullptr)
+    {
+        Serial.println("Error: jsonString is null");
+        clearBuffer();
+        return false;
+    }
+
+    auto error = deserializeJson(doc, jsonString);
     if (error)
     {
         Serial.print(F("deserializeJson() failed with code "));
         Serial.println(error.c_str());
+        Serial.println("Buffer: " + String(jsonString));
         clearBuffer();
-
         return false;
     }
-
+    clearBuffer();
     // if (isVerbose())
     // {
     //     Serial.print("Json Deserialized: ");

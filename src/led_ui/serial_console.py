@@ -1,31 +1,37 @@
-from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton
-from PyQt5.QtCore import pyqtSignal, QTimer
+from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton, QHBoxLayout, QCheckBox, QSpinBox
+from PyQt5.QtCore import pyqtSignal, QTimer, Qt
+
 import serial
 import threading
 import json
+import typing
 
 
 class SerialConsole(QWidget):
     append_signal = pyqtSignal(str)
+    string_signal = pyqtSignal(str)
+    json_signal = pyqtSignal(dict)
+
     motorToCheck = 0
     motors = ["dowel", "drill", "x_axis"]
-    stringListeners = []
-    jsonListeners = []
+    stringListeners: list[typing.Callable] = []
+    jsonListeners: list[typing.Callable] = []
 
-    def __init__(self, port):
+    def __init__(self, port, baud=115200, timeout=0.1):
         super().__init__()
 
         self.ser = None
         self.running = False  # Start off
-
+        self.string_signal.connect(self.broadcast_string)
+        self.json_signal.connect(self.broadcast_json)
         try:
-            self.ser = serial.Serial(port, 115200, timeout=0.1)
+            self.ser = serial.Serial(port, baudrate=baud, timeout=timeout)
         except serial.SerialException as e:
             self.show_error(f"Could not open serial port {port}:\n{e}")
             return
         except Exception as e:
             self.show_error(
-                f"Unexpected error while connecting to {port}:\n{e}")
+                f"Unexpected error while connecting to {port} {baud} {timeout}:\n{e}")
             return
 
         self.init_ui()
@@ -56,11 +62,26 @@ class SerialConsole(QWidget):
         self.output = QTextEdit()
         self.output.setReadOnly(True)
         self.input = QLineEdit()
+        self.echo_checkbox = QCheckBox("Echo")
+        self.echo_checkbox.setChecked(False)
 
         self.input.returnPressed.connect(self.manual_send)
 
         layout.addWidget(self.output)
-        layout.addWidget(self.input)
+        hlayout = QHBoxLayout()
+
+        self.verbose_checkbox = QCheckBox('Verbose')
+        self.verbose_checkbox.setChecked(False)
+        self.verbose_checkbox.stateChanged.connect(lambda state:  self.send_cmd(
+            "verbose") if state == Qt.Checked else self.send_cmd("quiet"))
+        self.echo_checkbox.stateChanged.connect(lambda state: self.send_cmd(
+            "echo") if state == Qt.Checked else self.send_cmd("no_echo"))
+
+        hlayout.addWidget(self.input)
+        hlayout.addWidget(self.echo_checkbox)
+        hlayout.addWidget(self.verbose_checkbox)
+
+        layout.addLayout(hlayout)
 
         self.setLayout(layout)
 
@@ -80,24 +101,30 @@ class SerialConsole(QWidget):
                 if self.ser.in_waiting:
                     msg = self.ser.readline().decode(errors='ignore').strip()
                     if msg and self.running:
+                        if msg.startswith("sim:"):
+                            self.string_signal.emit(msg)
 
-                        # first check if msg is json
-                        try:
-                            data = json.loads(msg)
-                            for listener in self.jsonListeners:
-                                listener(data)
-                            self.log(msg)
-                        except:
+                        elif msg.endswith(";"):
+                            msg = msg[:-1]
 
-                            for listener in self.stringListeners:
-                                listener(msg)
+                            try:
+                                data = json.loads(msg)
+
+                                self.json_signal.emit(data)
+
+                            except json.JSONDecodeError as e:
+                                self.log("failed to parse json " + str(e))
+                                self.log(msg)
+                                pass
+                        else:
+                            self.string_signal.emit(msg)
                             self.log(msg)
-                            pass
             except Exception as e:
-                print(f"Serial read error: {e}")
+                self.log(f"Serial read error: {e}")
                 break
 
     def log(self, msg):
+        print(msg)
         if self.running:
             self.append_signal.emit(msg)
 
@@ -106,16 +133,34 @@ class SerialConsole(QWidget):
             self.log("⚠️ Serial port not open.")
             return
         msg = json.dumps(data)
-        self.ser.write((msg + ";").encode())
-        self.log("→ " + msg)
+        jsonstring = msg+";"
+        self.ser.write(jsonstring.encode())
+        if self.echo_checkbox.isChecked():
+            self.log("→ " + jsonstring)
 
     def send_cmd(self, data):
         if not self.ser or not self.ser.is_open:
             self.log("⚠️ Serial port not open.")
             return
-        msg = json.dumps(data)
-        self.ser.write((msg + "\n").encode())
-        self.log("→ " + msg)
+
+        self.ser.write((data + "\n").encode())
+        if self.echo_checkbox.isChecked():
+            self.log("→ " + data)
+
+    def broadcast_string(self, msg: str):
+        for listener in self.stringListeners:
+            try:
+                listener(msg)
+            except Exception as e:
+                print(f"Error for [{msg}] in string listener: {e} ")
+
+    def broadcast_json(self, data: dict):
+        for listener in self.jsonListeners:
+            try:
+                if listener(data):
+                    break
+            except Exception as e:
+                print(f"Error in JSON listener: {e}")
 
     def manual_send(self):
         msg = self.input.text()
@@ -123,8 +168,16 @@ class SerialConsole(QWidget):
         self.log("→ " + msg)
         self.input.clear()
 
-    def closeEvent(self, event):
-        self.running = False
+    def connect(self, port):
         if self.ser and self.ser.is_open:
             self.ser.close()
-        event.accept()
+        try:
+            self.ser = serial.Serial(port, 115200, timeout=0.1)
+            self.log(f"Connected to {port}")
+        except serial.SerialException as e:
+            self.show_error(f"Could not open serial port {port}:\n{e}")
+            return
+        except Exception as e:
+            self.show_error(
+                f"Unexpected error while connecting to {port}:\n{e}")
+            return

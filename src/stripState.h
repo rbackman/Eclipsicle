@@ -6,101 +6,65 @@
 #include "leds.h"
 
 #include "parameterManager.h"
-struct Particle
-{
-    bool active = false;
-    int life = -1;
-    float position = 0;
-    float maxSpeed = 1.5;
-    float velocity = 0.2;
-    float acceleration = 0.5;
+#include "animations.h"
+#include <memory>
 
-    float fade = 0.9;
-    int randomDrift = 5;
-
-    int hueStart;
-    int hueEnd;
-    int brightness;
-    int width;
-};
-
-struct SliderParams
-{
-    int position;
-    int width;
-    int hueshift;
-    int repeat;
-    bool useGravity;
-};
+#include "animations.h"
 class StripState : public ParameterManager
 {
 
 private:
     int stripIndex;
+    int currentAnimation = 0;
     int gravityPosition = 0;
     int numLEDS = 128;
-    bool invertLEDs = false;
+    int simulateCount = -1;
+    int counter = 0;
     float beatSize = 0;
 
     float scrollPos = 0;
 
+    std::vector<std::unique_ptr<StripAnimation>> animations;
     LED_STATE ledState = LED_STATE_IDLE;
-    Particle particles[10];
 
 public:
     bool isActive = true;
+
     CRGB *leds;
-    StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, bool invert);
+    StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX);
 
     void setNumLEDS(int num)
     {
         numLEDS = num;
     }
+    void addAnimation(ANIMATION_TYPE animis, int startLED = -1, int endLED = -1, std::map<ParameterID, float> params = {});
+    void setSimulate(int simulateCount)
+    {
+        this->simulateCount = simulateCount;
+    }
+    void setAnimation(ANIMATION_TYPE animType, int startLED = -1, int endLED = -1, std::map<ParameterID, float> params = {})
+    {
+        ledState = LED_STATE_SINGLE_ANIMATION;
+        animations.clear();
+        addAnimation(animType, startLED, endLED, params);
+    }
     int getNumLEDS()
     {
         return numLEDS;
+    }
+    int getNumAnimations()
+    {
+        return animations.size();
+    }
+    int getStripIndex()
+    {
+        return stripIndex;
     }
     void setGravityPosition(float position)
     {
         gravityPosition = (int)(position * numLEDS);
     }
-    void fadeParticleTail(int position, int width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction);
-
-    void spawnParticle(int position, float velocity, int hueStart, int hueEnd, int brightness, int width, int life)
-    {
-
-        bool used = false;
-        for (int i = 0; i < 10; i++)
-        {
-            if (!particles[i].active)
-            {
-                used = true;
-                particles[i].active = true;
-                particles[i].position = position;
-                particles[i].velocity = velocity;
-                particles[i].hueStart = hueStart;
-                particles[i].hueEnd = hueEnd;
-                particles[i].brightness = brightness;
-                particles[i].width = width;
-                particles[i].life = life;
-
-                // if (isVerbose())
-                // {
-                // Serial.printf("\nSpawned particle\n  position x: %d\n velocity: %f \nhueStart: %d \nhueEnd: %d \nbrightness: %d \nwidth: %d \nlife: %d", position, velocity, hueStart, hueEnd, brightness, width, life);
-                // }
-
-                return;
-            }
-        }
-        if (!used)
-        {
-            Serial.println("No free particles");
-        }
-    }
-
-    void spawnParticle();
-    void updateRandomParticles();
-    void updateParticles();
+    void replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params = {});
 
     void setLEDRow(LedRow ledRow)
     {
@@ -131,7 +95,7 @@ public:
 
     void update();
     String getStripState();
-    void respondToParameterMessage(parameter_message parameter);
+    bool respondToParameterMessage(parameter_message parameter);
 };
 
 #endif

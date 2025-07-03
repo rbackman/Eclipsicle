@@ -16,18 +16,18 @@ int interpolate(int from, int to, float t)
 {
   return from + (to - from) * t;
 }
-std::vector<ParameterID> getParametersForMenu(MenuID menu)
-{
-  std::vector<ParameterID> menuParams = {};
-  for (auto it = parameterMenuList.begin(); it != parameterMenuList.end(); ++it)
-  {
-    if (it->first == menu)
-    {
-      menuParams.push_back(it->second);
-    }
-  }
-  return menuParams;
-}
+// std::vector<ParameterID> getParametersForMenu(MenuID menu)
+// {
+//   std::vector<ParameterID> menuParams = {};
+//   for (auto it = parameterMenuList.begin(); it != parameterMenuList.end(); ++it)
+//   {
+//     if (it->first == menu)
+//     {
+//       menuParams.push_back(it->second);
+//     }
+//   }
+//   return menuParams;
+// }
 const char *getMenuName(MenuID type, int MaxSize)
 {
   auto it = menuTypeMap.find(type);
@@ -152,11 +152,6 @@ void colorFromHSV(led &color, float h, float s, float v)
   color.r = int(r * 255);
   color.g = int(g * 255);
   color.b = int(b * 255);
-
-  // if (h != 0)
-  // {
-  //   printf("rgb :%d %d %d :", color.r, color.g, color.b);
-  // }
 }
 
 std::vector<std::string> getParameterNames()
@@ -168,12 +163,100 @@ std::vector<std::string> getParameterNames()
   };
   return names;
 }
+std::string getParameterName(ParameterID type)
+{
+  auto names = getParameterNames();
+  if (type < 0 || type >= names.size())
+  {
+    return "UNKNOWN";
+  }
+
+  std::string name = names[type];
+  name.erase(0, 6);
+  return name;
+}
+
+std::vector<String> splitString(const String &path, char delimiter)
+{
+  std::vector<String> result;
+  size_t start = 0;
+  size_t end = path.indexOf(delimiter);
+  while (end != -1)
+  {
+    result.push_back(path.substring(start, end));
+    start = end + 1;
+    end = path.indexOf(delimiter, start);
+  }
+  result.push_back(path.substring(start));
+  return result;
+}
+std::vector<std::string> getAnimationNames()
+{
+  std::vector<std::string> names = {
+#define X(name) #name,
+      ANIMATION_LIST
+#undef X
+  };
+  return names;
+}
+std::string getAnimationName(ANIMATION_TYPE type)
+{
+  auto names = getAnimationNames();
+  if (type < 0 || type >= names.size())
+  {
+    return "UNKNOWN";
+  }
+  // return names[type];
+  // remove ANIMATION_TYPE_ prefix
+  std::string name = names[type];
+  name.erase(0, 15);
+  return name;
+}
+
+bool isBoolParameter(ParameterID id)
+{
+  auto boolparams = getDefaultBoolParameters();
+  for (int i = 0; i < boolparams.size(); i++)
+  {
+    if (boolparams[i].id == id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool isFloatParameter(ParameterID id)
+{
+  auto floatparams = getDefaultFloatParameters();
+  for (int i = 0; i < floatparams.size(); i++)
+  {
+    if (floatparams[i].id == id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+bool isIntParameter(ParameterID id)
+{
+  auto intparams = getDefaultIntParameters();
+  for (int i = 0; i < intparams.size(); i++)
+  {
+    if (intparams[i].id == id)
+    {
+      return true;
+    }
+  }
+  return false;
+}
 
 void sanityCheckParameters()
 {
   auto names = getParameterNames();
-  auto intParams = getDefaultParameters();
+  auto intParams = getDefaultIntParameters();
   auto boolParams = getDefaultBoolParameters();
+  auto floatParams = getDefaultFloatParameters();
   int missingParams = 0;
   for (int i = 0; i < names.size(); i++)
   {
@@ -200,6 +283,18 @@ void sanityCheckParameters()
         break;
       }
     }
+    if (found)
+    {
+      continue;
+    }
+    for (auto param : floatParams)
+    {
+      if (param.id == i)
+      {
+        found = true;
+        break;
+      }
+    }
     if (!found)
     {
       missingParams++;
@@ -209,24 +304,5 @@ void sanityCheckParameters()
   if (missingParams == 0)
   {
     Serial.println("All parameters accounted for");
-  }
-
-  auto menus = parameterMenuList;
-  // make sure each parameter is used in a menu
-  for (int i = 0; i < names.size(); i++)
-  {
-    bool found = false;
-    for (auto menu : menus)
-    {
-      if (menu.second == i)
-      {
-        found = true;
-        break;
-      }
-    }
-    if (!found)
-    {
-      Serial.printf("Parameter %s not found in a menu\n", names[i].c_str());
-    }
   }
 }

@@ -28,7 +28,6 @@
     X(PARAM_RAINBOW_REPEAT)        \
     X(PARAM_RAINBOW_OFFSET)        \
     X(PARAM_SLIDER_POSITION)       \
-    X(PARAM_SLIDER_HUE)            \
     X(PARAM_SPAWN_RATE)            \
     X(PARAM_PARTICLE_LIFE)         \
     X(PARAM_SOUND_SCALE)           \
@@ -57,6 +56,7 @@
     X(PARAM_BEAT)                  \
     X(PARAM_BEAT_MAX_SIZE)         \
     X(PARAM_BEAT_FADE)             \
+    X(PARAM_ANIMATION_TYPE)        \
     X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
@@ -137,6 +137,7 @@ const std::map<SensorID, std::string> sensorIDMap = {
     {AUDIO_AMP, "AudioAmp"},
     {AUDIO_FREQ, "AudioFreq"},
     {AUDIO_BEAT, "AudioBeat"}};
+
 const char *getSensorName(SensorID id);
 
 enum MESSAGE_TYPE
@@ -162,7 +163,7 @@ enum ParameterID
 #undef X
 };
 std::vector<std::string> getParameterNames();
-
+std::string getParameterName(ParameterID id);
 enum MenuID
 {
     MENU_ROOT = -1,
@@ -186,6 +187,10 @@ enum MenuID
     MENU_SETTINGS_DEBUG_MODE,
     MENU_MISC_DEBUG_MODE,
     MENU_LED_DEBUG_MODE,
+    MENU_ANIMATION_TYPE,
+    MENU_SINGLE_ANIMATION,
+    MENU_MULTI_ANIMATION,
+    MENU_POINT_CONTROL,
     MENU_MASTER_LED_MODE,
     MENU_SETTINGS,
     MENU_AUDIO,
@@ -196,7 +201,10 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_IDLE, {"Idle", MENU_ROOT}},
     {MENU_MAIN, {"Main", MENU_IDLE}},
     {MENU_PATTERNS, {"Patterns", MENU_MAIN}},
-
+    {MENU_ANIMATION_TYPE, {"Animation Type", MENU_MAIN}},
+    {MENU_SINGLE_ANIMATION, {"Single Animation", MENU_ANIMATION_TYPE}},
+    {MENU_MULTI_ANIMATION, {"Multi Animation", MENU_ANIMATION_TYPE}},
+    {MENU_POINT_CONTROL, {"Point Control", MENU_ANIMATION_TYPE}},
     {MENU_PARTICLES, {"Particles", MENU_PATTERNS}},
 
     {MENU_RANDOM_PARTICLES, {"RndParticles", MENU_PATTERNS}},
@@ -219,7 +227,7 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_DISPLAY_DEBUG_MODE, {"Display", MENU_DEBUG}},
     {MENU_SETTINGS_DEBUG_MODE, {"Settings", MENU_DEBUG}},
     {MENU_MISC_DEBUG_MODE, {"Misc", MENU_DEBUG}},
-    {MENU_LED_DEBUG_MODE, {"LEDDbg", MENU_DEBUG}},
+
 };
 
 struct IntParameter
@@ -229,7 +237,6 @@ struct IntParameter
     int value;
     int min;
     int max;
-    float scale;
 };
 
 struct BoolParameter
@@ -239,106 +246,110 @@ struct BoolParameter
     bool value;
 };
 
-// add parameters to menu
-const std::vector<std::pair<MenuID, ParameterID>> parameterMenuList = {
-    {MENU_PARTICLES_COLOR_MODE, PARAM_HUE},
-    {MENU_PARTICLES_COLOR_MODE, PARAM_HUE_END},
-    {MENU_PARTICLES_COLOR_MODE, PARAM_PARTICLE_WIDTH},
-    {MENU_PARTICLES_COLOR_MODE, PARAM_TIME_SCALE},
-    {MENU_PARTICLES_COLOR_MODE, PARAM_PARTICLE_FADE},
-    {MENU_PARTICLES_LIFE_MODE, PARAM_PARTICLE_LIFE},
-    {MENU_PARTICLES_LIFE_MODE, PARAM_PARTICLE_UPDATE_ALL},
-
-    {MENU_PARTICLES_SPEED_MODE, PARAM_VELOCITY},
-    {MENU_PARTICLES_SPEED_MODE, PARAM_ACCELERATION},
-    {MENU_PARTICLES_SPEED_MODE, PARAM_MAX_SPEED},
-    {MENU_PARTICLES_SPEED_MODE, PARAM_RANDOM_DRIFT},
-    {MENU_PARTICLES_LIFE_MODE, PARAM_SPAWN_RATE},
-    {MENU_PARTICLES_LIFE_MODE, PARAM_CYCLE},
-
-    {MENU_RAINBOW_MODE, PARAM_SCROLL_SPEED},
-    {MENU_RAINBOW_MODE, PARAM_BRIGHTNESS},
-    {MENU_RAINBOW_MODE, PARAM_RAINBOW_REPEAT},
-    {MENU_RAINBOW_MODE, PARAM_RAINBOW_OFFSET},
-    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_WIDTH},
-    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_REPEAT},
-    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_POSITION},
-    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_HUE},
-    {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_MULTIPLIER},
-
-    {MENU_SLIDER_SETTINGS_MODE, PARAM_SLIDER_GRAVITY},
-    {MENU_SLIDER_SETTINGS_MODE, PARAM_INVERT},
-    {MENU_SLIDER_SETTINGS_MODE, PARAM_CENTERED},
-
-    {MENU_RANDOM_MODE, PARAM_RANDOM_ON},
-    {MENU_RANDOM_MODE, PARAM_RANDOM_OFF},
-    {MENU_RANDOM_MODE, PARAM_RANDOM_MIN},
-    {MENU_RANDOM_MODE, PARAM_RANDOM_MAX},
-
-    {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_HUE},
-    {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_BRIGHTNESS},
-    {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_SATURATION},
-
-    {MENU_DISPLAY_DEBUG_MODE, PARAM_SHOW_FPS},
-    {MENU_DISPLAY_DEBUG_MODE, PARAM_DISPLAY_ACCEL},
-    {MENU_DISPLAY_DEBUG_MODE, PARAM_BLACK_AND_WHITE},
-
-    {MENU_MISC_DEBUG_MODE, PARAM_MOTOR_SPEED},
-    {MENU_MISC_DEBUG_MODE, PARAM_SEQUENCE},
-    {MENU_MISC_DEBUG_MODE, PARAM_SOUND_SCALE},
-    {MENU_MISC_DEBUG_MODE, PARAM_RECORD_AUDIO},
-    {MENU_MISC_DEBUG_MODE, PARAM_LOOP_ANIM},
-    {MENU_LED_DEBUG_MODE, PARAM_CURRENT_STRIP},
-    {MENU_LED_DEBUG_MODE, PARAM_CURRENT_LED},
-    {MENU_LED_DEBUG_MODE, PARAM_HUE},
-    {MENU_LED_DEBUG_MODE, PARAM_BRIGHTNESS},
-
+struct FloatParameter
+{
+    ParameterID id;
+    std::string name;
+    float value;
+    float min;
+    float max;
 };
 
-static const std::vector<IntParameter> getDefaultParameters()
+// // add parameters to menu
+// const std::vector<std::pair<MenuID, ParameterID>> parameterMenuList = {
+//     {MENU_PARTICLES_COLOR_MODE, PARAM_HUE},
+//     {MENU_PARTICLES_COLOR_MODE, PARAM_HUE_END},
+//     {MENU_PARTICLES_COLOR_MODE, PARAM_PARTICLE_WIDTH},
+//     {MENU_PARTICLES_COLOR_MODE, PARAM_TIME_SCALE},
+//     {MENU_PARTICLES_COLOR_MODE, PARAM_PARTICLE_FADE},
+//     {MENU_PARTICLES_LIFE_MODE, PARAM_PARTICLE_LIFE},
+//     {MENU_PARTICLES_LIFE_MODE, PARAM_PARTICLE_UPDATE_ALL},
+
+//     {MENU_PARTICLES_SPEED_MODE, PARAM_VELOCITY},
+//     {MENU_PARTICLES_SPEED_MODE, PARAM_ACCELERATION},
+//     {MENU_PARTICLES_SPEED_MODE, PARAM_MAX_SPEED},
+//     {MENU_PARTICLES_SPEED_MODE, PARAM_RANDOM_DRIFT},
+//     {MENU_PARTICLES_LIFE_MODE, PARAM_SPAWN_RATE},
+//     {MENU_PARTICLES_LIFE_MODE, PARAM_CYCLE},
+
+//     {MENU_RAINBOW_MODE, PARAM_SCROLL_SPEED},
+//     {MENU_RAINBOW_MODE, PARAM_BRIGHTNESS},
+//     {MENU_RAINBOW_MODE, PARAM_RAINBOW_REPEAT},
+//     {MENU_RAINBOW_MODE, PARAM_RAINBOW_OFFSET},
+//     {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_WIDTH},
+//     {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_REPEAT},
+//     {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_POSITION},
+
+//     {MENU_SLIDER_COLOR_MODE, PARAM_SLIDER_MULTIPLIER},
+
+//     {MENU_SLIDER_SETTINGS_MODE, PARAM_SLIDER_GRAVITY},
+//     {MENU_SLIDER_SETTINGS_MODE, PARAM_INVERT},
+//     {MENU_SLIDER_SETTINGS_MODE, PARAM_CENTERED},
+
+//     {MENU_RANDOM_MODE, PARAM_RANDOM_ON},
+//     {MENU_RANDOM_MODE, PARAM_RANDOM_OFF},
+//     {MENU_RANDOM_MODE, PARAM_RANDOM_MIN},
+//     {MENU_RANDOM_MODE, PARAM_RANDOM_MAX},
+
+//     {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_HUE},
+//     {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_BRIGHTNESS},
+//     {MENU_MASTER_LED_MODE, PARAM_MASTER_LED_SATURATION},
+
+//     {MENU_DISPLAY_DEBUG_MODE, PARAM_SHOW_FPS},
+//     {MENU_DISPLAY_DEBUG_MODE, PARAM_DISPLAY_ACCEL},
+//     {MENU_DISPLAY_DEBUG_MODE, PARAM_BLACK_AND_WHITE},
+
+//     {MENU_MISC_DEBUG_MODE, PARAM_MOTOR_SPEED},
+//     {MENU_MISC_DEBUG_MODE, PARAM_SEQUENCE},
+//     {MENU_MISC_DEBUG_MODE, PARAM_SOUND_SCALE},
+//     {MENU_MISC_DEBUG_MODE, PARAM_RECORD_AUDIO},
+//     {MENU_MISC_DEBUG_MODE, PARAM_LOOP_ANIM},
+//     {MENU_LED_DEBUG_MODE, PARAM_CURRENT_STRIP},
+//     {MENU_LED_DEBUG_MODE, PARAM_CURRENT_LED},
+//     {MENU_LED_DEBUG_MODE, PARAM_HUE},
+//     {MENU_LED_DEBUG_MODE, PARAM_BRIGHTNESS},
+
+// };
+
+static const std::vector<IntParameter> getDefaultIntParameters()
 {
 
     return {
-        {PARAM_HUE, "Hue", 60, 0, 360, 1.0},
-        {PARAM_HUE_END, "HueEnd", 120, 0, 360, 1.0},
-        {PARAM_PARTICLE_WIDTH, "Width", 10, 1, 60, 1.0},
-        {PARAM_VELOCITY, "Vel", 10, 1, 100, 0.1},
-        {PARAM_ACCELERATION, "Accel", 0, -10, 100, 0.1},
-        {PARAM_MAX_SPEED, "MaxSpd", 1, 1, 10, 0.1},
-        {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255, 1.0},
+        {PARAM_HUE, "Hue", 60, 0, 360},
+        {PARAM_HUE_END, "HueEnd", 120, 0, 360},
+        {PARAM_PARTICLE_WIDTH, "Width", 5, 1, 60},
 
-        {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40, 1.0},
-        {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255, 1.0},
-        {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255, 1.0},
-        {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100, 1.0},
-        {PARAM_TIME_SCALE, "Time", 10, 1, 100, 0.1},
-        {PARAM_SLIDER_REPEAT, "Repeat", 10, 1, 100, 0.1},
-        {PARAM_SLIDER_POSITION, "Pos", 0, 0, 255, 1.0},
-        {PARAM_SLIDER_WIDTH, "Width", 6, 1, 60, 1.0},
-        {PARAM_SLIDER_HUE, "Hue", 60, 0, 360, 1.0},
-        {PARAM_RANDOM_ON, "On", 30, 0, 255, 1.0},
-        {PARAM_RANDOM_OFF, "Off", 30, 0, 255, 1.0},
-        {PARAM_RANDOM_MIN, "Min", 0, 0, 255, 1.0},
-        {PARAM_RANDOM_MAX, "Max", 255, 0, 255, 1.0},
-        {PARAM_DISPLAY_ACCEL, "Accel", 0, 0, 1, 1.0},
-        {PARAM_RAINBOW_REPEAT, "Repeat", 1, 1, 10, 1.0},
-        {PARAM_RAINBOW_OFFSET, "Offset", 0, 0, 255, 1.0},
-        {PARAM_SOUND_SCALE, "Sound", 0, 0, 1, 1.0},
-        {PARAM_SCROLL_SPEED, "Speed", 0, 0, 100, 1.0},
-        {PARAM_SLIDER_MULTIPLIER, "Mult", 0, 0, 1, 1.0},
-        {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3, 1.0},
-        {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255, 0.5},
-        {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360, 1.0},
-        {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 50, 0, 255, 1.0},
-        {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255, 1.0},
-        {PARAM_MASTER_VOLUME, "Volume", 0, 0, 255, 1.0},
-        {PARAM_MOTOR_SPEED, "Speed", 0, 0, 255, 1.0},
-        {PARAM_BEAT, "Beat", 0, 0, 255, 1.0},
-        {PARAM_BEAT_MAX_SIZE, "MaxSize", 30, 0, 255, 1.0},
-        {PARAM_BEAT_FADE, "Fade", 50, 0, 255, 0.05},
+        {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255},
+        {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255},
+        {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40},
+        {PARAM_BRIGHTNESS, "Brightness", 50, 0, 255},
+        {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255},
+        {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100},
 
+        {PARAM_SLIDER_POSITION, "Pos", 0, -255, 255},
+
+        {PARAM_RANDOM_ON, "On", 30, 0, 255},
+        {PARAM_RANDOM_OFF, "Off", 30, 0, 255},
+        {PARAM_RANDOM_MIN, "Min", 0, 0, 255},
+        {PARAM_RANDOM_MAX, "Max", 255, 0, 255},
+        {PARAM_DISPLAY_ACCEL, "Accel", 0, 0, 1},
+
+        {PARAM_RAINBOW_OFFSET, "Offset", 0, 0, 255},
+        {PARAM_SOUND_SCALE, "Sound", 0, 0, 1},
+
+        {PARAM_SLIDER_MULTIPLIER, "Mult", 0, 0, 1},
+        {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3},
+        {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255},
+        {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360},
+        {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 50, 0, 255},
+        {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255},
+        {PARAM_MASTER_VOLUME, "Volume", 0, 0, 255},
+        {PARAM_MOTOR_SPEED, "Speed", 0, 0, 255},
+        {PARAM_BEAT, "Beat", 0, 0, 255},
+        {PARAM_BEAT_MAX_SIZE, "MaxSize", 30, 0, 255},
+        {PARAM_BEAT_FADE, "Fade", 50, 0, 255},
     };
-};
+}
 
 static const std::vector<BoolParameter> getDefaultBoolParameters()
 {
@@ -354,16 +365,42 @@ static const std::vector<BoolParameter> getDefaultBoolParameters()
         {PARAM_SLIDER_GRAVITY, "Gravity", false},
         {PARAM_RECORD_AUDIO, "Record", false},
         {PARAM_PARTICLE_UPDATE_ALL, "UpdateAll", true},
+
     };
 }
 
-std::vector<ParameterID> getParametersForMenu(MenuID menu);
+static const std::vector<FloatParameter> getDefaultFloatParameters()
+{
+
+    return {
+        {PARAM_SLIDER_GRAVITY, "Gravity", 0.0, 0.0, 1.0},
+        {PARAM_SLIDER_MULTIPLIER, "Mult", 1.0, 0.0, 1.0},
+        {PARAM_SCROLL_SPEED, "Speed", 1.0, 0.0, 100.0},
+        {PARAM_SOUND_SCALE, "Sound", 1.0, 0.0, 1.0},
+        {PARAM_TIME_SCALE, "Time", 1.0, 0.1, 20.0},
+        {PARAM_SLIDER_REPEAT, "Repeat", 0.9, 0.1, 10.0},
+        {PARAM_VELOCITY, "Vel", 20.0, -100, 100.0},
+        {PARAM_ACCELERATION, "Accel", 0.0, -10.0, 100.0},
+        {PARAM_MAX_SPEED, "MaxSpd", 1.0, 1.0, 10.0},
+        {PARAM_RAINBOW_REPEAT, "Repeat", 1.0, 1.0, 10.0},
+        {PARAM_SLIDER_WIDTH, "Width", 0.6, 0.1, 2.0},
+    };
+}
+
+bool isBoolParameter(ParameterID id);
+
+bool isFloatParameter(ParameterID id);
+bool isIntParameter(ParameterID id);
+
+// std::vector<ParameterID> getParametersForMenu(MenuID menu);
 
 std::vector<MenuID> getChildrenOfMenu(MenuID type);
 std::string getMenuPath(MenuID type, MenuID root);
 const char *getMenuName(MenuID type, int MaxSize = 6);
 
 const MenuID getParentMenu(MenuID type);
+
+std::vector<String> splitString(const String &path, char delimiter);
 
 // Maximum sizes
 #define MAX_TEXT_SIZE 144
@@ -389,8 +426,9 @@ typedef struct sensor_message
 typedef struct parameter_message
 {
     MESSAGE_TYPE type;
-    int value;
-    bool boolValue;
+    int value = 0;
+    bool boolValue = false;
+    float floatValue = 0.0f;
     ParameterID paramID;
 } parameter_message;
 
@@ -444,7 +482,7 @@ using MacAddresses = std::map<std::string, MacAddress>;
 
 #define MAX_LEDS_PER_STRIP 200
 
-#define LED_PIN_1 17
+#define LED_PIN_1 23
 #define LED_PIN_2 5
 #define LED_PIN_3 19
 #define LED_PIN_4 18
@@ -452,20 +490,57 @@ using MacAddresses = std::map<std::string, MacAddress>;
 enum LED_STATE
 {
     LED_STATE_IDLE,
-    LED_STATE_RAINBOW,
-    LED_STATE_DOUBLE_RAINBOW,
-    LED_STATE_SLIDER,
-    LED_STATE_RANDOM,
+    LED_STATE_SINGLE_ANIMATION,
+    LED_STATE_MULTI_ANIMATION,
     LED_STATE_POINT_CONTROL,
-    LED_STATE_PARTICLES,
-    LED_STATE_RANDOM_PARTICLES,
+};
+
+#define ANIMATION_LIST                 \
+    X(ANIMATION_TYPE_NONE)             \
+    X(ANIMATION_TYPE_PARTICLES)        \
+    X(ANIMATION_TYPE_RAINBOW)          \
+    X(ANIMATION_TYPE_DOUBLE_RAINBOW)   \
+    X(ANIMATION_TYPE_SLIDER)           \
+    X(ANIMATION_TYPE_RANDOM)           \
+    X(ANIMATION_TYPE_RANDOM_PARTICLES) \
+    X(ANIMATION_TYPE_IDLE)
+
+// enum ANIMATION_TYPE
+// {
+//     ANIMATION_TYPE_NONE,
+//     ANIMATION_TYPE_PARTICLES,
+//     ANIMATION_TYPE_RAINBOW,
+//     ANIMATION_TYPE_DOUBLE_RAINBOW,
+//     ANIMATION_TYPE_SLIDER,
+//     ANIMATION_TYPE_RANDOM,
+//     ANIMATION_TYPE_POINT_CONTROL,
+//     ANIMATION_TYPE_RANDOM_PARTICLES,
+//     ANIMATION_TYPE_IDLE
+// };
+enum ANIMATION_TYPE
+{
+#define X(name) name,
+    ANIMATION_LIST
+#undef X
+};
+
+std::string getAnimationName(ANIMATION_TYPE type);
+
+struct AnimationParams
+{
+    ANIMATION_TYPE type;
+    int startLED = 0;
+    int endLED = -1; // -1 means all LEDs
+
+    std::map<ParameterID, float> params = {};
 };
 struct LEDParams
 {
-    int numLEDS;
+
     int stripIndex;
-    LED_STATE startState;
-    bool reverse;
+    int numLEDS;
+    LED_STATE state;
+    std::vector<AnimationParams> animations;
 };
 
 struct LEDRig
@@ -475,13 +550,36 @@ struct LEDRig
     std::vector<LEDParams> strips;
 };
 
+// map to state names
+const std::map<LED_STATE, String> LED_STATE_NAMES = {
+    {LED_STATE_IDLE, "IDLE"},
+    {LED_STATE_POINT_CONTROL, "POINT_CONTROL"},
+    {LED_STATE_SINGLE_ANIMATION, "SINGLE_ANIMATION"},
+    {LED_STATE_MULTI_ANIMATION, "MULTI_ANIMATION"}
+
+};
+
+const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
+    {ANIMATION_TYPE_NONE, "NONE"},
+    {ANIMATION_TYPE_PARTICLES, "PARTICLES"},
+    {ANIMATION_TYPE_RAINBOW, "RAINBOW"},
+    {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
+    {ANIMATION_TYPE_SLIDER, "SLIDER"},
+    {ANIMATION_TYPE_RANDOM, "RANDOM"},
+
+    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}};
+
 const std::vector<LEDRig> slaves = {
     {
         "Eclipsicle",
         {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
         {
-            {164, 0, LED_STATE_PARTICLES, false},
-            {200, 1, LED_STATE_SLIDER, false},
+            {0, 164, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_RAINBOW, 0, 163},
+                                                 }},
+            {1, 200, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_SLIDER, 0, 200},
+                                                 }},
 
         },
     },
@@ -489,7 +587,12 @@ const std::vector<LEDRig> slaves = {
         "Tesseratica",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
-            {164, 0, LED_STATE_PARTICLES, false},
+            {0, 122, LED_STATE_MULTI_ANIMATION, {
+                                                    {ANIMATION_TYPE_PARTICLES, 0, 27, {{PARAM_HUE, 100}, {PARAM_HUE_END, 120}, {PARAM_TIME_SCALE, 0.1f}}},
+                                                    {ANIMATION_TYPE_RAINBOW, 28, 44},
+                                                    {ANIMATION_TYPE_PARTICLES, 45, 72, {{PARAM_HUE, 200}, {PARAM_HUE_END, 240}, {PARAM_TIME_SCALE, 0.1f}}},
+                                                    {ANIMATION_TYPE_RAINBOW, 73, 121},
+                                                }},
 
         },
     },
@@ -497,14 +600,16 @@ const std::vector<LEDRig> slaves = {
         "tradeday",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
-            {100, 0, LED_STATE_IDLE, false},
+            {0, 100, LED_STATE_SINGLE_ANIMATION, {}},
         },
     },
     {
         "simpled",
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
-            {164, 0, LED_STATE_PARTICLES, false},
+            {0, 164, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_PARTICLES, 0, 164},
+                                                 }},
 
         },
     },
@@ -512,9 +617,15 @@ const std::vector<LEDRig> slaves = {
         "Bike",
         {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
         {
-            {48, 0, LED_STATE_SLIDER, false},
-            {48, 1, LED_STATE_SLIDER, false},
-            {18, 2, LED_STATE_SLIDER, false},
+            {0, 48, LED_STATE_SINGLE_ANIMATION, {
+                                                    {ANIMATION_TYPE_SLIDER, 0, 48},
+                                                }},
+            {1, 48, LED_STATE_SINGLE_ANIMATION, {
+                                                    {ANIMATION_TYPE_SLIDER, 0, 48},
+                                                }},
+            {2, 18, LED_STATE_SINGLE_ANIMATION, {
+                                                    {ANIMATION_TYPE_SLIDER, 0, 18},
+                                                }},
         },
     },
     {
@@ -522,43 +633,30 @@ const std::vector<LEDRig> slaves = {
         "Spinner",
         {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
         {
-            {280, 0, LED_STATE_IDLE, false},
-            {280, 1, LED_STATE_IDLE, false},
+            {0, 280, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_IDLE, 0, 280},
+                                                 }},
+            {1, 280, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_IDLE, 0, 280},
+                                                 }},
         },
     },
-    {
-        "Dunno",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {100, 0, LED_STATE_IDLE, false},
-            {100, 1, LED_STATE_IDLE, false},
-            {100, 2, LED_STATE_IDLE, false},
-        },
 
-    },
     {
         "Bike",
         {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
         {
-            {100, 0, LED_STATE_IDLE, false},
-            {100, 1, LED_STATE_IDLE, false},
-            {100, 2, LED_STATE_IDLE, false},
+            {0, 100, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_IDLE, 0, 100},
+                                                 }},
+            {1, 100, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_IDLE, 0, 100},
+                                                 }},
+            {2, 100, LED_STATE_SINGLE_ANIMATION, {
+                                                     {ANIMATION_TYPE_IDLE, 0, 100},
+                                                 }},
         },
     }};
-
-// map to state names
-const std::map<LED_STATE, String> LED_STATE_NAMES = {
-    {LED_STATE_IDLE, "IDLE"},
-    {LED_STATE_RAINBOW, "RAINBOW"},
-    {LED_STATE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
-    {LED_STATE_SLIDER, "SLIDER"},
-    {LED_STATE_RANDOM, "RANDOM"},
-    {LED_STATE_POINT_CONTROL, "POINT_CONTROL"},
-    {LED_STATE_PARTICLES, "PARTICLES"},
-    {LED_STATE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}
-
-};
-
 const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 
 void colorFromHSV(led &color, float h, float s, float v);

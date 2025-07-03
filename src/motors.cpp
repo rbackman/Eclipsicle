@@ -25,6 +25,7 @@ bool MotorManager::handleMotorCommand(String cmd)
         {
 
             setMotor(motorVal);
+            ANIMATION_TYPE_RAINBOW
         }
         return true;
     }
