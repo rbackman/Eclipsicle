@@ -88,6 +88,7 @@ public:
 
     void clearPixels();
     void clearPixel(int index);
+    void blendPixel(int index, led color);
     void setPixel(int index, led color);
     void setPixel(int index, int r, int g, int b);
 
@@ -95,6 +96,10 @@ public:
 
     void update();
     String getStripState();
+    int getAnimationCount()
+    {
+        return animations.size();
+    }
     bool respondToParameterMessage(parameter_message parameter);
 };
 
