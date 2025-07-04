@@ -6,6 +6,9 @@
 #include <vector>
 typedef bool (*ParameterChangeListener)(parameter_message parameter);
 
+// Stores int, float and bool parameters for a component.
+// Parameter IDs are defined in shared.h so firmware and UI share the same enum.
+
 class ParameterManager
 {
     // parameter change listeners

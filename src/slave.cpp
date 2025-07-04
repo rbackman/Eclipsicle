@@ -95,7 +95,6 @@ SensorHandler sensorHandler = [](sensor_message msg)
   }
 #endif
 #ifdef USE_LEDS
-  // ledManager->respondToSensor(msg);
 #endif
 };
 
@@ -120,7 +119,6 @@ ParameterHandler parameterHandler = [](parameter_message msg)
 
 bool respondToParameterChange(parameter_message parameter)
 {
-  // when a parameter changes have led manager process it
 
   return ledManager->respondToParameterMessage(parameter);
 }
@@ -162,8 +160,6 @@ void setup()
   display.setTextColor(WHITE);
   display.setRotation(0);
 
-  // while (!Serial)
-  //   delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
   Serial.println("Adafruit MPU6050 found display!");
 #endif
@@ -173,10 +169,6 @@ void setup()
   if (!mpu.begin())
   {
     Serial.println("Failed to find MPU6050 chip");
-    // while (1)
-    // {
-    //   delay(10);
-    // }
   }
 
   pinMode(buttonPin, INPUT_PULLUP);
@@ -199,7 +191,6 @@ void setup()
 
   meshManager->setImageHandler(imageHandler);
   meshManager->setTextHandler(textHandler);
-  //  parameters use over espnow
   meshManager->setParameterHandler(parameterHandler);
 #ifdef USE_SENSORS
   meshManager->setSensorHandler(sensorHandler);
@@ -357,195 +348,6 @@ bool processCmd(String command)
     Serial.println(state + ";");
     return true;
   }
-  // ledManager->handleLEDCommand(command);
-  // meshManager->handleMeshCommand(command);
-  // checkLEDCommand(command);
-  // checkSensorCommand(command);
-
-  // if (command.startsWith("?"))
-  // {
-  //   String subCommand = command.substring(1);
-
-  //   if (subCommand == "led")
-  //   {
-  //     Serial.println("led <pixel> <hue>");
-  //   }
-  //   else if (subCommand == "rand")
-  //   {
-  //     Serial.println("rand <on> <off> <on2> <min> <max>");
-  //   }
-  //   else if (subCommand == "anim")
-  //   {
-  //     Serial.println("anim <speed>");
-  //   }
-  //   else if (subCommand == "cent")
-  //   {
-  //     Serial.println("cent");
-  //   }
-  //   else if (subCommand == "verb")
-  //   {
-  //     Serial.println("verb");
-  //   }
-  //   else if (subCommand == "loop")
-  //   {
-  //     Serial.println("loop");
-  //   }
-  //   else if (subCommand == "strobe")
-  //   {
-  //     Serial.println("strobe <delay>");
-  //   }
-  //   else if (subCommand == "delay")
-  //   {
-  //     Serial.println("delay <delay>");
-  //   }
-  //   else if (subCommand == "brightness")
-  //   {
-  //     Serial.println("brightness <brightness>");
-  //   }
-  //   else if (subCommand == "dist")
-  //   {
-  //     Serial.println("dist");
-  //   }
-  //   else if (subCommand == "rand")
-  //   {
-  //     Serial.println("rand");
-  //   }
-  //   else if (subCommand == "rain")
-  //   {
-  //     Serial.println("rain");
-  //   }
-  //   else
-  //   {
-  //     Serial.println("Commands:");
-  //     Serial.println("rain");
-  //     Serial.println("idle");
-  //     Serial.println("anim");
-  //     Serial.println("rand");
-  //     Serial.println("dist");
-  //     Serial.println("brightness");
-  //     Serial.println("delay");
-  //     Serial.println("strobe");
-  //     Serial.println("loop");
-  //     Serial.println("verb");
-  //     Serial.println("cent");
-  //     Serial.println("anim");
-  //     Serial.println("rand");
-  //     Serial.println("led");
-  //   }
-  // }
-
-  // if (cmd.startsWith("led"))
-  // {
-  //   int pixel = String(strtok(NULL, " ")).toInt();
-  //   int hue = String(strtok(NULL, " ")).toInt();
-
-  //   colorFromHSV(color, hue / 255.0, 1, 1);
-  //   if (pixel >= 0 && pixel < NUM_LEDS)
-  //   {
-  //     Serial.println("Setting pixel " + String(pixel) + " to ");
-  //     strip.setPixelColor(pixel, color.r, color.g, color.b);
-  //     strip.show();
-  //   }
-  // }
-  // else if (cmd.startsWith("cent"))
-  // {
-  //   centered = !centered;
-  //   Serial.println("Centered" + centered);
-  // }
-  // else if (cmd.startsWith("rand"))
-  // {
-  //   ledState = LED_STATE_RANDOM;
-
-  //   randomOn = String(strtok(NULL, " ")).toInt();
-  //   randomOff = String(strtok(NULL, " ")).toInt();
-  //   randomOn2 = String(strtok(NULL, " ")).toInt();
-  //   randMin = String(strtok(NULL, " ")).toInt();
-  //   randMax = String(strtok(NULL, " ")).toInt();
-
-  //   Serial.println("Switched to RANDOM mode");
-  // }
-
-  // else if (cmd.startsWith("rain"))
-  // {
-  //   ledState = LED_STATE_RAINBOW;
-  //   Serial.println("Switched to RAINBOW mode");
-  // }
-  // else if (cmd.startsWith("loop"))
-  // {
-  //   loopAnim = !loopAnim;
-  // }
-  // else if (cmd.startsWith("dist"))
-  // {
-  //   ledState = LED_STATE_DISTANCE_REACTIVE;
-  //   Serial.println("Switched to DISTANCE_REACTIVE mode");
-  // }
-  // else if (cmd.startsWith("idle"))
-  // {
-  //   ledState = LED_STATE_IDLE;
-  //   Serial.println("Switched to IDLE mode");
-  //   for (size_t i = 0; i < NUM_LEDS; i++)
-  //   {
-  //     strip.setPixelColor(i, 0);
-  //   }
-  // }
-  // else if (cmd.startsWith("anim"))
-  // {
-  //   scrollSpeed = String(strtok(NULL, " ")).toInt();
-  //   ledState = LED_STATE_IMAGE_ANIMATED;
-  //   currentRow = 0;
-  //   Serial.println("Switched to IMAGE mode scroll: " + String(scrollSpeed));
-  // }
-
-  // else if (cmd.startsWith("strobe"))
-  // {
-  //   strobeDelay = String(strtok(NULL, " ")).toInt();
-  // }
-  // else if (cmd.startsWith("delay"))
-  // {
-  //   delayTime = String(strtok(NULL, " ")).toInt();
-  // }
-
-  // else if (cmd.startsWith("brightness"))
-  // {
-  //   brightness = String(strtok(NULL, " ")).toInt();
-  //   Serial.println("Setting brightness to: " + String(brightness));
-  //   strip.setBrightness(brightness);
-  //   strip.show();
-  // }
-  // else if (cmd.startsWith("verb"))
-  // {
-  //   verbose = !verbose;
-  //   Serial.println("Verbose: " + String(verbose));
-  // }
-  return false; // command was not handled
-}
-int lastDisplayUpdate = 0;
-int displayFrameRate = 10;
-void loop()
-{
-
-  // int buttonState = digitalRead(buttonPin);
-
-  // // Check if button state has changed from high to low (button press)
-  // if (buttonState == LOW && lastButtonState == HIGH)
-  // {
-
-  //   ledManager->toggleMode();
-  //   Serial.print("Switched to mode: ");
-  //   Serial.println(ledManager->getStripState());
-  // }
-
-  // lastButtonState = buttonState; // Update the last button state
-
-#ifdef USE_ACCELEROMETER
-  sensors_event_t a, g, temp;
-  mpu.getEvent(&a, &g, &temp);
-
-  int curentTime = millis();
-  if (curentTime - lastDisplayUpdate > 1000 / 60) // 1000 / displayFrameRate)
-  {
-    lastDisplayUpdate = curentTime;
-
     float ax = a.acceleration.x;
     float ay = a.acceleration.y;
     float az = a.acceleration.z;
@@ -590,49 +392,9 @@ void loop()
 #endif
   }
 
-  // display.clearDisplay();
-  // display.setCursor(0, 0);
 
-  // // Serial.print("Accelerometer ");
-  // // Serial.print("X: ");
-  // // Serial.print(a.acceleration.x, 1);
-  // // Serial.print(" m/s^2, ");
-  // // Serial.print("Y: ");
-  // // Serial.print(a.acceleration.y, 1);
-  // // Serial.print(" m/s^2, ");
-  // // Serial.print("Z: ");
-  // // Serial.print(a.acceleration.z, 1);
-  // // Serial.println(" m/s^2");
 
-  // display.println("Accelerometer - m/s^2");
-  // display.print(a.acceleration.x, 1);
-  // display.print(", ");
-  // display.print(a.acceleration.y, 1);
-  // display.print(", ");
-  // display.print(a.acceleration.z, 1);
-  // display.println("");
 
-  // // Serial.print("Gyroscope ");
-  // // Serial.print("X: ");
-  // // Serial.print(g.gyro.x, 1);
-  // // Serial.print(" rps, ");
-  // // Serial.print("Y: ");
-  // // Serial.print(g.gyro.y, 1);
-  // // Serial.print(" rps, ");
-  // // Serial.print("Z: ");
-  // // Serial.print(g.gyro.z, 1);
-  // // Serial.println(" rps");
-
-  // display.println("Gyroscope - rps");
-  // display.print(g.gyro.x, 1);
-  // display.print(", ");
-  // display.print(g.gyro.y, 1);
-  // display.print(", ");
-  // display.print(g.gyro.z, 1);
-  // display.println("");
-
-  // display.display();
-  // delay(100);
 #endif
   serialManager->updateSerial();
   if (serialManager->stringAvailable())
