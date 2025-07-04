@@ -255,6 +255,141 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
     }
     return false;
 }
+
+bool StripState::parseAnimationScript(String script)
+{
+    script.replace('|', '\n');
+    std::vector<String> lines = splitString(script, '\n');
+    bool inParams = false;
+    bool inAnims = false;
+    String configFile;
+    std::map<ParameterID, float> paramOverrides;
+    struct AnimLine
+    {
+        ANIMATION_TYPE type;
+        int startLED;
+        int endLED;
+        std::map<ParameterID, float> params;
+    };
+    std::vector<AnimLine> anims;
+
+    for (auto &line : lines)
+    {
+        line.trim();
+        if (line.length() == 0 || line.startsWith("#"))
+            continue;
+        if (line.startsWith("ConfigFile:"))
+        {
+            configFile = line.substring(String("ConfigFile:").length());
+            configFile.trim();
+            continue;
+        }
+        if (line.equalsIgnoreCase("Parameters:") || line.equalsIgnoreCase("PARAMETERS:"))
+        {
+            inParams = true;
+            inAnims = false;
+            continue;
+        }
+        if (line.equalsIgnoreCase("Animations:") || line.equalsIgnoreCase("ANIMATIONS:"))
+        {
+            inAnims = true;
+            inParams = false;
+            continue;
+        }
+        if (inParams)
+        {
+            int colon = line.indexOf(':');
+            if (colon == -1)
+                continue;
+            String key = line.substring(0, colon);
+            String val = line.substring(colon + 1);
+            key.trim();
+            val.trim();
+            key.toUpperCase();
+            String full = "PARAM_" + key;
+            ParameterID pid = getParameterID(full.c_str());
+            if (pid != PARAM_UNKNOWN)
+            {
+                paramOverrides[pid] = val.toFloat();
+            }
+            continue;
+        }
+        if (inAnims)
+        {
+            auto tokens = splitString(line, ' ');
+            if (tokens.size() == 0)
+                continue;
+            String animName = tokens[0];
+            ANIMATION_TYPE type = getAnimationTypeFromName(animName);
+            if (type == ANIMATION_TYPE_NONE)
+                continue;
+            int startLED = 0;
+            int endLED = getNumLEDS() - 1;
+            std::map<ParameterID, float> params;
+            for (int i = 1; i < tokens.size(); ++i)
+            {
+                String t = tokens[i];
+                int c = t.indexOf(':');
+                if (c == -1)
+                    continue;
+                String k = t.substring(0, c);
+                String v = t.substring(c + 1);
+                k.trim();
+                v.trim();
+                if (k.equalsIgnoreCase("startLED"))
+                {
+                    startLED = v.toInt();
+                }
+                else if (k.equalsIgnoreCase("endLED"))
+                {
+                    endLED = v.toInt();
+                }
+                else
+                {
+                    k.toUpperCase();
+                    String full = "PARAM_" + k;
+                    ParameterID pid = getParameterID(full.c_str());
+                    if (pid != PARAM_UNKNOWN)
+                    {
+                        params[pid] = v.toFloat();
+                    }
+                }
+            }
+            anims.push_back({type, startLED, endLED, params});
+        }
+    }
+
+    if (configFile.length() > 0 && isVerbose())
+    {
+        Serial.printf("ConfigFile %s\n", configFile.c_str());
+    }
+
+    for (const auto &kv : paramOverrides)
+    {
+        ParameterID id = kv.first;
+        float value = kv.second;
+        if (isIntParameter(id))
+        {
+            setInt(id, (int)value);
+        }
+        else if (isFloatParameter(id))
+        {
+            setFloat(id, value);
+        }
+        else if (isBoolParameter(id))
+        {
+            setBool(id, value != 0);
+        }
+    }
+
+    ledState = LED_STATE_MULTI_ANIMATION;
+    animations.clear();
+    for (const auto &a : anims)
+    {
+        addAnimation(a.type, a.startLED, a.endLED, a.params);
+    }
+    return true;
+}
 void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params)
 {
     if (index < 0 || index >= animations.size())
@@ -277,6 +412,11 @@ bool StripState::respondToText(String command)
 {
 
     bool verbose = isVerbose();
+    if (command.startsWith("script:"))
+    {
+        String script = command.substring(String("script:").length());
+        return parseAnimationScript(script);
+    }
     if (command.startsWith("simulate:"))
     {
         auto simParts = splitString(command, ':');
