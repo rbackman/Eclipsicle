@@ -100,7 +100,7 @@ public:
     {
         return animations.size();
     }
-    std::vector<std::unique_ptr<StripAnimation>> getAnimations()
+    std::vector<std::unique_ptr<StripAnimation>> &getAnimations()
     {
         return animations;
     }
