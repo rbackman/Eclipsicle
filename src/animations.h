@@ -43,12 +43,9 @@ protected:
 
 public:
     virtual void update() = 0;
-    StripAnimation(StripState *state, int startLED, int endLED, ANIMATION_TYPE type, std::vector<ParameterID> params) : ParameterManager(getAnimationName(type), params)
+    StripAnimation(StripState *state, int startLED, int endLED, ANIMATION_TYPE type, std::vector<ParameterID> params)
+        : ParameterManager(getAnimationName(type), params), stripState(state), startLED(startLED), endLED(endLED)
     {
-        this->stripState = state;
-        this->animationType = type;
-        this->startLED = startLED;
-        this->endLED = endLED;
     }
     ANIMATION_TYPE getAnimationType()
     {
@@ -86,7 +83,7 @@ class ParticleAnimation : public StripAnimation
 public:
     void update();
 
-    ParticleAnimation(StripState *state, bool random, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_PARTICLE_WIDTH, PARAM_PARTICLE_LIFE, PARAM_PARTICLE_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE})
+    ParticleAnimation(StripState *state, bool random, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_WIDTH, PARAM_PARTICLE_LIFE, PARAM_PARTICLE_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE, PARAM_REVERSE})
     {
 
         this->randomMode = random;
@@ -141,9 +138,9 @@ public:
     void update();
     FallingBricksAnimation(StripState *state, int startLED, int endLED)
         : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_FALLING_BRICKS,
-                          {PARAM_PARTICLE_WIDTH, PARAM_VELOCITY, PARAM_HUE,
-                           PARAM_HUE_END, PARAM_HUE_VARIANCE, PARAM_BRIGHTNESS,
-                           PARAM_TIME_SCALE, PARAM_DIRECTION})
+                         {PARAM_WIDTH, PARAM_VELOCITY, PARAM_HUE,
+                          PARAM_HUE_END, PARAM_HUE_VARIANCE, PARAM_BRIGHTNESS,
+                          PARAM_TIME_SCALE, PARAM_REVERSE})
     {
     }
 };

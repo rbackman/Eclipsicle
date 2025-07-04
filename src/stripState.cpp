@@ -353,6 +353,18 @@ bool StripState::parseAnimationScript(String script)
                     k.toUpperCase();
                     String full = "PARAM_" + k;
                     ParameterID pid = getParameterID(full.c_str());
+                    if (isBoolParameter(pid))
+                    {
+                        v = v.equalsIgnoreCase("true") ? "1" : "0";
+                    }
+                    else if (isIntParameter(pid))
+                    {
+                        v = String((int)v.toFloat());
+                    }
+                    else if (isFloatParameter(pid))
+                    {
+                        v = String(v.toFloat(), 2);
+                    }
                     if (pid != PARAM_UNKNOWN)
                     {
                         params[pid] = v.toFloat();

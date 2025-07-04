@@ -14,7 +14,7 @@
     X(PARAM_HUE)                   \
     X(PARAM_HUE_END)               \
     X(PARAM_BRIGHTNESS)            \
-    X(PARAM_PARTICLE_WIDTH)        \
+    X(PARAM_WIDTH)                 \
     X(PARAM_PARTICLE_FADE)         \
     X(PARAM_PARTICLE_UPDATE_ALL)   \
     X(PARAM_SLIDER_WIDTH)          \
@@ -56,11 +56,11 @@
     X(PARAM_BEAT)                  \
     X(PARAM_BEAT_MAX_SIZE)         \
     X(PARAM_BEAT_FADE)             \
-    X(PARAM_NOISE_SCALE)          \
-    X(PARAM_NOISE_SPEED)          \
+    X(PARAM_NOISE_SCALE)           \
+    X(PARAM_NOISE_SPEED)           \
     X(PARAM_ANIMATION_TYPE)        \
-    X(PARAM_DIRECTION)            \
-    X(PARAM_HUE_VARIANCE)         \
+    X(PARAM_REVERSE)               \
+    X(PARAM_HUE_VARIANCE)          \
     X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
@@ -182,6 +182,8 @@ enum MenuID
     MENU_PARTICLES_LIFE_MODE,
     MENU_RAINBOW_MODE,
     MENU_DOUBLE_RAINBOW_MODE,
+    MENU_NEBULA_MODE,
+    MENU_FALLING_BRICKS_MODE,
     MENU_SLIDER,
     MENU_SLIDER_COLOR_MODE,
     MENU_SLIDER_SETTINGS_MODE,
@@ -214,6 +216,8 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_RANDOM_PARTICLES, {"RndParticles", MENU_PATTERNS}},
     {MENU_SAVE_PATTERN, {"Save", MENU_PATTERNS}},
     {MENU_RAINBOW_MODE, {"Rainbow", MENU_PATTERNS}},
+    {MENU_NEBULA_MODE, {"Nebula", MENU_PATTERNS}},
+    {MENU_FALLING_BRICKS_MODE, {"Falling Bricks", MENU_PATTERNS}},
     {MENU_DOUBLE_RAINBOW_MODE, {"Double Rainbow", MENU_PATTERNS}},
     {MENU_SLIDER, {"Slider", MENU_PATTERNS}},
     {MENU_SLIDER_COLOR_MODE, {"Color", MENU_SLIDER}},
@@ -268,7 +272,7 @@ static const std::vector<IntParameter> getDefaultIntParameters()
         {PARAM_HUE, "Hue", 60, 0, 360},
         {PARAM_HUE_END, "HueEnd", 120, 0, 360},
         {PARAM_HUE_VARIANCE, "HueVar", 0, 0, 180},
-        {PARAM_PARTICLE_WIDTH, "Width", 5, 1, 60},
+        {PARAM_WIDTH, "Width", 5, 1, 60},
 
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255},
         {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255},
@@ -316,7 +320,7 @@ static const std::vector<BoolParameter> getDefaultBoolParameters()
         {PARAM_SLIDER_GRAVITY, "Gravity", false},
         {PARAM_RECORD_AUDIO, "Record", false},
         {PARAM_PARTICLE_UPDATE_ALL, "UpdateAll", true},
-        {PARAM_DIRECTION, "Dir", false},
+        {PARAM_REVERSE, "Dir", false},
 
     };
 }
@@ -519,13 +523,13 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_NONE, "NONE"},
     {ANIMATION_TYPE_PARTICLES, "PARTICLES"},
     {ANIMATION_TYPE_RAINBOW, "RAINBOW"},
-    {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
+    {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLE RAINBOW"},
     {ANIMATION_TYPE_SLIDER, "SLIDER"},
     {ANIMATION_TYPE_RANDOM, "RANDOM"},
-    {ANIMATION_TYPE_FALLING_BRICKS, "FALLING_BRICKS"},
+    {ANIMATION_TYPE_FALLING_BRICKS, "FALLING BRICKS"},
     {ANIMATION_TYPE_NEBULA, "NEBULA"},
 
-    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}};
+    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOM PARTICLES"}};
 
 const std::vector<LEDRig> slaves = {
     {

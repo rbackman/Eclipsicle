@@ -55,7 +55,7 @@ void ParticleAnimation::updateRandomParticles()
 
     if (random(0, 100) > 90)
     {
-        float vel = random(10, 50) / 10.0;
+        float vel = random(10, 50) / 100.0;
         if (abs(vel) < 0.5)
         {
             vel = random(1, 2);
@@ -127,7 +127,7 @@ void ParticleAnimation::updateParticles()
     int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
     int fade = getInt(PARAM_PARTICLE_FADE);
-    int width = getInt(PARAM_PARTICLE_WIDTH);
+    int width = getInt(PARAM_WIDTH);
     int life = getInt(PARAM_PARTICLE_LIFE);
     int randomDrift = getInt(PARAM_RANDOM_DRIFT);
     float acceleration = getFloat(PARAM_ACCELERATION);
@@ -164,7 +164,7 @@ void ParticleAnimation::updateParticles()
         if (particle->active)
         {
 
-            particle->position += particle->velocity * timeScale / 10.0;
+            particle->position += particle->velocity * timeScale / 100.0;
             particle->velocity += particle->velocity * particle->acceleration;
             if (particle->velocity > particle->maxSpeed)
             {
@@ -219,7 +219,7 @@ void ParticleAnimation::updateParticles()
 }
 void ParticleAnimation::spawnParticle()
 {
-    int width = getInt(PARAM_PARTICLE_WIDTH);
+    int width = getInt(PARAM_WIDTH);
     float timeScale = getFloat(PARAM_TIME_SCALE);
     float velocity = getFloat(PARAM_VELOCITY);
     int hueStart = getInt(PARAM_HUE);
@@ -281,7 +281,7 @@ void RainbowAnimation::update()
     float offset = getInt(PARAM_RAINBOW_OFFSET);
     int brightness = getInt(PARAM_BRIGHTNESS);
 
-    scrollPos += scrollSpeed * timescale / 10.0;
+    scrollPos += scrollSpeed * timescale / 100.0;
 
     for (int i = 0; i < numLEDs(); i++)
     {
@@ -391,27 +391,27 @@ void DoubleRainbowAnimation::update()
 
 void FallingBricksAnimation::update()
 {
-    int width = getInt(PARAM_PARTICLE_WIDTH);
+    int width = getInt(PARAM_WIDTH);
     float speed = getFloat(PARAM_VELOCITY);
     int hueStart = getInt(PARAM_HUE);
     int hueEnd = getInt(PARAM_HUE_END);
     int hueVar = getInt(PARAM_HUE_VARIANCE);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float timeScale = getFloat(PARAM_TIME_SCALE);
-    bool reverse = getBool(PARAM_DIRECTION);
+    bool reverse = getBool(PARAM_REVERSE);
 
-    auto mapIdx = [&](int idx) { return reverse ? numLEDs() - 1 - idx : idx; };
+    auto mapIdx = [&](int idx)
+    { return reverse ? numLEDs() - 1 - idx : idx; };
 
     if (brickPos < 0 && stackHeight < numLEDs())
     {
-        brickPos = reverse ? -width : numLEDs() - 1 + width;
+        brickPos = numLEDs() - 1 + width;
     }
 
     if (brickPos >= 0)
     {
-        brickPos += (reverse ? 1 : -1) * speed * timeScale / 10.0f;
-        if ((!reverse && brickPos - (width - 1) <= stackHeight) ||
-            (reverse && brickPos + (width - 1) >= numLEDs() - 1 - stackHeight))
+        brickPos += speed * timeScale / 10.0f;
+        if (brickPos - (width - 1) <= stackHeight)
         {
             stackHeight += width;
             brickPos = -1;
@@ -462,13 +462,13 @@ void NebulaAnimation::update()
     float speed = getFloat(PARAM_NOISE_SPEED);
     float timeScale = getFloat(PARAM_TIME_SCALE);
 
-    noiseOffset += speed * timeScale;
+    noiseOffset += speed * timeScale / 100.0f;
 
     for (int i = 0; i < numLEDs(); i++)
     {
         float t = float(i) / float(numLEDs());
         float baseHue = interpolate(hueStart, hueEnd, t);
-        uint8_t noiseVal = inoise8(i * scale * 20, int(noiseOffset * 50));
+        uint8_t noiseVal = inoise8(i * scale * 20, int(noiseOffset * 100));
         float hue = fmod(baseHue + (noiseVal / 255.0f) * 60.0f, 360.0f);
         float bright = brightness / 255.0f * pow(noiseVal / 255.0f, 3.0f);
         colorFromHSV(animationColor, hue / 360.0f, 1.0f, bright);

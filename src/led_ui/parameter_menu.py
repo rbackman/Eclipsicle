@@ -55,6 +55,12 @@ MENU_TREE = {
                        "PARAM_RANDOM_ON", "PARAM_RANDOM_OFF", "PARAM_BRIGHTNESS"
 
                        ],
+            "Nebula": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
+                       "PARAM_NOISE_SPEED", "PARAM_TIME_SCALE", "PARAM_NOISE_SCALE"],
+            "Falling Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
+                               "PARAM_BRICK_WIDTH", "PARAM_BRICK_SPEED", "PARAM_TIME_SCALE",
+                               "PARAM_BRICK_LIFE", "PARAM_BRICK_VARIANCE"]
+
         },
         "LED": {"Master LED": {}, "Animation Type": {}},
         "Audio": {},
@@ -526,12 +532,13 @@ class ParameterMenuWidget(QWidget):
         self.console.send_cmd("saveDefaults")
 
     def load_profile(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Load Parameter Profile", "", "JSON Files (*.json)")
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Load Parameter Profile", "", "JSON Files (*.json)")
         if path:
             self.load_profile_file(path)
 
     # ------------------------------------------------------------------
-    def load_profile_file(self, path:str):
+    def load_profile_file(self, path: str):
         with open(path, "r") as f:
             data = json.load(f)
         ParameterMap.clear()
@@ -555,11 +562,13 @@ class ParameterMenuWidget(QWidget):
 
     def refresh_data_files(self):
         os.makedirs(CONFIG_DIR, exist_ok=True)
-        files = [f for f in sorted(os.listdir(CONFIG_DIR)) if f.endswith(".json")]
+        files = [f for f in sorted(os.listdir(
+            CONFIG_DIR)) if f.endswith(".json")]
         self.data_tab.refresh_files(files)
         if hasattr(self, 'animation_tab'):
             os.makedirs(ANIM_DIR, exist_ok=True)
-            anims = [f for f in sorted(os.listdir(ANIM_DIR)) if f.endswith('.led')]
+            anims = [f for f in sorted(
+                os.listdir(ANIM_DIR)) if f.endswith('.led')]
             self.animation_tab.refresh_files(anims)
 
     def apply_parameter_values(self):

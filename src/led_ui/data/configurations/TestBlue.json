@@ -77,7 +77,7 @@
     "min": 0,
     "max": 360
   },
-  "PARAM_PARTICLE_WIDTH": {
+  "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
     "value": 2,

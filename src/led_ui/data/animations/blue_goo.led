@@ -1,0 +1,7 @@
+ConfigFile: blue_halo.json
+PARAMETERS:
+  brightness: 100
+  time_scale: 1.0
+Animations:
+     Nebula hue:220 hue_variance:200  NSpd:0.01  NScl:0.01
+     Particles hue:255

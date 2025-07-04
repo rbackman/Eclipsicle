@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 254,
+    "value": 285,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,12 +72,12 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 107,
+    "value": 115,
     "name": "HueEnd",
     "min": 0,
     "max": 360
   },
-  "PARAM_PARTICLE_WIDTH": {
+  "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
     "value": 28,
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 255,
+    "value": 189,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 12,
     "type": "float",
-    "value": 17.372,
+    "value": 18.048,
     "name": "Time",
     "min": 0.1,
     "max": 20
@@ -352,7 +352,7 @@
   "PARAM_NOISE_SCALE": {
     "id": 45,
     "type": "float",
-    "value": 0.2,
+    "value": 2.0,
     "name": "NScl",
     "min": 0.01,
     "max": 2
@@ -360,16 +360,16 @@
   "PARAM_NOISE_SPEED": {
     "id": 46,
     "type": "float",
-    "value": 0.1,
+    "value": 0.756,
     "name": "NSpd",
     "min": 0,
     "max": 5
   },
-  "PARAM_DIRECTION": {
+  "PARAM_REVERSE": {
     "id": 48,
     "type": "bool",
     "value": false,
-    "name": "Dir"
+    "name": "Reverse"
   },
   "PARAM_HUE_VARIANCE": {
     "id": 49,
