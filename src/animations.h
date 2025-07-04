@@ -142,8 +142,8 @@ public:
     FallingBricksAnimation(StripState *state, int startLED, int endLED)
         : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_FALLING_BRICKS,
                           {PARAM_PARTICLE_WIDTH, PARAM_VELOCITY, PARAM_HUE,
-                           PARAM_HUE_VARIANCE, PARAM_BRIGHTNESS, PARAM_TIME_SCALE,
-                           PARAM_DIRECTION})
+                           PARAM_HUE_END, PARAM_HUE_VARIANCE, PARAM_BRIGHTNESS,
+                           PARAM_TIME_SCALE, PARAM_DIRECTION})
     {
     }
 };

@@ -3,6 +3,7 @@
 #include "shared.h"
 #include "stripState.h"
 #include <FastLED.h>
+#include <algorithm>
 
 led animationColor;
 int animCount = 0;
@@ -392,7 +393,8 @@ void FallingBricksAnimation::update()
 {
     int width = getInt(PARAM_PARTICLE_WIDTH);
     float speed = getFloat(PARAM_VELOCITY);
-    int hue = getInt(PARAM_HUE);
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
     int hueVar = getInt(PARAM_HUE_VARIANCE);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float timeScale = getFloat(PARAM_TIME_SCALE);
@@ -420,12 +422,15 @@ void FallingBricksAnimation::update()
         }
     }
 
+    int maxBricks = std::max(1, numLEDs() / width);
     for (int i = 0; i < stackHeight && i < numLEDs(); i++)
     {
         int brickIndex = i / width;
-        float n = (inoise8(brickIndex * 50) / 255.0f) * 2.0f * hueVar - hueVar;
-        float brickHue = fmod(hue + n + 360.0f, 360.0f);
-        colorFromHSV(animationColor, brickHue / 360.0f, 1.0, brightness / 255.0f);
+        float t = float(brickIndex) / float(maxBricks - 1);
+        float baseHue = interpolate(hueStart, hueEnd, t);
+        float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
+        float brickHue = fmod(baseHue + n + 360.0f, 360.0f);
+        colorFromHSV(animationColor, brickHue / 360.0f, 1.0f, brightness / 255.0f);
         setPixel(mapIdx(i), animationColor);
     }
 
@@ -437,9 +442,11 @@ void FallingBricksAnimation::update()
             if (idx >= 0 && idx < numLEDs())
             {
                 int brickIndex = stackHeight / width;
-                float n = (inoise8(brickIndex * 50) / 255.0f) * 2.0f * hueVar - hueVar;
-                float brickHue = fmod(hue + n + 360.0f, 360.0f);
-                colorFromHSV(animationColor, brickHue / 360.0f, 1.0, brightness / 255.0f);
+                float t = float(brickIndex) / float(maxBricks - 1);
+                float baseHue = interpolate(hueStart, hueEnd, t);
+                float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
+                float brickHue = fmod(baseHue + n + 360.0f, 360.0f);
+                colorFromHSV(animationColor, brickHue / 360.0f, 1.0f, brightness / 255.0f);
                 setPixel(mapIdx(idx), animationColor);
             }
         }
