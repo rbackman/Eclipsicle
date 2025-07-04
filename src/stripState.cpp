@@ -21,6 +21,15 @@ ANIMATION_TYPE getAnimationTypeFromName(const String &name)
     return ANIMATION_TYPE_NONE;
 }
 
+std::vector<String> getAnimationNames()
+{
+    std::vector<String> names;
+    for (const auto &pair : ANIMATION_TYPE_NAMES)
+    {
+        names.push_back(pair.second);
+    }
+    return names;
+}
 String rleCompresssCRGB(const CRGB *leds, int numLEDS)
 {
     String result;
@@ -94,8 +103,8 @@ String StripState::getStripStateJson(bool verbose)
         {
             JsonObject a = arr.add<JsonObject>();
             a["type"] = getAnimationName(anim->getAnimationType()).c_str();
-            a["start"] = anim->getStartLED();
-            a["end"] = anim->getEndLED();
+            a["start"] = anim->getstart();
+            a["end"] = anim->getend();
             JsonObject params = a["params"].to<JsonObject>();
             for (const auto &p : anim->getIntParameters())
             {
@@ -116,50 +125,50 @@ String StripState::getStripStateJson(bool verbose)
     return output;
 }
 
-std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int startLED, int endLED, std::map<ParameterID, float> params)
+std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
 {
     switch (animType)
     {
     case ANIMATION_TYPE_PARTICLES:
-        return std::make_unique<ParticleAnimation>(stripState, false, startLED, endLED);
+        return std::make_unique<ParticleAnimation>(stripState, false, start, end, params);
     case ANIMATION_TYPE_RAINBOW:
-        return std::make_unique<RainbowAnimation>(stripState, startLED, endLED);
+        return std::make_unique<RainbowAnimation>(stripState, start, end, params);
     case ANIMATION_TYPE_DOUBLE_RAINBOW:
-        return std::make_unique<DoubleRainbowAnimation>(stripState, startLED, endLED);
+        return std::make_unique<DoubleRainbowAnimation>(stripState, start, end, params);
     case ANIMATION_TYPE_SLIDER:
-        return std::make_unique<SliderAnimation>(stripState, startLED, endLED);
+        return std::make_unique<SliderAnimation>(stripState, start, end, params);
     case ANIMATION_TYPE_RANDOM:
-        return std::make_unique<RandomAnimation>(stripState, startLED, endLED);
+        return std::make_unique<RandomAnimation>(stripState, start, end, params);
     case ANIMATION_TYPE_BRICKS:
-        return std::make_unique<FallingBricksAnimation>(stripState, startLED, endLED);
+        return std::make_unique<FallingBricksAnimation>(stripState, start, end, params);
     case ANIMATION_TYPE_NEBULA:
-        return std::make_unique<NebulaAnimation>(stripState, startLED, endLED);
+        return std::make_unique<NebulaAnimation>(stripState, start, end, params);
     case ANIMATION_TYPE_RANDOM_PARTICLES:
-        return std::make_unique<ParticleAnimation>(stripState, true, startLED, endLED);
+        return std::make_unique<ParticleAnimation>(stripState, true, start, end, params);
     default:
         throw std::invalid_argument("Unknown animation type");
     }
 }
-void StripState::addAnimation(ANIMATION_TYPE anim, int startLED, int endLED, std::map<ParameterID, float> params)
+void StripState::addAnimation(ANIMATION_TYPE anim, int start, int end, std::map<ParameterID, float> params)
 {
 
     StripAnimation *currentAnim = nullptr;
 
-    if (startLED < 0)
+    if (start < 0)
     {
-        startLED = 0;
+        start = 0;
     }
-    if (endLED < 0 || endLED >= numLEDS)
+    if (end < 0 || end >= numLEDS)
     {
-        endLED = numLEDS - 1;
+        end = numLEDS - 1;
     }
-    auto animation = makeAnimation(this, anim, startLED, endLED, params);
+    auto animation = makeAnimation(this, anim, start, end, params);
     if (animation == nullptr)
     {
         Serial.println("Failed to create animation");
         return;
     }
-    animation.get()->setParameters(params);
+
     animations.emplace_back(std::move(animation));
 }
 void StripState::update()
@@ -271,8 +280,8 @@ bool StripState::parseAnimationScript(String script)
     struct AnimLine
     {
         ANIMATION_TYPE type;
-        int startLED;
-        int endLED;
+        int start;
+        int end;
         std::map<ParameterID, float> params;
     };
     std::vector<AnimLine> anims;
@@ -290,12 +299,20 @@ bool StripState::parseAnimationScript(String script)
         }
         if (line.equalsIgnoreCase("Parameters:") || line.equalsIgnoreCase("PARAMETERS:"))
         {
+            if (isVerbose())
+            {
+                Serial.printf("Entering parameters section\n");
+            }
             inParams = true;
             inAnims = false;
             continue;
         }
         if (line.equalsIgnoreCase("Animations:") || line.equalsIgnoreCase("ANIMATIONS:"))
         {
+            if (isVerbose())
+            {
+                Serial.printf("Entering animations section\n");
+            }
             inAnims = true;
             inParams = false;
             continue;
@@ -315,6 +332,14 @@ bool StripState::parseAnimationScript(String script)
             if (pid != PARAM_UNKNOWN)
             {
                 paramOverrides[pid] = val.toFloat();
+                if (isVerbose())
+                {
+                    Serial.printf("Parameter override: %s = %s\n", full.c_str(), val.c_str());
+                }
+            }
+            else
+            {
+                Serial.printf("Unknown parameter in script: %s\n", full.c_str());
             }
             continue;
         }
@@ -326,9 +351,21 @@ bool StripState::parseAnimationScript(String script)
             String animName = tokens[0];
             ANIMATION_TYPE type = getAnimationTypeFromName(animName);
             if (type == ANIMATION_TYPE_NONE)
+            {
+                Serial.printf("Unknown animation type in script: %s out of: ", animName.c_str());
+                for (const auto &name : getAnimationNames())
+                {
+                    Serial.printf(" %s ", name.c_str());
+                }
+                Serial.print(" \n");
                 continue;
-            int startLED = 0;
-            int endLED = getNumLEDS() - 1;
+            }
+            if (isVerbose())
+            {
+                Serial.printf(" animation type:%s \n", animName.c_str());
+            }
+            int start = 0;
+            int end = getNumLEDS() - 1;
             std::map<ParameterID, float> params;
             for (int i = 1; i < tokens.size(); ++i)
             {
@@ -340,13 +377,21 @@ bool StripState::parseAnimationScript(String script)
                 String v = t.substring(c + 1);
                 k.trim();
                 v.trim();
-                if (k.equalsIgnoreCase("startLED"))
+                if (k.equalsIgnoreCase("start"))
                 {
-                    startLED = v.toInt();
+                    start = v.toInt();
+                    if (isVerbose())
+                    {
+                        Serial.printf("\tstart = %d\n", start);
+                    }
                 }
-                else if (k.equalsIgnoreCase("endLED"))
+                else if (k.equalsIgnoreCase("end"))
                 {
-                    endLED = v.toInt();
+                    end = v.toInt();
+                    if (isVerbose())
+                    {
+                        Serial.printf("\tend = %d\n", end);
+                    }
                 }
                 else
                 {
@@ -355,15 +400,29 @@ bool StripState::parseAnimationScript(String script)
                     ParameterID pid = getParameterID(full.c_str());
                     if (isBoolParameter(pid))
                     {
-                        v = v.equalsIgnoreCase("true") ? "1" : "0";
+                        if (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("1"))
+                        {
+                            v = "1";
+                        }
+                        else if (v.equalsIgnoreCase("false") || v.equalsIgnoreCase("0"))
+                        {
+                            v = "0";
+                        }
+                        else
+                        {
+                            Serial.printf("Invalid boolean value for parameter %s: %s\n", full.c_str(), v.c_str());
+                            continue;
+                        }
                     }
                     else if (isIntParameter(pid))
                     {
-                        v = String((int)v.toFloat());
                     }
                     else if (isFloatParameter(pid))
                     {
-                        v = String(v.toFloat(), 2);
+                    }
+                    else
+                    {
+                        Serial.printf("Unknown parameter in script: %s\n", full.c_str());
                     }
                     if (pid != PARAM_UNKNOWN)
                     {
@@ -371,38 +430,21 @@ bool StripState::parseAnimationScript(String script)
                     }
                 }
             }
-            anims.push_back({type, startLED, endLED, params});
-        }
-    }
-
-    if (configFile.length() > 0 && isVerbose())
-    {
-        Serial.printf("ConfigFile %s\n", configFile.c_str());
-    }
-
-    for (const auto &kv : paramOverrides)
-    {
-        ParameterID id = kv.first;
-        float value = kv.second;
-        if (isIntParameter(id))
-        {
-            setInt(id, (int)value);
-        }
-        else if (isFloatParameter(id))
-        {
-            setFloat(id, value);
-        }
-        else if (isBoolParameter(id))
-        {
-            setBool(id, value != 0);
+            anims.push_back({type, start, end, params});
         }
     }
 
     ledState = LED_STATE_MULTI_ANIMATION;
     animations.clear();
+
+    if (configFile.length() > 0 && isVerbose())
+    {
+        Serial.printf("\nConfigFile\n %s\n", configFile.c_str());
+    }
+
     for (const auto &a : anims)
     {
-        addAnimation(a.type, a.startLED, a.endLED, a.params);
+        addAnimation(a.type, a.start, a.end, a.params);
     }
     return true;
 }
@@ -413,8 +455,8 @@ void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<P
         Serial.printf("Invalid animation index %d\n", index);
         return;
     }
-    int start = animations[index]->getStartLED();
-    int end = animations[index]->getEndLED();
+    int start = animations[index]->getstart();
+    int end = animations[index]->getend();
     animations[index] = makeAnimation(this, animType, start, end, params);
 }
 void StripState::setAll(led tcol)
@@ -465,12 +507,12 @@ bool StripState::respondToText(String command)
 
         if (animparts.size() == 4)
         {
-            int startLED = animparts[2].toInt();
-            int endLED = animparts[3].toInt();
-            setAnimation(animType, startLED, endLED);
+            int start = animparts[2].toInt();
+            int end = animparts[3].toInt();
+            setAnimation(animType, start, end);
             if (isVerbose())
             {
-                Serial.printf("Set animation %s from %d to %d \n", getAnimationName(animType).c_str(), startLED, endLED);
+                Serial.printf("Set animation %s from %d to %d \n", getAnimationName(animType).c_str(), start, end);
             }
         }
         else if (animparts.size() == 2)
@@ -514,7 +556,7 @@ bool StripState::respondToText(String command)
                 for (int i = 0; i < animations.size(); i++)
                 {
                     auto &anim = animations[i];
-                    Serial.printf("Replaced animation at index %d with %s %d %d\n", i, getAnimationName(anim->getAnimationType()).c_str(), anim->getStartLED(), anim->getEndLED());
+                    Serial.printf("Replaced animation at index %d with %s %d %d\n", i, getAnimationName(anim->getAnimationType()).c_str(), anim->getstart(), anim->getend());
                 }
             }
             return true;
@@ -558,14 +600,14 @@ bool StripState::respondToText(String command)
             Serial.printf("Unknown animation type %s\n", animName.c_str());
             return false;
         }
-        int startLED = 0;
-        int endLED = getNumLEDS() - 1;
+        int start = 0;
+        int end = getNumLEDS() - 1;
         if (animparts.size() == 4)
         {
-            startLED = animparts[2].toInt();
-            endLED = animparts[3].toInt();
+            start = animparts[2].toInt();
+            end = animparts[3].toInt();
         }
-        addAnimation(animType, startLED, endLED);
+        addAnimation(animType, start, end);
         return true;
     }
     return false;

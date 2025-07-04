@@ -251,17 +251,17 @@ class AnimationSendWidget(QWidget):
         self.led_selectWidget.setLayout(self.led_selectLayout)
         self.layout.addWidget(self.led_selectWidget)
 
-        self.startLEDSSpinbox = QSpinBox()
-        self.startLEDSSpinbox.setRange(0, 255)
-        self.endLEDSSpinbox = QSpinBox()
-        self.endLEDSSpinbox.setRange(0, 255)
-        self.startLEDSSpinbox.setValue(0)
-        self.endLEDSSpinbox.setValue(255)
+        self.startSSpinbox = QSpinBox()
+        self.startSSpinbox.setRange(0, 255)
+        self.endSSpinbox = QSpinBox()
+        self.endSSpinbox.setRange(0, 255)
+        self.startSSpinbox.setValue(0)
+        self.endSSpinbox.setValue(255)
 
         self.led_selectLayout.addWidget(QLabel("Start LED:"))
-        self.led_selectLayout.addWidget(self.startLEDSSpinbox)
+        self.led_selectLayout.addWidget(self.startSSpinbox)
         self.led_selectLayout.addWidget(QLabel("End LED:"))
-        self.led_selectLayout.addWidget(self.endLEDSSpinbox)
+        self.led_selectLayout.addWidget(self.endSSpinbox)
         self.led_selectWidget.setVisible(False)
         self.overwrite_toggle = QCheckBox("Overwrite Animation")
         self.overwrite_toggle.setChecked(False)
@@ -290,8 +290,8 @@ class AnimationSendWidget(QWidget):
         overwrite = self.overwrite_toggle.isChecked()
         if overwrite:
             if self.partial_animation_toggle.isChecked():
-                start_led = self.startLEDSSpinbox.value()
-                end_led = self.endLEDSSpinbox.value()
+                start_led = self.startSSpinbox.value()
+                end_led = self.endSSpinbox.value()
 
                 self.console.send_cmd(
                     f"setanimation:{animation}:{start_led}:{end_led}")
@@ -300,8 +300,8 @@ class AnimationSendWidget(QWidget):
                 self.console.send_cmd(f"setanimation:{animation}")
         else:
             if self.partial_animation_toggle.isChecked():
-                start_led = self.startLEDSSpinbox.value()
-                end_led = self.endLEDSSpinbox.value()
+                start_led = self.startSSpinbox.value()
+                end_led = self.endSSpinbox.value()
 
                 self.console.send_cmd(
                     f"addanimation:{animation}:{start_led}:{end_led}")

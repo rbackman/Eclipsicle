@@ -15,7 +15,7 @@ class ParameterManager
     std::vector<ParameterChangeListener> listeners;
 
 public:
-    ParameterManager(std::string name, std::vector<ParameterID> filterParams = {});
+    ParameterManager(std::string name, std::vector<ParameterID> filterParams = {}, std::map<ParameterID, float> paramOverrides = {});
     void addParameterChangeListener(ParameterChangeListener listener)
     {
         listeners.push_back(listener);

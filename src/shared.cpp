@@ -1,7 +1,7 @@
 #include "shared.h"
 #include <WiFi.h>
 
-bool _verbose = false;
+bool _verbose = true;
 String _name = "default";
 String getName()
 {

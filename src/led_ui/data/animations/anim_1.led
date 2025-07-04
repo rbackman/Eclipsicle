@@ -3,7 +3,7 @@ PARAMETERS:
   brightness: 100
   time_scale: 5.0
 Animations:
-    Particles startLED:1 endLED:40  hue:122 hue_end:240 spawn_rate:30 blend:multiply
-    Particles startLED:60 endLED:80  hue:240 hue_end:122 spawn_rate:30 blend:subtract
-    Rainbow startLED:81 endLED:120 time_scale:1.0 rainbow_repeat:3 blend:add
+    Particles start:1 end:40  hue:122 hue_end:240 spawn_rate:30 blend:multiply
+    Particles start:60 end:80  hue:240 hue_end:122 spawn_rate:30 blend:subtract
+    Rainbow start:81 end:120 time_scale:1.0 rainbow_repeat:3 blend:add
 

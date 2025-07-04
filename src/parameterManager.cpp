@@ -2,7 +2,7 @@
 #include "parameterManager.h"
 #include "shared.h"
 
-ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> filterParams) : name(name)
+ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> filterParams, std::map<ParameterID, float> paramOverrides) : name(name)
 {
     auto intParameterList = getDefaultIntParameters();
     auto boolParameterList = getDefaultBoolParameters();
@@ -41,24 +41,48 @@ ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> fi
             floatParams.push_back(param);
         }
     }
-
-    if (isVerbose())
+    // Apply overrides if provided
+    if (isVerbose() && paramOverrides.size() > 0)
     {
-        Serial.printf("Parameter Manager Initialized %s intParams:%d boolParams:%d floatParams:%d\n", name.c_str(), intParams.size(), boolParams.size(), floatParams.size());
+        Serial.printf("%s initialized with overrides:\n", name.c_str());
+        for (const auto &override : paramOverrides)
+        {
+            if (isFloatParameter(override.first))
+            {
 
-        for (const auto &iParam : intParams)
-        {
-            Serial.printf("Int Param %d %s %d\n", iParam.id, iParam.name.c_str(), iParam.value);
-        }
-        for (const auto &bParam : boolParams)
-        {
-            Serial.printf("Bool Param %d %s %s \n", bParam.id, bParam.name.c_str(), bParam.value ? "true" : "false");
-        }
-        for (const auto &fParam : floatParams)
-        {
-            Serial.printf("Float Param %d %s %f\n", fParam.id, fParam.name.c_str(), fParam.value);
+                Serial.printf(" %s = %f\n", getParameterName(override.first).c_str(), override.second);
+            }
+            else if (isIntParameter(override.first))
+            {
+
+                Serial.printf(" %s = %d\n", getParameterName(override.first).c_str(), (int) override.second);
+            }
+            else if (isBoolParameter(override.first))
+            {
+
+                Serial.printf("  %s = %s\n", getParameterName(override.first).c_str(), ((bool) override.second ? "true" : "false"));
+            }
         }
     }
+
+    setParameters(paramOverrides);
+    // if (isVerbose())
+    // {
+    //     Serial.printf("Parameter Manager Initialized %s intParams:%d boolParams:%d floatParams:%d\n", name.c_str(), intParams.size(), boolParams.size(), floatParams.size());
+
+    //     for (const auto &iParam : intParams)
+    //     {
+    //         Serial.printf("Int Param %d %s %d\n", iParam.id, iParam.name.c_str(), iParam.value);
+    //     }
+    //     for (const auto &bParam : boolParams)
+    //     {
+    //         Serial.printf("Bool Param %d %s %s \n", bParam.id, bParam.name.c_str(), bParam.value ? "true" : "false");
+    //     }
+    //     for (const auto &fParam : floatParams)
+    //     {
+    //         Serial.printf("Float Param %d %s %f\n", fParam.id, fParam.name.c_str(), fParam.value);
+    //     }
+    // }
 }
 
 IntParameter ParameterManager::getIntParameter(ParameterID id)
@@ -117,8 +141,7 @@ void ParameterManager::setInt(ParameterID id, int val)
         {
             intParams[i].value = val;
             paramChanged = true;
-            if (isVerbose())
-                Serial.printf("updating int parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
+
             return;
         }
     }
@@ -131,12 +154,12 @@ void ParameterManager::setBool(ParameterID id, bool val)
         {
             boolParams[i].value = val;
             paramChanged = true;
-            if (isVerbose())
-                Serial.printf("updating  bool parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
+
             return;
         }
     }
 }
+
 void ParameterManager::setFloat(ParameterID id, float val)
 {
     for (int i = 0; i < floatParams.size(); i++)
@@ -145,8 +168,7 @@ void ParameterManager::setFloat(ParameterID id, float val)
         {
             floatParams[i].value = val;
             paramChanged = true;
-            if (isVerbose())
-                Serial.printf("updating float parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
+
             return;
         }
     }
@@ -164,7 +186,7 @@ float ParameterManager::getFloat(ParameterID id)
     auto pname = getParameterName(id);
     floatParams.push_back({id, pname, 0.0, 0.0, 1.0});
 
-    Serial.printf("Error Float Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
+    Serial.printf("Error Float Parameter not found   %s for %s\n", pname.c_str(), name.c_str());
     return 0;
 }
 bool ParameterManager::hasParameter(ParameterID paramID)

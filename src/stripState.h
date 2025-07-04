@@ -37,16 +37,16 @@ public:
     {
         numLEDS = num;
     }
-    void addAnimation(ANIMATION_TYPE animis, int startLED = -1, int endLED = -1, std::map<ParameterID, float> params = {});
+    void addAnimation(ANIMATION_TYPE animis, int start = -1, int end = -1, std::map<ParameterID, float> params = {});
     void setSimulate(int simulateCount)
     {
         this->simulateCount = simulateCount;
     }
-    void setAnimation(ANIMATION_TYPE animType, int startLED = -1, int endLED = -1, std::map<ParameterID, float> params = {})
+    void setAnimation(ANIMATION_TYPE animType, int start = -1, int end = -1, std::map<ParameterID, float> params = {})
     {
         ledState = LED_STATE_SINGLE_ANIMATION;
         animations.clear();
-        addAnimation(animType, startLED, endLED, params);
+        addAnimation(animType, start, end, params);
     }
     int getNumLEDS()
     {

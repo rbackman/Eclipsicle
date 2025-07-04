@@ -44,7 +44,7 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
             {
                 Serial.printf("Adding animation %d to strip %d\n", getAnimationName(anim.type), strip->getStripIndex());
             }
-            strip->addAnimation(anim.type, anim.startLED, anim.endLED, anim.params);
+            strip->addAnimation(anim.type, anim.start, anim.end, anim.params);
         }
         stripStates.push_back(strip);
         if (isVerbose())
@@ -176,17 +176,15 @@ bool LEDManager::handleLEDCommand(String command)
     {
         bool res = false;
         int currentStrip = getInt(PARAM_CURRENT_STRIP);
-        if (isVerbose())
-        {
-            Serial.printf("\nLEDManager handling command %s for strip %d of %d\n", command.c_str(), currentStrip, stripStates.size());
-        }
+
         for (int i = 0; i < stripStates.size(); i++)
         {
             if (currentStrip == 0 || currentStrip == i + 1)
             {
-                // Serial.printf("stripStates handling command %s for strip %d\n", command.c_str(), i + 1);
+
                 if (stripStates[i]->respondToText(command))
                 {
+
                     res = true;
                 }
             }

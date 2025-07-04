@@ -17,19 +17,19 @@ void StripAnimation::setPixel(int index, led color)
 
     if (stripState->getAnimationCount() > 1)
     {
-        stripState->blendPixel(index + startLED, color);
+        stripState->blendPixel(index + start, color);
     }
     else
     {
-        stripState->setPixel(index + startLED, color);
+        stripState->setPixel(index + start, color);
     }
 }
 
 String StripAnimation::describe()
 {
     String desc = getAnimationName(animationType).c_str();
-    desc += " start:" + String(startLED);
-    desc += " end:" + String(endLED);
+    desc += " start:" + String(start);
+    desc += " end:" + String(end);
 
     for (const auto &p : getIntParameters())
     {

@@ -475,8 +475,8 @@ std::string getAnimationName(ANIMATION_TYPE type);
 struct AnimationParams
 {
     ANIMATION_TYPE type;
-    int startLED = 0;
-    int endLED = -1; // -1 means all LEDs
+    int start = 0;
+    int end = -1; // -1 means all LEDs
 
     std::map<ParameterID, float> params = {};
 };
@@ -511,7 +511,7 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLERAINBOW"},
     {ANIMATION_TYPE_SLIDER, "SLIDER"},
     {ANIMATION_TYPE_RANDOM, "RANDOM"},
-    {ANIMATION_TYPE_BRICKS, "FALLINGBRICKS"},
+    {ANIMATION_TYPE_BRICKS, "BRICKS"},
     {ANIMATION_TYPE_NEBULA, "NEBULA"},
     {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOMPARTICLES"}};
 

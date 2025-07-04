@@ -38,13 +38,13 @@ class StripAnimation : public ParameterManager
 
 protected:
     float scrollPos = 0.0f;
-    int startLED = -1;
-    int endLED = -1;
+    int start = -1; // first led in the parent strip -1 means beginning of the strip
+    int end = -1;   // last led in the parent strip -1 means end of the strip
 
 public:
     virtual void update() = 0;
-    StripAnimation(StripState *state, int startLED, int endLED, ANIMATION_TYPE type, std::vector<ParameterID> params)
-        : ParameterManager(getAnimationName(type), params), stripState(state), startLED(startLED), endLED(endLED)
+    StripAnimation(StripState *state, int start, int end, ANIMATION_TYPE type, std::vector<ParameterID> params, std::map<ParameterID, float> paramOverrides = {})
+        : ParameterManager(getAnimationName(type), params, paramOverrides), stripState(state), start(start), end(end)
     {
     }
     ANIMATION_TYPE getAnimationType()
@@ -53,15 +53,15 @@ public:
     }
     int numLEDs()
     {
-        return this->endLED - this->startLED + 1;
+        return this->end - this->start + 1;
     }
-    int getStartLED()
+    int getstart()
     {
-        return startLED;
+        return start;
     }
-    int getEndLED()
+    int getend()
     {
-        return endLED;
+        return end;
     }
     void setPixel(int index, led color);
     String describe();
@@ -83,7 +83,8 @@ class ParticleAnimation : public StripAnimation
 public:
     void update();
 
-    ParticleAnimation(StripState *state, bool random, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_WIDTH, PARAM_LIFE, PARAM_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE, PARAM_REVERSE})
+    ParticleAnimation(StripState *state, bool random, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_WIDTH, PARAM_LIFE, PARAM_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE, PARAM_REVERSE}, paramOverrides),
+                                                                                                                              randomMode(random)
     {
 
         this->randomMode = random;
@@ -95,7 +96,8 @@ class RainbowAnimation : public StripAnimation
 public:
     void update();
 
-    RainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_TIME_SCALE, PARAM_REPEAT, PARAM_OFFSET, PARAM_BRIGHTNESS})
+    RainbowAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_TIME_SCALE, PARAM_REPEAT, PARAM_OFFSET, PARAM_BRIGHTNESS}, paramOverrides)
+
     {
     }
 };
@@ -104,7 +106,7 @@ class RandomAnimation : public StripAnimation
 {
 public:
     void update();
-    RandomAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_RANDOM, {PARAM_SCROLL_SPEED, PARAM_TIME_SCALE, PARAM_RANDOM_OFF, PARAM_BRIGHTNESS})
+    RandomAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_RANDOM, {PARAM_SCROLL_SPEED, PARAM_TIME_SCALE, PARAM_RANDOM_OFF, PARAM_BRIGHTNESS}, paramOverrides)
     {
     }
 };
@@ -114,7 +116,8 @@ class DoubleRainbowAnimation : public StripAnimation
 
 public:
     void update();
-    DoubleRainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_DOUBLE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_REPEAT, PARAM_OFFSET, PARAM_BRIGHTNESS})
+    DoubleRainbowAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_DOUBLE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_REPEAT, PARAM_OFFSET, PARAM_BRIGHTNESS}, paramOverrides)
+
     {
     }
 };
@@ -124,9 +127,7 @@ class SliderAnimation : public StripAnimation
 
 public:
     void update();
-    SliderAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_SLIDER, {PARAM_POSITION, PARAM_WIDTH, PARAM_REPEAT, PARAM_BRIGHTNESS, PARAM_HUE})
-    {
-    }
+    SliderAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_SLIDER, {PARAM_POSITION, PARAM_WIDTH, PARAM_REPEAT, PARAM_BRIGHTNESS, PARAM_HUE}, paramOverrides) {}
 };
 
 class FallingBricksAnimation : public StripAnimation
@@ -136,11 +137,12 @@ class FallingBricksAnimation : public StripAnimation
 
 public:
     void update();
-    FallingBricksAnimation(StripState *state, int startLED, int endLED)
-        : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_BRICKS,
+    FallingBricksAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {})
+        : StripAnimation(state, start, end, ANIMATION_TYPE_BRICKS,
                          {PARAM_WIDTH, PARAM_VELOCITY, PARAM_HUE,
                           PARAM_HUE_END, PARAM_HUE_VARIANCE, PARAM_BRIGHTNESS,
-                          PARAM_TIME_SCALE, PARAM_REVERSE})
+                          PARAM_TIME_SCALE, PARAM_REVERSE},
+                         paramOverrides)
     {
     }
 };
@@ -151,7 +153,7 @@ class NebulaAnimation : public StripAnimation
 
 public:
     void update();
-    NebulaAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_NEBULA, {PARAM_HUE, PARAM_HUE_END, PARAM_BRIGHTNESS, PARAM_NOISE_SCALE, PARAM_NOISE_SPEED, PARAM_TIME_SCALE})
+    NebulaAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_NEBULA, {PARAM_HUE, PARAM_HUE_END, PARAM_BRIGHTNESS, PARAM_NOISE_SCALE, PARAM_NOISE_SPEED, PARAM_TIME_SCALE}, paramOverrides)
     {
     }
 };

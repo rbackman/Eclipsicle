@@ -347,6 +347,14 @@ bool processCmd(String command)
     Serial.println(state + ";");
     return true;
   }
+#ifdef USE_LEDS
+  else if (ledManager->handleLEDCommand(command))
+  {
+    // command was handled by LED manager
+    return true;
+  }
+#endif
+
   else
   {
     if (isVerbose())
@@ -354,22 +362,6 @@ bool processCmd(String command)
       Serial.println("Command not recognized: " + command);
     }
   }
-
-  // float ax = a.acceleration.x;
-  // float ay = a.acceleration.y;
-  // float az = a.acceleration.z;
-  // float magnitude = sqrt(ax * ax + ay * ay + az * az);
-  // ax /= magnitude;
-  // ay /= magnitude;
-  // az /= magnitude;
-
-  // // Calculate the angle in the x-y plane
-  // float angle = atan2(ay, ax); // Radians
-
-  // // Map the angle to an LED index
-  // float gravityPosition = ((angle + PI) / (2 * PI));
-
-  // ledManager->setGravityPosition(gravityPosition);
 
 #ifdef USE_DISPLAY
   display.clearDisplay();
@@ -414,10 +406,6 @@ void loop()
     {
       return; // command was handled
     }
-#ifdef USE_LEDS
-
-    ledManager->handleLEDCommand(command);
-#endif
 
 #ifdef USE_MOTOR
     if (motorManager->handleMotorCommand(command))
