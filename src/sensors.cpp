@@ -41,6 +41,7 @@ static void handleButton4Interrupt()
 
 #endif
 
+
 SensorManager::SensorManager(SensorGrid sensors) : sensorGrid(sensors)
 {
     instance = this;
@@ -49,7 +50,6 @@ SensorManager::SensorManager(SensorGrid sensors) : sensorGrid(sensors)
 #ifdef USE_BUTTON_INTERRUPTS
         if (sensors[i].type == BUTTON)
         {
-            // Serial.printf("Creating Button %s %d\n", sensors[i].name, sensors[i].pin);
             pinMode(sensors[i].pin, INPUT_PULLUP);
             if (sensors[i].name == "Button1")
             {
@@ -132,8 +132,7 @@ sensor_message SensorManager::getNextMessage()
 
 void SensorManager::updateSensors()
 {
-    // only updates one sensor at a time to avoid saturating the ADC
-    // Serial.println("Updating sensor: " + String(currentSensor) + " " + sensorGrid[currentSensor].type);
+    // only update one sensor each cycle to avoid saturating the ADC
     currentSensor++;
     if (currentSensor >= sensorGrid.size())
     {
@@ -142,8 +141,6 @@ void SensorManager::updateSensors()
     SensorState *sensor = &sensorGrid[currentSensor];
 
     long currentTime = millis();
-    // && currentTime - grid[i].lastDebounceTime > DEBOUNCE_DELAY
-
     if (currentTime - sensor->lastDebounceTime > DEBOUNCE_DELAY)
     {
         sensor->lastDebounceTime = currentTime;
@@ -207,7 +204,6 @@ void SensorManager::updateSensors()
         }
 
 #else
-        Serial1.println("Button update" + String(getSensorName(sensor->sensorID)));
         int value = digitalRead(sensor->pin) == LOW ? 1 : 0;
 
         if (value != sensor->value && !sensor->changed) // only change on button press
@@ -233,8 +229,6 @@ void SensorManager::updateSensors()
         // linearize logrithmic sensor value
         int value = map(pow(anlg, 1.5), 262048, 0, 0, 255);
         // value = constrain(value, 0, 255);
-
-        Serial.println("Sensor: " + String(value) + " analog: " + String(anlg));
 
         value = 255 - value;
 
@@ -271,8 +265,7 @@ void SensorManager::updateSensors()
             sensor->changed = true;
             if (isVerbose() || printSensor == currentSensor || printSensor == -2)
             {
-                // Serial.println("print Sensor changed: " + String(sensor->name) + " Average: " + String(average) + " :" + String(output));
-                // Serial.printf("Sensor Changed: %s Average: %d\n", sensor->name, average);
+                // Optional verbose logging for sensor changes
             }
         }
     }

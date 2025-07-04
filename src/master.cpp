@@ -7,7 +7,7 @@
 #ifdef USE_AUDIO
 #include "audio.h"
 #endif
-// #include <SD.h>
+
 #include <SPI.h>
 #include "meshnet.h"
 #include <ArduinoJson.h>
@@ -483,20 +483,12 @@ public:
                     if (message.sensorId == BUTTON_RIGHT)
                     {
 
-                        // Serial.println("Last Menu Selected " + String(selectedMenu) + " " + String(getMenuName(currentMenu)));
                         auto availableMenus = getChildrenOfMenu(currentMenu);
-                        // Serial.println("Available Menus " + String(availableMenus.size()));
-                        // for (size_t i = 0; i < availableMenus.size(); i++)
-                        // {
-                        //     Serial.println("Menu " + String(i) + " " + String(getMenuName(availableMenus[i])));
-                        // }
 
                         if (selectedMenu >= availableMenus.size() || selectedMenu < 0)
                         {
                             if (availableMenus.size() == 0)
                             {
-                                // Serial.println("Selected Menu out of range" + String(selectedMenu) + " " + String(availableMenus.size()));
-                                // Serial.println("current Menu" + String(currentMenu) + " " + getMenuName(currentMenu));
                                 return false;
                             }
                             selectedMenu = 0;
@@ -504,7 +496,6 @@ public:
 
                         currentMenu = availableMenus[selectedMenu];
 
-                        // Serial.printf("Selected Menu %d  %d %s\n", selectedMenu, currentMenu, getMenuName(currentMenu));
 
                         std::string name = getMenuName(currentMenu, 32);
 

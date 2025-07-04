@@ -61,6 +61,8 @@ ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> fi
     }
 }
 
+
+
 IntParameter ParameterManager::getIntParameter(ParameterID id)
 {
     for (int i = 0; i < intParams.size(); i++)
@@ -136,7 +138,6 @@ void ParameterManager::setBool(ParameterID id, bool val)
             return;
         }
     }
-    // Serial.printf("Cant set Bool Parameter, not found %d %s for %s\n", id, getParameterName(id), name.c_str());
 }
 void ParameterManager::setFloat(ParameterID id, float val)
 {
@@ -151,7 +152,6 @@ void ParameterManager::setFloat(ParameterID id, float val)
             return;
         }
     }
-    // Serial.printf("Cant set Float Parameter, not found %d %s for %s\n", id, getParameterName(id), name.c_str());
 }
 
 float ParameterManager::getFloat(ParameterID id)
