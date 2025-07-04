@@ -258,6 +258,7 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
 
 bool StripState::parseAnimationScript(String script)
 {
+    script.replace('|', '\n');
     std::vector<String> lines = splitString(script, '\n');
     bool inParams = false;
     bool inAnims = false;

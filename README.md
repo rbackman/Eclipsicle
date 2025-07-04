@@ -36,3 +36,5 @@ Parameter presets are stored under `src/led_ui/data/configurations` while animat
 
 Animation scripts (`*.led`) begin with a `ConfigFile:` line naming the base parameter preset. Parameters listed under the `Parameters:` section override values from that preset and `Animations:` describes the sequence of animations for the strip.
 
+Within the UI, open an animation file and use the **Send** button to transmit it to the device. Newlines are encoded as `|` characters when sent via the `script:` command.
+

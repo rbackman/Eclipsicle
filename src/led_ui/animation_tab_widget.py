@@ -7,10 +7,11 @@ import os
 class AnimationTabWidget(QWidget):
     """Simple editor for *.led animation scripts."""
 
-    def __init__(self, directory: str):
+    def __init__(self, directory: str, console=None):
         super().__init__()
         self.directory = directory
         os.makedirs(self.directory, exist_ok=True)
+        self.console = console
         self.current_file = None
 
         layout = QVBoxLayout(self)
@@ -33,7 +34,9 @@ class AnimationTabWidget(QWidget):
         save_row = QHBoxLayout()
         save_row.addStretch(1)
         self.save_btn = QPushButton("Save")
+        self.send_btn = QPushButton("Send")
         save_row.addWidget(self.save_btn)
+        save_row.addWidget(self.send_btn)
         layout.addLayout(save_row)
 
         self.add_btn.clicked.connect(self._start_new)
@@ -41,6 +44,7 @@ class AnimationTabWidget(QWidget):
         self.file_list.itemDoubleClicked.connect(
             lambda item: self.load_file(item.text()))
         self.save_btn.clicked.connect(self.save_file)
+        self.send_btn.clicked.connect(self.send_script)
 
     def refresh_files(self, files):
         self.file_list.clear()
@@ -80,3 +84,12 @@ class AnimationTabWidget(QWidget):
             f.write(self.editor.toPlainText())
         self.refresh_files(sorted(f for f in os.listdir(self.directory)
                                   if f.endswith('.led')))
+
+    def send_script(self):
+        if not self.console:
+            return
+        script = self.editor.toPlainText()
+        if not script.strip():
+            return
+        encoded = script.replace('\n', '|')
+        self.console.send_cmd(f"script:{encoded}")

@@ -347,7 +347,7 @@ class ParameterMenuWidget(QWidget):
         self.tabs.addTab(self.data_tab, "Data")
 
         # Animation script tab -----------------------------------------
-        self.animation_tab = AnimationTabWidget(ANIM_DIR)
+        self.animation_tab = AnimationTabWidget(ANIM_DIR, console)
         self.tabs.addTab(self.animation_tab, "Animations")
 
         self.setWindowTitle("ESP32 Pattern Controller")
