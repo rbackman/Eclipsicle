@@ -1,13 +1,16 @@
 #include "FallingBricks.h"
 #include <gtest/gtest.h>
 
-TEST(FallingBricks, ReversePixelsDrawn) {
+TEST(FallingBricks, OrientationForward) {
+    FallingBricksSim sim(10, 2, 1.0f, false);
+    sim.update();
+    sim.update();
+    EXPECT_EQ(sim.pixels().back().r, 255);
+}
+
+TEST(FallingBricks, OrientationReverse) {
     FallingBricksSim sim(10, 2, 1.0f, true);
     sim.update();
-    bool any=false;
-    for (const auto& p: sim.pixels()) {
-        if (p.r || p.g || p.b) { any=true; break; }
-    }
-    EXPECT_TRUE(any);
-    EXPECT_EQ(sim.pixels().back().r, 255);
+    sim.update();
+    EXPECT_EQ(sim.pixels().front().r, 255);
 }

@@ -399,39 +399,43 @@ void FallingBricksAnimation::update()
     float timeScale = getFloat(PARAM_TIME_SCALE);
     bool reverse = getBool(PARAM_REVERSE);
 
-    auto mapIdx = [&](int idx)
-    { return reverse ? numLEDs() - 1 - idx : idx; };
+    auto mapIdx = [&](int idx) { return reverse ? numLEDs() - 1 - idx : idx; };
 
-    // Initialize brick position depending on direction. Only spawn a new brick
-    // when brickPos is below -width which indicates no active brick.
-    if (brickPos < -width && stackHeight < numLEDs())
+    int maxBricks = std::max(1, numLEDs() / width);
+
+    // Spawn a new brick when the current one is inactive
+    if (brick.pos < -width && stackHeight < numLEDs())
     {
-        brickPos = reverse ? -width : numLEDs() - 1 + width;
+        brick.width = width;
+        int brickIndex = stackHeight / width;
+        float t = float(brickIndex) / float(maxBricks - 1);
+        float baseHue = interpolate(hueStart, hueEnd, t);
+        float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
+        brick.hue = fmod(baseHue + n + 360.0f, 360.0f);
+        brick.pos = reverse ? -width : numLEDs() - 1 + width;
     }
 
     // Move the falling brick
-    if ((reverse && brickPos < numLEDs()) || (!reverse && brickPos >= 0))
+    if ((reverse && brick.pos < numLEDs()) || (!reverse && brick.pos >= 0))
     {
-        brickPos += (reverse ? 1 : -1) * speed * timeScale / 100.0f;
+        brick.pos += (reverse ? 1 : -1) * speed * timeScale / 100.0f;
 
         // Determine when it lands
         bool landed = reverse
-                          ? brickPos + (width - 1) >= numLEDs() - 1 - stackHeight
-                          : brickPos - (width - 1) <= stackHeight;
+                          ? brick.pos + (width - 1) >= numLEDs() - 1 - stackHeight
+                          : brick.pos - (width - 1) <= stackHeight;
 
         if (landed)
         {
             stackHeight += width;
             // Mark brick as inactive by positioning it below the spawn
             // threshold so a new one will spawn on the next frame.
-            brickPos = -width - 1;
+            brick.pos = -width - 1;
 
             if (stackHeight >= numLEDs())
                 stackHeight = 0;
         }
     }
-
-    int maxBricks = std::max(1, numLEDs() / width);
 
     // Draw stacked bricks
     for (int i = 0; i < stackHeight && i < numLEDs(); i++)
@@ -446,20 +450,16 @@ void FallingBricksAnimation::update()
     }
 
     // Draw falling brick
-    if (brickPos >= 0 && brickPos < numLEDs())
+    if (brick.pos >= 0 && brick.pos < numLEDs())
     {
         for (int i = 0; i < width; i++)
         {
-            int idx = reverse ? (int)brickPos + i : (int)brickPos - i;
+            int idx = reverse ? (int)brick.pos + i : (int)brick.pos - i;
             if (idx >= 0 && idx < numLEDs())
             {
-                int brickIndex = stackHeight / width;
-                float t = float(brickIndex) / float(maxBricks - 1);
-                float baseHue = interpolate(hueStart, hueEnd, t);
-                float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
-                float brickHue = fmod(baseHue + n + 360.0f, 360.0f);
-                colorFromHSV(animationColor, brickHue / 360.0f, 1.0f, brightness / 255.0f);
-                setPixel(mapIdx(idx), animationColor);
+                colorFromHSV(animationColor, brick.hue / 360.0f, 1.0f,
+                              brightness / 255.0f);
+                setPixel(idx, animationColor);
             }
         }
     }

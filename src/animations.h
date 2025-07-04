@@ -132,7 +132,12 @@ public:
 
 class FallingBricksAnimation : public StripAnimation
 {
-    float brickPos = -1;
+    struct Brick
+    {
+        float pos{-1000.f};
+        int width{1};
+        float hue{0.f};
+    } brick;
     int stackHeight = 0;
 
 public:

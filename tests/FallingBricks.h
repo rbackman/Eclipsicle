@@ -6,6 +6,10 @@ struct Led {
     uint8_t r{0}, g{0}, b{0};
 };
 class FallingBricksSim {
+    struct Brick {
+        float pos{-1000.f};
+        int width{1};
+    } brick_;
     int numLEDs_;
     int width_;
     float speed_;
@@ -13,11 +17,11 @@ class FallingBricksSim {
     std::vector<Led> leds;
     int mapIdx(int idx) const { return reverse_ ? numLEDs_ - 1 - idx : idx; }
 public:
-    float brickPos{-1.f};
     int stackHeight{0};
     FallingBricksSim(int numLEDs, int width, float speed, bool reverse)
         : numLEDs_(numLEDs), width_(width), speed_(speed), reverse_(reverse), leds(numLEDs) {}
     void update();
     const std::vector<Led>& pixels() const { return leds; }
+    float brickPos() const { return brick_.pos; }
 };
 #endif
