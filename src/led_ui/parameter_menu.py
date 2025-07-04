@@ -340,6 +340,7 @@ class ParameterMenuWidget(QWidget):
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
         loadParameters()
+        self.update_widgets_from_map()
         self.refresh_data_files()
 
         stateTab = QWidget()
