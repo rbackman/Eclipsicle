@@ -399,8 +399,11 @@ void FallingBricksAnimation::update()
     float timeScale = getFloat(PARAM_TIME_SCALE);
     bool reverse = getBool(PARAM_REVERSE);
 
+    // When running in reverse we already move the brick from the bottom
+    // towards the top. Mapping the index again would flip the physical
+    // direction so just return the index unchanged.
     auto mapIdx = [&](int idx)
-    { return reverse ? numLEDs() - 1 - idx : idx; };
+    { return idx; };
 
     // Initialize brick position depending on direction
     if (brickPos < 0 && stackHeight < numLEDs())
