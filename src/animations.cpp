@@ -126,9 +126,9 @@ void ParticleAnimation::updateParticles()
     int hueStart = getInt(PARAM_HUE);
     int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
-    int fade = getInt(PARAM_PARTICLE_FADE);
+    int fade = getInt(PARAM_FADE);
     int width = getInt(PARAM_WIDTH);
-    int life = getInt(PARAM_PARTICLE_LIFE);
+    int life = getInt(PARAM_LIFE);
     int randomDrift = getInt(PARAM_RANDOM_DRIFT);
     float acceleration = getFloat(PARAM_ACCELERATION);
     float maxSpeed = getFloat(PARAM_MAX_SPEED);
@@ -225,7 +225,7 @@ void ParticleAnimation::spawnParticle()
     int hueStart = getInt(PARAM_HUE);
     int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
-    int life = getInt(PARAM_PARTICLE_LIFE);
+    int life = getInt(PARAM_LIFE);
 
     if (random(0, 100) < 50)
     {
@@ -277,8 +277,8 @@ void RainbowAnimation::update()
 {
     float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
     float timescale = getFloat(PARAM_TIME_SCALE);
-    float repeat = getFloat(PARAM_RAINBOW_REPEAT);
-    float offset = getInt(PARAM_RAINBOW_OFFSET);
+    float repeat = getFloat(PARAM_REPEAT);
+    float offset = getInt(PARAM_OFFSET);
     int brightness = getInt(PARAM_BRIGHTNESS);
 
     scrollPos += scrollSpeed * timescale / 100.0;
@@ -344,9 +344,9 @@ void RandomAnimation::update()
 void SliderAnimation::update()
 {
     //  slider animation is just a gradient that positioned in the middle of the strip with a width and hue and repeat factor
-    int position = numLEDs() / 2 + getInt(PARAM_SLIDER_POSITION);
-    float width = getFloat(PARAM_SLIDER_WIDTH) * numLEDs();
-    float repeat = getFloat(PARAM_SLIDER_REPEAT);
+    int position = numLEDs() / 2 + getInt(PARAM_POSITION);
+    int width = getInt(PARAM_WIDTH) * numLEDs();
+    float repeat = getFloat(PARAM_REPEAT);
     int brightness = getInt(PARAM_BRIGHTNESS);
     int hue = getInt(PARAM_HUE);
 
@@ -374,8 +374,8 @@ void DoubleRainbowAnimation::update()
 {
     float scrollSpeed = getFloat(PARAM_SCROLL_SPEED);
     float timescale = getFloat(PARAM_TIME_SCALE);
-    float repeat = getFloat(PARAM_RAINBOW_REPEAT);
-    float offset = getInt(PARAM_RAINBOW_OFFSET);
+    float repeat = getFloat(PARAM_REPEAT);
+    float offset = getInt(PARAM_OFFSET);
     int brightness = getInt(PARAM_BRIGHTNESS);
 
     scrollPos += scrollSpeed * timescale;
@@ -388,7 +388,6 @@ void DoubleRainbowAnimation::update()
         setPixel(i, animationColor);
     }
 }
-
 void FallingBricksAnimation::update()
 {
     int width = getInt(PARAM_WIDTH);
@@ -403,26 +402,35 @@ void FallingBricksAnimation::update()
     auto mapIdx = [&](int idx)
     { return reverse ? numLEDs() - 1 - idx : idx; };
 
+    // Initialize brick position depending on direction
     if (brickPos < 0 && stackHeight < numLEDs())
     {
-        brickPos = numLEDs() - 1 + width;
+        brickPos = reverse ? -width : numLEDs() - 1 + width;
     }
 
-    if (brickPos >= 0)
+    // Move the falling brick
+    if ((reverse && brickPos < numLEDs()) || (!reverse && brickPos >= 0))
     {
-        brickPos += speed * timeScale / 10.0f;
-        if (brickPos - (width - 1) <= stackHeight)
+        brickPos += (reverse ? 1 : -1) * speed * timeScale / 100.0f;
+
+        // Determine when it lands
+        bool landed = reverse
+                          ? brickPos + (width - 1) >= numLEDs() - 1 - stackHeight
+                          : brickPos - (width - 1) <= stackHeight;
+
+        if (landed)
         {
             stackHeight += width;
             brickPos = -1;
+
             if (stackHeight >= numLEDs())
-            {
                 stackHeight = 0;
-            }
         }
     }
 
     int maxBricks = std::max(1, numLEDs() / width);
+
+    // Draw stacked bricks
     for (int i = 0; i < stackHeight && i < numLEDs(); i++)
     {
         int brickIndex = i / width;
@@ -434,7 +442,8 @@ void FallingBricksAnimation::update()
         setPixel(mapIdx(i), animationColor);
     }
 
-    if (brickPos >= 0)
+    // Draw falling brick
+    if (brickPos >= 0 && brickPos < numLEDs())
     {
         for (int i = 0; i < width; i++)
         {

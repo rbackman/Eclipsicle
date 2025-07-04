@@ -1,48 +1,48 @@
 {
   "PARAM_INVERT": {
-    "id": 26,
+    "id": 24,
     "type": "bool",
     "value": false,
     "name": "Invert"
   },
   "PARAM_CENTERED": {
-    "id": 27,
+    "id": 25,
     "type": "bool",
     "value": false,
     "name": "Centered"
   },
   "PARAM_BLACK_AND_WHITE": {
-    "id": 28,
+    "id": 26,
     "type": "bool",
     "value": false,
     "name": "B&W"
   },
   "PARAM_LOOP_ANIM": {
-    "id": 29,
+    "id": 27,
     "type": "bool",
     "value": false,
     "name": "Loop"
   },
   "PARAM_CYCLE": {
-    "id": 30,
+    "id": 28,
     "type": "bool",
     "value": false,
     "name": "Cycle"
   },
   "PARAM_SEQUENCE": {
-    "id": 31,
+    "id": 29,
     "type": "bool",
     "value": false,
     "name": "Seq"
   },
   "PARAM_SHOW_FPS": {
-    "id": 32,
+    "id": 30,
     "type": "bool",
     "value": false,
     "name": "FPS"
   },
-  "PARAM_SLIDER_GRAVITY": {
-    "id": 7,
+  "PARAM_GRAVITY": {
+    "id": 6,
     "type": "float",
     "value": 0,
     "name": "Gravity",
@@ -50,7 +50,7 @@
     "max": 1
   },
   "PARAM_RECORD_AUDIO": {
-    "id": 34,
+    "id": 32,
     "type": "bool",
     "value": false,
     "name": "Record"
@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 285,
+    "value": 283,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 115,
+    "value": 175,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -80,13 +80,13 @@
   "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 28,
+    "value": 1,
     "name": "Width",
     "min": 1,
     "max": 60
   },
   "PARAM_RANDOM_DRIFT": {
-    "id": 11,
+    "id": 10,
     "type": "int",
     "value": 0,
     "name": "Drift",
@@ -94,7 +94,7 @@
     "max": 255
   },
   "PARAM_ANIMATION_TYPE": {
-    "id": 47,
+    "id": 45,
     "type": "int",
     "value": 0,
     "name": "AnimType",
@@ -102,9 +102,9 @@
     "max": 255
   },
   "PARAM_SPAWN_RATE": {
-    "id": 17,
+    "id": 15,
     "type": "int",
-    "value": 35,
+    "value": 4,
     "name": "Spawn",
     "min": 1,
     "max": 40
@@ -112,12 +112,12 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 189,
+    "value": 50,
     "name": "Brightness",
     "min": 0,
     "max": 255
   },
-  "PARAM_PARTICLE_FADE": {
+  "PARAM_FADE": {
     "id": 4,
     "type": "int",
     "value": 100,
@@ -125,16 +125,16 @@
     "min": 0,
     "max": 255
   },
-  "PARAM_PARTICLE_LIFE": {
-    "id": 18,
+  "PARAM_LIFE": {
+    "id": 16,
     "type": "int",
     "value": -1,
     "name": "Life",
     "min": -1,
     "max": 100
   },
-  "PARAM_SLIDER_POSITION": {
-    "id": 16,
+  "PARAM_POSITION": {
+    "id": 14,
     "type": "int",
     "value": 0,
     "name": "Pos",
@@ -142,7 +142,7 @@
     "max": 255
   },
   "PARAM_RANDOM_ON": {
-    "id": 22,
+    "id": 20,
     "type": "int",
     "value": 30,
     "name": "On",
@@ -150,7 +150,7 @@
     "max": 255
   },
   "PARAM_RANDOM_OFF": {
-    "id": 23,
+    "id": 21,
     "type": "int",
     "value": 30,
     "name": "Off",
@@ -158,7 +158,7 @@
     "max": 255
   },
   "PARAM_RANDOM_MIN": {
-    "id": 24,
+    "id": 22,
     "type": "int",
     "value": 0,
     "name": "Min",
@@ -166,7 +166,7 @@
     "max": 255
   },
   "PARAM_RANDOM_MAX": {
-    "id": 25,
+    "id": 23,
     "type": "int",
     "value": 255,
     "name": "Max",
@@ -174,15 +174,15 @@
     "max": 255
   },
   "PARAM_DISPLAY_ACCEL": {
-    "id": 33,
+    "id": 31,
     "type": "int",
     "value": 0,
     "name": "Accel",
     "min": 0,
     "max": 1
   },
-  "PARAM_RAINBOW_OFFSET": {
-    "id": 15,
+  "PARAM_OFFSET": {
+    "id": 13,
     "type": "int",
     "value": 0,
     "name": "Offset",
@@ -190,15 +190,15 @@
     "max": 255
   },
   "PARAM_SOUND_SCALE": {
-    "id": 19,
+    "id": 17,
     "type": "float",
     "value": 1,
     "name": "Sound",
     "min": 0,
     "max": 1
   },
-  "PARAM_SLIDER_MULTIPLIER": {
-    "id": 21,
+  "PARAM_MULTIPLIER": {
+    "id": 19,
     "type": "float",
     "value": 1,
     "name": "Mult",
@@ -206,7 +206,7 @@
     "max": 1
   },
   "PARAM_CURRENT_STRIP": {
-    "id": 35,
+    "id": 33,
     "type": "int",
     "value": 0,
     "name": "CurrentStrip",
@@ -214,7 +214,7 @@
     "max": 3
   },
   "PARAM_CURRENT_LED": {
-    "id": 36,
+    "id": 34,
     "type": "int",
     "value": 1,
     "name": "CurrentLED",
@@ -222,7 +222,7 @@
     "max": 255
   },
   "PARAM_MASTER_LED_HUE": {
-    "id": 37,
+    "id": 35,
     "type": "int",
     "value": 60,
     "name": "Hue",
@@ -230,7 +230,7 @@
     "max": 360
   },
   "PARAM_MASTER_LED_BRIGHTNESS": {
-    "id": 38,
+    "id": 36,
     "type": "int",
     "value": 50,
     "name": "Brightness",
@@ -238,7 +238,7 @@
     "max": 255
   },
   "PARAM_MASTER_LED_SATURATION": {
-    "id": 39,
+    "id": 37,
     "type": "int",
     "value": 255,
     "name": "Saturation",
@@ -246,7 +246,7 @@
     "max": 255
   },
   "PARAM_MASTER_VOLUME": {
-    "id": 40,
+    "id": 38,
     "type": "int",
     "value": 0,
     "name": "Volume",
@@ -254,7 +254,7 @@
     "max": 255
   },
   "PARAM_MOTOR_SPEED": {
-    "id": 41,
+    "id": 39,
     "type": "int",
     "value": 0,
     "name": "Speed",
@@ -262,7 +262,7 @@
     "max": 255
   },
   "PARAM_BEAT": {
-    "id": 42,
+    "id": 40,
     "type": "int",
     "value": 0,
     "name": "Beat",
@@ -270,7 +270,7 @@
     "max": 255
   },
   "PARAM_BEAT_MAX_SIZE": {
-    "id": 43,
+    "id": 41,
     "type": "int",
     "value": 30,
     "name": "MaxSize",
@@ -278,7 +278,7 @@
     "max": 255
   },
   "PARAM_BEAT_FADE": {
-    "id": 44,
+    "id": 42,
     "type": "int",
     "value": 50,
     "name": "Fade",
@@ -286,7 +286,7 @@
     "max": 255
   },
   "PARAM_SCROLL_SPEED": {
-    "id": 20,
+    "id": 18,
     "type": "float",
     "value": 1,
     "name": "Speed",
@@ -294,31 +294,31 @@
     "max": 100
   },
   "PARAM_TIME_SCALE": {
+    "id": 11,
+    "type": "float",
+    "value": 15.444,
+    "name": "Time",
+    "min": 0,
+    "max": 200
+  },
+  "PARAM_REPEAT": {
     "id": 12,
     "type": "float",
-    "value": 18.048,
-    "name": "Time",
-    "min": 0.1,
-    "max": 20
-  },
-  "PARAM_SLIDER_REPEAT": {
-    "id": 13,
-    "type": "float",
-    "value": 0.9,
+    "value": 1,
     "name": "Repeat",
-    "min": 0.1,
+    "min": 1,
     "max": 10
   },
   "PARAM_VELOCITY": {
-    "id": 8,
+    "id": 7,
     "type": "float",
-    "value": 20.0,
+    "value": 20,
     "name": "Vel",
     "min": -100,
     "max": 100
   },
   "PARAM_ACCELERATION": {
-    "id": 10,
+    "id": 9,
     "type": "float",
     "value": 0,
     "name": "Accel",
@@ -326,55 +326,39 @@
     "max": 100
   },
   "PARAM_MAX_SPEED": {
-    "id": 9,
+    "id": 8,
     "type": "float",
     "value": 1,
     "name": "MaxSpd",
     "min": 1,
     "max": 10
   },
-  "PARAM_RAINBOW_REPEAT": {
-    "id": 14,
-    "type": "float",
-    "value": 1,
-    "name": "Repeat",
-    "min": 1,
-    "max": 10
-  },
-  "PARAM_SLIDER_WIDTH": {
-    "id": 6,
-    "type": "float",
-    "value": 0.6,
-    "name": "Width",
-    "min": 0.1,
-    "max": 2
-  },
   "PARAM_NOISE_SCALE": {
-    "id": 45,
+    "id": 43,
     "type": "float",
-    "value": 2.0,
+    "value": 0.2,
     "name": "NScl",
     "min": 0.01,
     "max": 2
   },
   "PARAM_NOISE_SPEED": {
-    "id": 46,
+    "id": 44,
     "type": "float",
-    "value": 0.756,
+    "value": 0.1,
     "name": "NSpd",
     "min": 0,
     "max": 5
   },
   "PARAM_REVERSE": {
-    "id": 48,
+    "id": 46,
     "type": "bool",
     "value": false,
-    "name": "Reverse"
+    "name": "Dir"
   },
   "PARAM_HUE_VARIANCE": {
-    "id": 49,
+    "id": 47,
     "type": "int",
-    "value": 0,
+    "value": 1,
     "name": "HueVar",
     "min": 0,
     "max": 180

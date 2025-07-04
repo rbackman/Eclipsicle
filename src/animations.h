@@ -83,7 +83,7 @@ class ParticleAnimation : public StripAnimation
 public:
     void update();
 
-    ParticleAnimation(StripState *state, bool random, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_WIDTH, PARAM_PARTICLE_LIFE, PARAM_PARTICLE_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE, PARAM_REVERSE})
+    ParticleAnimation(StripState *state, bool random, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_PARTICLES, {PARAM_HUE, PARAM_HUE_END, PARAM_VELOCITY, PARAM_BRIGHTNESS, PARAM_WIDTH, PARAM_LIFE, PARAM_FADE, PARAM_RANDOM_DRIFT, PARAM_ACCELERATION, PARAM_MAX_SPEED, PARAM_SPAWN_RATE, PARAM_TIME_SCALE, PARAM_CYCLE, PARAM_REVERSE})
     {
 
         this->randomMode = random;
@@ -95,7 +95,7 @@ class RainbowAnimation : public StripAnimation
 public:
     void update();
 
-    RainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_TIME_SCALE, PARAM_RAINBOW_REPEAT, PARAM_RAINBOW_OFFSET, PARAM_BRIGHTNESS})
+    RainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_TIME_SCALE, PARAM_REPEAT, PARAM_OFFSET, PARAM_BRIGHTNESS})
     {
     }
 };
@@ -114,7 +114,7 @@ class DoubleRainbowAnimation : public StripAnimation
 
 public:
     void update();
-    DoubleRainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_DOUBLE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_RAINBOW_REPEAT, PARAM_RAINBOW_OFFSET, PARAM_BRIGHTNESS})
+    DoubleRainbowAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_DOUBLE_RAINBOW, {PARAM_SCROLL_SPEED, PARAM_REPEAT, PARAM_OFFSET, PARAM_BRIGHTNESS})
     {
     }
 };
@@ -124,7 +124,7 @@ class SliderAnimation : public StripAnimation
 
 public:
     void update();
-    SliderAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_SLIDER, {PARAM_SLIDER_POSITION, PARAM_SLIDER_WIDTH, PARAM_SLIDER_REPEAT, PARAM_BRIGHTNESS, PARAM_HUE})
+    SliderAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_SLIDER, {PARAM_POSITION, PARAM_WIDTH, PARAM_REPEAT, PARAM_BRIGHTNESS, PARAM_HUE})
     {
     }
 };
@@ -137,7 +137,7 @@ class FallingBricksAnimation : public StripAnimation
 public:
     void update();
     FallingBricksAnimation(StripState *state, int startLED, int endLED)
-        : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_FALLING_BRICKS,
+        : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_BRICKS,
                          {PARAM_WIDTH, PARAM_VELOCITY, PARAM_HUE,
                           PARAM_HUE_END, PARAM_HUE_VARIANCE, PARAM_BRIGHTNESS,
                           PARAM_TIME_SCALE, PARAM_REVERSE})

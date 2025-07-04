@@ -41,16 +41,16 @@ MENU_TREE = {
     "Main": {
         "Patterns": {
             "Particles": {
-                "Color": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_PARTICLE_WIDTH", "PARAM_BRIGHTNESS"],
+                "Color": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_WIDTH", "PARAM_BRIGHTNESS"],
                 "Speed": ["PARAM_TIME_SCALE", "PARAM_ACCELERATION", "PARAM_VELOCITY"],
-                "Life": ["PARAM_PARTICLE_LIFE", "PARAM_PARTICLE_FADE", "PARAM_SPAWN_RATE"]
+                "Life": ["PARAM_LIFE", "PARAM_FADE", "PARAM_SPAWN_RATE"]
             },
-            "Rainbow": ["PARAM_RAINBOW_REPEAT", "PARAM_RAINBOW_OFFSET",
+            "Rainbow": ["PARAM_REPEAT", "PARAM_OFFSET",
                         "PARAM_TIME_SCALE", "PARAM_SCROLL_SPEED", "PARAM_BRIGHTNESS"],
             "Double Rainbow": ["PARAM_TIME_SCALE"],
-            "Slider":  ["PARAM_SLIDER_WIDTH", "PARAM_SLIDER_GRAVITY",
-                        "PARAM_SLIDER_REPEAT", "PARAM_SLIDER_POSITION",
-                        "PARAM_SLIDER_MULTIPLIER", "PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS"],
+            "Slider":  ["PARAM_WIDTH", "PARAM_GRAVITY",
+                        "PARAM_REPEAT", "PARAM_POSITION",
+                        "PARAM_MULTIPLIER", "PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS"],
             "Random": ["PARAM_RANDOM_MIN", "PARAM_RANDOM_MAX",
                        "PARAM_RANDOM_ON", "PARAM_RANDOM_OFF", "PARAM_BRIGHTNESS"
 
@@ -58,8 +58,8 @@ MENU_TREE = {
             "Nebula": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
                        "PARAM_NOISE_SPEED", "PARAM_TIME_SCALE", "PARAM_NOISE_SCALE"],
             "Falling Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
-                               "PARAM_BRICK_WIDTH", "PARAM_BRICK_SPEED", "PARAM_TIME_SCALE",
-                               "PARAM_BRICK_LIFE", "PARAM_BRICK_VARIANCE"]
+                               "PARAM_WIDTH", "PARAM_SPEED", "PARAM_TIME_SCALE",
+                               "PARAM_HUE_VARIANCE"]
 
         },
         "LED": {"Master LED": {}, "Animation Type": {}},

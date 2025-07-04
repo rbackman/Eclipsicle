@@ -6,4 +6,4 @@ Animations:
     Particles startLED:1 endLED:40  hue:122 hue_end:240 spawn_rate:30 blend:multiply
     Particles startLED:60 endLED:80  hue:240 hue_end:122 spawn_rate:30 blend:subtract
     Rainbow startLED:81 endLED:120 time_scale:1.0 rainbow_repeat:3 blend:add
-    GRADIENT startLED:121 endLED:160 hue:122 hue_end:240
+

@@ -41,7 +41,7 @@
     "value": false,
     "name": "FPS"
   },
-  "PARAM_SLIDER_GRAVITY": {
+  "PARAM_GRAVITY": {
     "id": 7,
     "type": "float",
     "value": 0,
@@ -117,7 +117,7 @@
     "min": 0,
     "max": 255
   },
-  "PARAM_PARTICLE_FADE": {
+  "PARAM_FADE": {
     "id": 4,
     "type": "int",
     "value": 100,
@@ -125,7 +125,7 @@
     "min": 0,
     "max": 255
   },
-  "PARAM_PARTICLE_LIFE": {
+  "PARAM_LIFE": {
     "id": 18,
     "type": "int",
     "value": -1,
@@ -133,7 +133,7 @@
     "min": -1,
     "max": 100
   },
-  "PARAM_SLIDER_POSITION": {
+  "PARAM_POSITION": {
     "id": 16,
     "type": "int",
     "value": 0,
@@ -181,7 +181,7 @@
     "min": 0,
     "max": 1
   },
-  "PARAM_RAINBOW_OFFSET": {
+  "PARAM_OFFSET": {
     "id": 15,
     "type": "int",
     "value": 0,
@@ -197,7 +197,7 @@
     "min": 0,
     "max": 1
   },
-  "PARAM_SLIDER_MULTIPLIER": {
+  "PARAM_MULTIPLIER": {
     "id": 21,
     "type": "float",
     "value": 1,
@@ -301,7 +301,7 @@
     "min": 0.1,
     "max": 20
   },
-  "PARAM_SLIDER_REPEAT": {
+  "PARAM_REPEAT": {
     "id": 13,
     "type": "float",
     "value": 0.9,
@@ -333,7 +333,7 @@
     "min": 1,
     "max": 10
   },
-  "PARAM_RAINBOW_REPEAT": {
+  "PARAM_REPEAT": {
     "id": 14,
     "type": "float",
     "value": 1,
@@ -341,7 +341,7 @@
     "min": 1,
     "max": 10
   },
-  "PARAM_SLIDER_WIDTH": {
+  "PARAM_WIDTH": {
     "id": 6,
     "type": "float",
     "value": 0.6,

@@ -1,8 +1,8 @@
 ConfigFile: blue_halo.json
 
 Animations:
-    Falling_Bricks startLed:0 endLED:29 particle_width:3  reverse:true
-    Falling_Bricks startLed:41 endLED:70  hue:200 hue_variance:40  particle_width:3    
+    BRICKS startLed:0 endLED:29  width:3 
+    BRICKS startLed:41 endLED:70  hue:200 hue_variance:40   width:3    
 
 PARAMETERS:
   brightness: 100

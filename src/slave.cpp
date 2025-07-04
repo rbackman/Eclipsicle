@@ -256,13 +256,13 @@ bool processCmd(String command)
     Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
     return true;
   }
-  if (command == "quiet")
+  else if (command == "quiet")
   {
     setVerbose(false);
     Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
     return true;
   }
-  if (command.startsWith("p:"))
+  else if (command.startsWith("p:"))
   {
     // command is in form "p:PARAM_ID:VALUE"
     int colonIndex = command.indexOf(':');
@@ -299,13 +299,13 @@ bool processCmd(String command)
     }
     parameterHandler(parameter);
   }
-  if (command == "confirmParameters")
+  else if (command == "confirmParameters")
   {
     confirmParameters();
 
     return true;
   }
-  if (command == "saveDefaults")
+  else if (command == "saveDefaults")
   {
     configManager.saveParameters(parameterManager);
     configManager.saveParameters(ledManager);
@@ -320,7 +320,7 @@ bool processCmd(String command)
     Serial.println("Defaults saved");
     return true;
   }
-  if (command == "loadDefaults")
+  else if (command == "loadDefaults")
   {
     configManager.loadParameters(parameterManager);
     configManager.loadParameters(ledManager);
@@ -335,17 +335,24 @@ bool processCmd(String command)
     Serial.println("Defaults loaded");
     return true;
   }
-  if (command == "resetDefaults")
+  else if (command == "resetDefaults")
   {
     configManager.clear();
     Serial.println("Defaults cleared");
     return true;
   }
-  if (command == "getStripState")
+  else if (command == "getStripState")
   {
     String state = ledManager->getStripStateJson(true);
     Serial.println(state + ";");
     return true;
+  }
+  else
+  {
+    if (isVerbose())
+    {
+      Serial.println("Command not recognized: " + command);
+    }
   }
 
   // float ax = a.acceleration.x;

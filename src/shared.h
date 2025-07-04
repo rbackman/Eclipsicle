@@ -15,24 +15,22 @@
     X(PARAM_HUE_END)               \
     X(PARAM_BRIGHTNESS)            \
     X(PARAM_WIDTH)                 \
-    X(PARAM_PARTICLE_FADE)         \
+    X(PARAM_FADE)                  \
     X(PARAM_PARTICLE_UPDATE_ALL)   \
-    X(PARAM_SLIDER_WIDTH)          \
-    X(PARAM_SLIDER_GRAVITY)        \
+    X(PARAM_GRAVITY)               \
     X(PARAM_VELOCITY)              \
     X(PARAM_MAX_SPEED)             \
     X(PARAM_ACCELERATION)          \
     X(PARAM_RANDOM_DRIFT)          \
     X(PARAM_TIME_SCALE)            \
-    X(PARAM_SLIDER_REPEAT)         \
-    X(PARAM_RAINBOW_REPEAT)        \
-    X(PARAM_RAINBOW_OFFSET)        \
-    X(PARAM_SLIDER_POSITION)       \
+    X(PARAM_REPEAT)                \
+    X(PARAM_OFFSET)                \
+    X(PARAM_POSITION)              \
     X(PARAM_SPAWN_RATE)            \
-    X(PARAM_PARTICLE_LIFE)         \
+    X(PARAM_LIFE)                  \
     X(PARAM_SOUND_SCALE)           \
     X(PARAM_SCROLL_SPEED)          \
-    X(PARAM_SLIDER_MULTIPLIER)     \
+    X(PARAM_MULTIPLIER)            \
     X(PARAM_RANDOM_ON)             \
     X(PARAM_RANDOM_OFF)            \
     X(PARAM_RANDOM_MIN)            \
@@ -183,7 +181,7 @@ enum MenuID
     MENU_RAINBOW_MODE,
     MENU_DOUBLE_RAINBOW_MODE,
     MENU_NEBULA_MODE,
-    MENU_FALLING_BRICKS_MODE,
+    MENU_BRICKS_MODE,
     MENU_SLIDER,
     MENU_SLIDER_COLOR_MODE,
     MENU_SLIDER_SETTINGS_MODE,
@@ -217,7 +215,7 @@ const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
     {MENU_SAVE_PATTERN, {"Save", MENU_PATTERNS}},
     {MENU_RAINBOW_MODE, {"Rainbow", MENU_PATTERNS}},
     {MENU_NEBULA_MODE, {"Nebula", MENU_PATTERNS}},
-    {MENU_FALLING_BRICKS_MODE, {"Falling Bricks", MENU_PATTERNS}},
+    {MENU_BRICKS_MODE, {"Falling Bricks", MENU_PATTERNS}},
     {MENU_DOUBLE_RAINBOW_MODE, {"Double Rainbow", MENU_PATTERNS}},
     {MENU_SLIDER, {"Slider", MENU_PATTERNS}},
     {MENU_SLIDER_COLOR_MODE, {"Color", MENU_SLIDER}},
@@ -278,10 +276,10 @@ static const std::vector<IntParameter> getDefaultIntParameters()
         {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255},
         {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40},
         {PARAM_BRIGHTNESS, "Brightness", 50, 0, 255},
-        {PARAM_PARTICLE_FADE, "Fade", 100, 0, 255},
-        {PARAM_PARTICLE_LIFE, "Life", -1, -1, 100},
+        {PARAM_FADE, "Fade", 100, 0, 255},
+        {PARAM_LIFE, "Life", -1, -1, 100},
 
-        {PARAM_SLIDER_POSITION, "Pos", 0, -255, 255},
+        {PARAM_POSITION, "Pos", 0, -255, 255},
 
         {PARAM_RANDOM_ON, "On", 30, 0, 255},
         {PARAM_RANDOM_OFF, "Off", 30, 0, 255},
@@ -289,10 +287,10 @@ static const std::vector<IntParameter> getDefaultIntParameters()
         {PARAM_RANDOM_MAX, "Max", 255, 0, 255},
         {PARAM_DISPLAY_ACCEL, "Accel", 0, 0, 1},
 
-        {PARAM_RAINBOW_OFFSET, "Offset", 0, 0, 255},
+        {PARAM_OFFSET, "Offset", 0, 0, 255},
         {PARAM_SOUND_SCALE, "Sound", 0, 0, 1},
 
-        {PARAM_SLIDER_MULTIPLIER, "Mult", 0, 0, 1},
+        {PARAM_MULTIPLIER, "Mult", 0, 0, 1},
         {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3},
         {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255},
         {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360},
@@ -317,7 +315,7 @@ static const std::vector<BoolParameter> getDefaultBoolParameters()
         {PARAM_CYCLE, "Cycle", false},
         {PARAM_SEQUENCE, "Seq", false},
         {PARAM_SHOW_FPS, "FPS", false},
-        {PARAM_SLIDER_GRAVITY, "Gravity", false},
+        {PARAM_GRAVITY, "Gravity", false},
         {PARAM_RECORD_AUDIO, "Record", false},
         {PARAM_PARTICLE_UPDATE_ALL, "UpdateAll", true},
         {PARAM_REVERSE, "Dir", false},
@@ -329,17 +327,17 @@ static const std::vector<FloatParameter> getDefaultFloatParameters()
 {
 
     return {
-        {PARAM_SLIDER_GRAVITY, "Gravity", 0.0, 0.0, 1.0},
-        {PARAM_SLIDER_MULTIPLIER, "Mult", 1.0, 0.0, 1.0},
+        {PARAM_GRAVITY, "Gravity", 0.0, 0.0, 1.0},
+        {PARAM_MULTIPLIER, "Mult", 1.0, 0.0, 1.0},
         {PARAM_SCROLL_SPEED, "Speed", 1.0, 0.0, 100.0},
         {PARAM_SOUND_SCALE, "Sound", 1.0, 0.0, 1.0},
-        {PARAM_TIME_SCALE, "Time", 1.0, 0.1, 20.0},
-        {PARAM_SLIDER_REPEAT, "Repeat", 0.9, 0.1, 10.0},
+        {PARAM_TIME_SCALE, "Time", 1.0, 0, 200.0},
+        {PARAM_REPEAT, "Repeat", 0.9, 0.1, 10.0},
         {PARAM_VELOCITY, "Vel", 20.0, -100, 100.0},
         {PARAM_ACCELERATION, "Accel", 0.0, -10.0, 100.0},
         {PARAM_MAX_SPEED, "MaxSpd", 1.0, 1.0, 10.0},
-        {PARAM_RAINBOW_REPEAT, "Repeat", 1.0, 1.0, 10.0},
-        {PARAM_SLIDER_WIDTH, "Width", 0.6, 0.1, 2.0},
+        {PARAM_REPEAT, "Repeat", 1.0, 1.0, 10.0},
+
         {PARAM_NOISE_SCALE, "NScl", 0.2, 0.01, 2.0},
         {PARAM_NOISE_SPEED, "NSpd", 0.1, 0.0, 5.0},
     };
@@ -460,23 +458,11 @@ enum LED_STATE
     X(ANIMATION_TYPE_DOUBLE_RAINBOW)   \
     X(ANIMATION_TYPE_SLIDER)           \
     X(ANIMATION_TYPE_RANDOM)           \
-    X(ANIMATION_TYPE_FALLING_BRICKS)   \
+    X(ANIMATION_TYPE_BRICKS)           \
     X(ANIMATION_TYPE_NEBULA)           \
     X(ANIMATION_TYPE_RANDOM_PARTICLES) \
     X(ANIMATION_TYPE_IDLE)
 
-// enum ANIMATION_TYPE
-// {
-//     ANIMATION_TYPE_NONE,
-//     ANIMATION_TYPE_PARTICLES,
-//     ANIMATION_TYPE_RAINBOW,
-//     ANIMATION_TYPE_DOUBLE_RAINBOW,
-//     ANIMATION_TYPE_SLIDER,
-//     ANIMATION_TYPE_RANDOM,
-//     ANIMATION_TYPE_POINT_CONTROL,
-//     ANIMATION_TYPE_RANDOM_PARTICLES,
-//     ANIMATION_TYPE_IDLE
-// };
 enum ANIMATION_TYPE
 {
 #define X(name) name,
@@ -505,6 +491,7 @@ struct LEDParams
 
 struct LEDRig
 {
+    // presets for devices with different LED configurations
     std::string name;
     MacAddress mac;
     std::vector<LEDParams> strips;
@@ -513,23 +500,20 @@ struct LEDRig
 // map to state names
 const std::map<LED_STATE, String> LED_STATE_NAMES = {
     {LED_STATE_IDLE, "IDLE"},
-    {LED_STATE_POINT_CONTROL, "POINT_CONTROL"},
-    {LED_STATE_SINGLE_ANIMATION, "SINGLE_ANIMATION"},
-    {LED_STATE_MULTI_ANIMATION, "MULTI_ANIMATION"}
-
-};
+    {LED_STATE_POINT_CONTROL, "POINTCONTROL"},
+    {LED_STATE_SINGLE_ANIMATION, "SINGLEANIMATION"},
+    {LED_STATE_MULTI_ANIMATION, "MULTIANIMATION"}};
 
 const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_NONE, "NONE"},
     {ANIMATION_TYPE_PARTICLES, "PARTICLES"},
     {ANIMATION_TYPE_RAINBOW, "RAINBOW"},
-    {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLE RAINBOW"},
+    {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLERAINBOW"},
     {ANIMATION_TYPE_SLIDER, "SLIDER"},
     {ANIMATION_TYPE_RANDOM, "RANDOM"},
-    {ANIMATION_TYPE_FALLING_BRICKS, "FALLING BRICKS"},
+    {ANIMATION_TYPE_BRICKS, "FALLINGBRICKS"},
     {ANIMATION_TYPE_NEBULA, "NEBULA"},
-
-    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOM PARTICLES"}};
+    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOMPARTICLES"}};
 
 const std::vector<LEDRig> slaves = {
     {
@@ -550,9 +534,9 @@ const std::vector<LEDRig> slaves = {
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
             {0, 122, LED_STATE_MULTI_ANIMATION, {
-                                                    {ANIMATION_TYPE_PARTICLES, 0, 27, {{PARAM_HUE, 100}, {PARAM_HUE_END, 120}, {PARAM_TIME_SCALE, 0.1f}}},
-                                                    {ANIMATION_TYPE_RAINBOW, 28, 44},
-                                                    {ANIMATION_TYPE_PARTICLES, 45, 72, {{PARAM_HUE, 200}, {PARAM_HUE_END, 240}, {PARAM_TIME_SCALE, 0.1f}}},
+                                                    {ANIMATION_TYPE_PARTICLES, 0, 27, {{PARAM_HUE, 100}, {PARAM_HUE_END, 120}, {PARAM_TIME_SCALE, 5.0f}}},
+                                                    {ANIMATION_TYPE_BRICKS, 28, 44},
+                                                    {ANIMATION_TYPE_PARTICLES, 45, 72, {{PARAM_HUE, 200}, {PARAM_HUE_END, 240}, {PARAM_TIME_SCALE, 5.0f}}},
                                                     {ANIMATION_TYPE_RAINBOW, 73, 121},
                                                 }},
 

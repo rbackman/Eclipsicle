@@ -130,7 +130,7 @@ std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_
         return std::make_unique<SliderAnimation>(stripState, startLED, endLED);
     case ANIMATION_TYPE_RANDOM:
         return std::make_unique<RandomAnimation>(stripState, startLED, endLED);
-    case ANIMATION_TYPE_FALLING_BRICKS:
+    case ANIMATION_TYPE_BRICKS:
         return std::make_unique<FallingBricksAnimation>(stripState, startLED, endLED);
     case ANIMATION_TYPE_NEBULA:
         return std::make_unique<NebulaAnimation>(stripState, startLED, endLED);
