@@ -8,6 +8,7 @@ public:
     void begin();
     void saveParameters(ParameterManager* pm);
     void loadParameters(ParameterManager* pm);
+    void clear();
 private:
     Preferences prefs;
 };

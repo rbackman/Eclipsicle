@@ -40,3 +40,7 @@ void ConfigManager::loadParameters(ParameterManager* pm) {
         pm->setFloat(p.id, val);
     }
 }
+
+void ConfigManager::clear() {
+    prefs.clear();
+}

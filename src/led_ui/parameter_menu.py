@@ -499,3 +499,4 @@ class ParameterMenuWidget(QWidget):
             val = prm.get("value")
             cmd = f"p:{pid}:{val}"
             self.console.send_cmd(cmd)
+        self.console.send_cmd("saveDefaults")

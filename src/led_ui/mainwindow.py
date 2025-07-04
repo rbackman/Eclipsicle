@@ -54,10 +54,18 @@ class MainWindow(QMainWindow):
         load_action.triggered.connect(self.parameter_menu.load_profile)
         file_menu.addAction(load_action)
 
+        reset_action = QAction('Reset Defaults', self)
+        reset_action.triggered.connect(lambda: self.console.send_cmd('resetDefaults'))
+        file_menu.addAction(reset_action)
+
         confirm_action = QAction('Confirm Parameters', self)
         confirm_action.triggered.connect(
             lambda: self.console.send_cmd('confirmParameters'))
         file_menu.addAction(confirm_action)
+
+        state_action = QAction('Get Strip State', self)
+        state_action.triggered.connect(lambda: self.console.send_cmd('getStripState'))
+        file_menu.addAction(state_action)
 
         view_menu = menu_bar.addMenu('View')
         self.sim_action = QAction('Show Simulation', self, checkable=True)

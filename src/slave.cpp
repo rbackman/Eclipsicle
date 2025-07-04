@@ -337,6 +337,18 @@ bool processCmd(String command)
     Serial.println("Defaults loaded");
     return true;
   }
+  if (command == "resetDefaults")
+  {
+    configManager.clear();
+    Serial.println("Defaults cleared");
+    return true;
+  }
+  if (command == "getStripState")
+  {
+    String state = ledManager->getStripState(true);
+    Serial.println("state:" + state);
+    return true;
+  }
   // ledManager->handleLEDCommand(command);
   // meshManager->handleMeshCommand(command);
   // checkLEDCommand(command);

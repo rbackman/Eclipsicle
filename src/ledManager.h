@@ -27,7 +27,7 @@ public:
     bool handleLEDCommand(String command);
     void setLED(int ledIndex, led color);
     void toggleMode();
-    String getStripState();
+    String getStripState(bool verbose = false);
     int getCurrentStrip();
     std::vector<StripState*> &getStrips() { return stripStates; }
     bool respondToParameterMessage(parameter_message parameter);

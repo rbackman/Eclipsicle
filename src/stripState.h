@@ -95,7 +95,7 @@ public:
     void toggleMode();
 
     void update();
-    String getStripState();
+    String getStripState(bool verbose = false);
     int getAnimationCount()
     {
         return animations.size();

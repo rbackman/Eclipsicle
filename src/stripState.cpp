@@ -65,9 +65,19 @@ void StripState::toggleMode()
     this->clearPixels();
 }
 
-String StripState::getStripState()
+String StripState::getStripState(bool verbose)
 {
-    return getLedStateName(ledState);
+    if (!verbose)
+    {
+        return getLedStateName(ledState);
+    }
+    String result = "strip" + String(stripIndex + 1) + " state:" + getLedStateName(ledState);
+    for (const auto &anim : animations)
+    {
+        result += " " + anim->describe();
+        result += ";";
+    }
+    return result;
 }
 
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int startLED, int endLED, std::map<ParameterID, float> params)

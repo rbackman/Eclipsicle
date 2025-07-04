@@ -67,6 +67,7 @@ public:
         return endLED;
     }
     void setPixel(int index, led color);
+    String describe();
 };
 
 #define NUM_PARTICLES 20
