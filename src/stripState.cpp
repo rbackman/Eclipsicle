@@ -3,6 +3,7 @@
 
 #include "stripState.h"
 #include "animations.h"
+#include <ArduinoJson.h>
 int val = 0;
 int minr = 0;
 int maxr = 0;
@@ -65,9 +66,54 @@ void StripState::toggleMode()
     this->clearPixels();
 }
 
-String StripState::getStripState()
+String StripState::getStripState(bool verbose)
 {
-    return getLedStateName(ledState);
+    if (!verbose)
+    {
+        return getLedStateName(ledState);
+    }
+    String result = "strip" + String(stripIndex + 1) + " state:" + getLedStateName(ledState);
+    for (const auto &anim : animations)
+    {
+        result += " " + anim->describe();
+        result += ";";
+    }
+    return result;
+}
+
+String StripState::getStripStateJson(bool verbose)
+{
+    DynamicJsonDocument doc(2048);
+    doc["type"] = "stripState";
+    doc["strip"] = stripIndex + 1;
+    doc["state"] = getLedStateName(ledState);
+    if (verbose)
+    {
+        JsonArray arr = doc.createNestedArray("animations");
+        for (const auto &anim : animations)
+        {
+            JsonObject a = arr.createNestedObject();
+            a["type"] = getAnimationName(anim->getAnimationType()).c_str();
+            a["start"] = anim->getStartLED();
+            a["end"] = anim->getEndLED();
+            JsonObject params = a.createNestedObject("params");
+            for (const auto &p : anim->getIntParameters())
+            {
+                params[getParameterName(p.id).c_str()] = p.value;
+            }
+            for (const auto &p : anim->getFloatParameters())
+            {
+                params[getParameterName(p.id).c_str()] = p.value;
+            }
+            for (const auto &p : anim->getBoolParameters())
+            {
+                params[getParameterName(p.id).c_str()] = p.value;
+            }
+        }
+    }
+    String output;
+    serializeJson(doc, output);
+    return output;
 }
 
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int startLED, int endLED, std::map<ParameterID, float> params)

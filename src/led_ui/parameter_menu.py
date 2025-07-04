@@ -4,7 +4,7 @@ import json
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTreeWidget, QTreeWidgetItem,
     QStackedWidget, QLabel, QSlider, QCheckBox, QColorDialog, QPushButton,
-    QHeaderView, QSpinBox, QFileDialog, QListWidget, QTabWidget
+    QHeaderView, QSpinBox, QFileDialog, QListWidget, QTabWidget, QTextEdit
 )
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
@@ -120,6 +120,7 @@ class ParamPage(QWidget):
         self.console = console
         lay = QVBoxLayout(self)
         lay.setAlignment(Qt.AlignTop)
+        self.widgets = {}
         # print(f"Creating parameter page with { params} parameters\n")
         for prmname in params:
             prm = params[prmname]
@@ -128,19 +129,18 @@ class ParamPage(QWidget):
             print(
                 f"Adding parameter:{shortname}  id:{prm['id']} of type {kind}\n")
             if kind == "int":
-                # lbl = QLabel(f"{shortname}: 0")
                 sld = DebouncedSlider(prmname, prm)
-
                 sld.sendInt.connect(
                     lambda v,   p=prm:  self._send(p['id'], v))
-
                 lay.addWidget(sld)
+                self.widgets[prm['id']] = sld
             elif kind == "bool":
                 cb = QCheckBox(shortname)
                 cb.stateChanged.connect(
                     lambda s, p=prm: self._send(p['id'], bool(s)))
                 cb.setChecked(prm.get("value", False))
                 lay.addWidget(cb)
+                self.widgets[prm['id']] = cb
             elif kind == "color":
                 color_box = QLabel()
                 color_box.setFixedSize(24, 24)
@@ -160,6 +160,7 @@ class ParamPage(QWidget):
                 hbox.addWidget(btn)
                 hbox.addWidget(color_box)
                 lay.addLayout(hbox)
+                self.widgets[prm['id']] = color_box
             elif kind == "float":
 
                 sld = DebouncedSlider(prmname, prm, "float")
@@ -167,6 +168,7 @@ class ParamPage(QWidget):
                 sld.sendFloat.connect(
                     lambda v, p=prm: self._send(p['id'], v))
                 lay.addWidget(sld)
+                self.widgets[prm['id']] = sld
 
     def _upd_int(self, lbl, prm, v):
         lbl.setText(f"{prm['id']}: {v}")
@@ -187,6 +189,21 @@ class ParamPage(QWidget):
             color_box.setStyleSheet(
                 f"background: {c.name()}; border: 1px solid #aaa;")
             self._send(pid, hue)
+
+    def set_param_value(self, pid, val):
+        w = self.widgets.get(pid)
+        if w is None:
+            return
+        if isinstance(w, DebouncedSlider):
+            w.setValue(val)
+        elif isinstance(w, QCheckBox):
+            w.blockSignals(True)
+            w.setChecked(bool(val))
+            w.blockSignals(False)
+        elif isinstance(w, QLabel):
+            hue = int(val)
+            w.setStyleSheet(
+                f"background: hsl({hue}, 100%, 50%); border: 1px solid #aaa;")
 
     def _send(self, pid, val):
         if pid in ParameterIDMap:
@@ -320,6 +337,13 @@ class ParameterMenuWidget(QWidget):
         loadParameters()
         self.refresh_data_files()
 
+        stateTab = QWidget()
+        sRoot = QVBoxLayout(stateTab)
+        self.stateText = QTextEdit()
+        self.stateText.setReadOnly(True)
+        sRoot.addWidget(self.stateText)
+        self.tabs.addTab(stateTab, "State")
+
     # helper to build icon safely
     def _qta_icon(self, key):
         try:
@@ -449,6 +473,14 @@ class ParameterMenuWidget(QWidget):
             data = obj["data"]
             checkParameters(data)
             return True
+        if obj.get("type") == "stripState":
+            self.stateText.setPlainText(json.dumps(obj, indent=2))
+            for anim in obj.get("animations", []):
+                for pname, val in anim.get("params", {}).items():
+                    if pname in ParameterMap:
+                        ParameterMap[pname]["value"] = val
+            self.update_widgets_from_map()
+            return True
         return False
 
     def save_profile(self):
@@ -457,8 +489,10 @@ class ParameterMenuWidget(QWidget):
         path = os.path.join("data", f"profile_{timestamp}.json")
         with open(path, "w") as f:
             json.dump(ParameterMap, f, indent=2)
-        self.console.send_cmd("saveDefaults")
         self.refresh_data_files()
+
+    def set_default(self):
+        self.console.send_cmd("saveDefaults")
 
     def load_profile(self):
         path, _ = QFileDialog.getOpenFileName(self, "Load Parameter Profile", "", "JSON Files (*.json)")
@@ -499,3 +533,11 @@ class ParameterMenuWidget(QWidget):
             val = prm.get("value")
             cmd = f"p:{pid}:{val}"
             self.console.send_cmd(cmd)
+        self.set_default()
+
+    def update_widgets_from_map(self):
+        for page in self.cache.values():
+            for prm in ParameterMap.values():
+                pid = prm.get("id")
+                val = prm.get("value")
+                page.set_param_value(pid, val)

@@ -50,6 +50,9 @@ class LEDSimWidget(QWidget):
 
             self.update_leds(compressed_data)
             return True
+        if string.startswith("state:"):
+            print(string)
+            return True
         return False
 
     def update_leds(self, compressed_data):

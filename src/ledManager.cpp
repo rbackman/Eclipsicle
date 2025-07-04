@@ -317,14 +317,24 @@ void LEDManager::toggleMode()
         stripStates[currentStrip - 1]->toggleMode();
     }
 }
-String LEDManager::getStripState()
+String LEDManager::getStripState(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
-        return stripStates[0]->getStripState();
+        return stripStates[0]->getStripState(verbose);
     }
-    return stripStates[currentStrip - 1]->getStripState();
+    return stripStates[currentStrip - 1]->getStripState(verbose);
+}
+
+String LEDManager::getStripStateJson(bool verbose)
+{
+    int currentStrip = getInt(PARAM_CURRENT_STRIP);
+    if (currentStrip == 0)
+    {
+        return stripStates[0]->getStripStateJson(verbose);
+    }
+    return stripStates[currentStrip - 1]->getStripStateJson(verbose);
 }
 
 #endif

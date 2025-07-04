@@ -322,6 +322,10 @@ bool processCmd(String command)
     for (auto strip : ledManager->getStrips())
     {
       configManager.saveParameters(strip);
+      for (auto &anim : strip->getAnimations())
+      {
+        configManager.saveParameters(anim.get());
+      }
     }
     Serial.println("Defaults saved");
     return true;
@@ -333,8 +337,24 @@ bool processCmd(String command)
     for (auto strip : ledManager->getStrips())
     {
       configManager.loadParameters(strip);
+      for (auto &anim : strip->getAnimations())
+      {
+        configManager.loadParameters(anim.get());
+      }
     }
     Serial.println("Defaults loaded");
+    return true;
+  }
+  if (command == "resetDefaults")
+  {
+    configManager.clear();
+    Serial.println("Defaults cleared");
+    return true;
+  }
+  if (command == "getStripState")
+  {
+    String state = ledManager->getStripStateJson(true);
+    Serial.println(state + ";");
     return true;
   }
   // ledManager->handleLEDCommand(command);

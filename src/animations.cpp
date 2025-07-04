@@ -23,6 +23,27 @@ void StripAnimation::setPixel(int index, led color)
     }
 }
 
+String StripAnimation::describe()
+{
+    String desc = getAnimationName(animationType).c_str();
+    desc += " start:" + String(startLED);
+    desc += " end:" + String(endLED);
+
+    for (const auto &p : getIntParameters())
+    {
+        desc += " " + String(getParameterName(p.id).c_str()) + ":" + String(p.value);
+    }
+    for (const auto &p : getFloatParameters())
+    {
+        desc += " " + String(getParameterName(p.id).c_str()) + ":" + String(p.value, 2);
+    }
+    for (const auto &p : getBoolParameters())
+    {
+        desc += " " + String(getParameterName(p.id).c_str()) + ":" + String(p.value ? "1" : "0");
+    }
+    return desc;
+}
+
 void ParticleAnimation::updateRandomParticles()
 {
 
