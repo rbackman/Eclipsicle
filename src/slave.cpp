@@ -126,7 +126,7 @@ bool respondToParameterChange(parameter_message parameter)
 void setup()
 {
 
-  serialManager = new SerialManager(220, SLAVE_NAME);
+  serialManager = new SerialManager(512, SLAVE_NAME);
   configManager.begin();
   parameterManager = new ParameterManager(SLAVE_NAME, {PARAM_DISPLAY_ACCEL});
   ledManager = new LEDManager(SLAVE_NAME);
