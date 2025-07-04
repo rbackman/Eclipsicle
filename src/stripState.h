@@ -85,6 +85,7 @@ public:
     void setAll(CRGB color);
     void setAll(led color);
     bool respondToText(String command);
+    bool parseAnimationScript(String script);
 
     void clearPixels();
     void clearPixel(int index);

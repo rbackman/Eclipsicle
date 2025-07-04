@@ -34,3 +34,5 @@ The code uses a modular `ParameterManager` class so that each subsystem can expo
 
 Parameter presets are stored under `src/led_ui/data/configurations` while animation script files live in `src/led_ui/data/animations`.  Presets now store only values that differ from the defaults in `parameter_map.json`.
 
+Animation scripts (`*.led`) begin with a `ConfigFile:` line naming the base parameter preset. Parameters listed under the `Parameters:` section override values from that preset and `Animations:` describes the sequence of animations for the strip.
+
