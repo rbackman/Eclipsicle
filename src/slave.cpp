@@ -160,7 +160,6 @@ void setup()
   display.setTextColor(WHITE);
   display.setRotation(0);
 
-
   Serial.println("Adafruit MPU6050 found display!");
 #endif
 
@@ -348,54 +347,55 @@ bool processCmd(String command)
     Serial.println(state + ";");
     return true;
   }
-    float ax = a.acceleration.x;
-    float ay = a.acceleration.y;
-    float az = a.acceleration.z;
-    float magnitude = sqrt(ax * ax + ay * ay + az * az);
-    ax /= magnitude;
-    ay /= magnitude;
-    az /= magnitude;
 
-    // Calculate the angle in the x-y plane
-    float angle = atan2(ay, ax); // Radians
+  // float ax = a.acceleration.x;
+  // float ay = a.acceleration.y;
+  // float az = a.acceleration.z;
+  // float magnitude = sqrt(ax * ax + ay * ay + az * az);
+  // ax /= magnitude;
+  // ay /= magnitude;
+  // az /= magnitude;
 
-    // Map the angle to an LED index
-    float gravityPosition = ((angle + PI) / (2 * PI));
+  // // Calculate the angle in the x-y plane
+  // float angle = atan2(ay, ax); // Radians
 
-    ledManager->setGravityPosition(gravityPosition);
+  // // Map the angle to an LED index
+  // float gravityPosition = ((angle + PI) / (2 * PI));
+
+  // ledManager->setGravityPosition(gravityPosition);
 
 #ifdef USE_DISPLAY
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    if (showAccel)
-    {
+  display.clearDisplay();
+  display.setCursor(0, 0);
+  if (showAccel)
+  {
 
-      display.print("Accel ");
-      display.print(a.acceleration.x, 1);
-      display.print(",");
-      display.print(a.acceleration.y, 1);
-      display.print(",");
-      display.print(a.acceleration.z, 1);
-      display.println("");
+    display.print("Accel ");
+    display.print(a.acceleration.x, 1);
+    display.print(",");
+    display.print(a.acceleration.y, 1);
+    display.print(",");
+    display.print(a.acceleration.z, 1);
+    display.println("");
 
-      display.print("Gyro");
-      display.print(g.gyro.x, 1);
-      display.print(",");
-      display.print(g.gyro.y, 1);
-      display.print(",");
-      display.print(g.gyro.z, 1);
-      display.println("");
-    }
-    display.print(ledManager->getStripState());
-
-    display.display();
-#endif
+    display.print("Gyro");
+    display.print(g.gyro.x, 1);
+    display.print(",");
+    display.print(g.gyro.y, 1);
+    display.print(",");
+    display.print(g.gyro.z, 1);
+    display.println("");
   }
+  display.print(ledManager->getStripState());
 
-
-
-
+  display.display();
 #endif
+
+  return false; // command was not handled
+}
+
+void loop()
+{
   serialManager->updateSerial();
   if (serialManager->stringAvailable())
   {
