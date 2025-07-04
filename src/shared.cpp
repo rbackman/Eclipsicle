@@ -16,18 +16,6 @@ int interpolate(int from, int to, float t)
 {
   return from + (to - from) * t;
 }
-// std::vector<ParameterID> getParametersForMenu(MenuID menu)
-// {
-//   std::vector<ParameterID> menuParams = {};
-//   for (auto it = parameterMenuList.begin(); it != parameterMenuList.end(); ++it)
-//   {
-//     if (it->first == menu)
-//     {
-//       menuParams.push_back(it->second);
-//     }
-//   }
-//   return menuParams;
-// }
 const char *getMenuName(MenuID type, int MaxSize)
 {
   auto it = menuTypeMap.find(type);
@@ -92,8 +80,6 @@ void printBytes(ByteRow data)
   for (int i = 0; i < data.size(); ++i)
   {
     Serial.printf("%d ", data[i]);
-    // if ((i + 1) % 16 == 0)
-    //   Serial.println();
   }
   Serial.println("<-- as bytes");
 }

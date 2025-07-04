@@ -185,8 +185,6 @@ void StripState::update()
     {
     case LED_STATE_IDLE:
 
-        // clearPixels();
-
         break;
 
     case LED_STATE_SINGLE_ANIMATION:
@@ -208,8 +206,6 @@ void StripState::update()
         int pointPosition = (int)getInt(PARAM_CURRENT_LED);
 
         int pointHue = getInt(PARAM_HUE);
-
-        // Serial.printf("point control strip %s   %d \n", getName().c_str(), pointPosition);
 
         colorFromHSV(tempColor, float(pointHue) / float(255), 1, 255);
         setPixel(pointPosition, tempColor);

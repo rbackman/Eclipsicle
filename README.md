@@ -4,13 +4,15 @@ Eclipsicle is an ESP32 based light control project. The code is organized as a P
 
 ## Building
 
+Install the PlatformIO extension in VSCode to build and upload directly from the IDE.
+
 Install [PlatformIO](https://platformio.org/) and run for the desired environment. For example, to build the master firmware:
 
 ```bash
 pio run -e master
 ```
 
-The `platformio.ini` file lists additional environments such as `slave_with_motor` or `master_with_audio` which enable optional features like audio playback or motor control.
+The `platformio.ini` file lists additional environments such as `slave_with_motor` or `master_with_audio` which enable optional features like audio playback or motor control. The file lists multiple "env" sections for different boards and options.
 
 ## Source overview
 
@@ -20,6 +22,11 @@ The `platformio.ini` file lists additional environments such as `slave_with_moto
   * `sensors.*` – abstraction for buttons, sliders and other inputs
   * `meshnet.*` – simple ESP‑Now based communication
 * `src/led_ui` – Python desktop tools for testing animations
+The UI environment setup is described in `src/led_ui/README.md`.
 
-The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types.
+There are two major components:
+1. Firmware written in C++ for the ESP32 (master and slave roles).
+2. A PyQt desktop interface in `src/led_ui` that communicates with the device.
+
+The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types. Parameters are exchanged over serial/Mesh using the IDs from this header so that the C++ firmware and Python UI stay in sync.
 
