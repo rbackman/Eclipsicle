@@ -131,3 +131,26 @@ public:
     {
     }
 };
+
+class FallingBricksAnimation : public StripAnimation
+{
+    float brickPos = -1;
+    int stackHeight = 0;
+
+public:
+    void update();
+    FallingBricksAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_FALLING_BRICKS, {PARAM_PARTICLE_WIDTH, PARAM_VELOCITY, PARAM_HUE, PARAM_BRIGHTNESS, PARAM_TIME_SCALE})
+    {
+    }
+};
+
+class NebulaAnimation : public StripAnimation
+{
+    float noiseOffset = 0;
+
+public:
+    void update();
+    NebulaAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_NEBULA, {PARAM_HUE, PARAM_HUE_END, PARAM_BRIGHTNESS, PARAM_NOISE_SCALE, PARAM_NOISE_SPEED, PARAM_TIME_SCALE})
+    {
+    }
+};
