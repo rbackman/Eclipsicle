@@ -1,9 +1,7 @@
-ConfigFile: blue_halo.json
+
+Animations:
+    BRICKS  width:1  reverse:true time_scale:20 
+    BRICKS   hue:200 hue_variance:40   width:3    time_scale:20
+
 PARAMETERS:
   brightness: 100
-  time_scale: 5.0
-Animations:
-    Particles start:1 end:40  hue:122 hue_end:240 spawn_rate:30 blend:multiply
-    Particles start:60 end:80  hue:240 hue_end:122 spawn_rate:30 blend:subtract
-    Rainbow start:81 end:120 time_scale:1.0 rainbow_repeat:3 blend:add
-
