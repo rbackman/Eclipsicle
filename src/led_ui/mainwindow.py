@@ -4,7 +4,7 @@ import sys
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QVBoxLayout, QWidget,
     QPushButton, QLabel, QSlider, QCheckBox, QColorDialog, QHBoxLayout,
-    QSpinBox, QComboBox, QMenuBar, QAction
+    QSpinBox, QComboBox, QMenuBar, QAction, QLineEdit
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor
@@ -46,9 +46,6 @@ class MainWindow(QMainWindow):
         menu_bar = self.menuBar()
 
         file_menu = menu_bar.addMenu('File')
-        save_action = QAction('Save Preset', self)
-        save_action.triggered.connect(self.parameter_menu.save_profile)
-        file_menu.addAction(save_action)
 
         default_action = QAction('Set Default', self)
         default_action.triggered.connect(self.parameter_menu.set_default)
@@ -94,6 +91,13 @@ class MainWindow(QMainWindow):
         self.echo_action.triggered.connect(
             lambda checked: self.console.echo_checkbox.setChecked(checked))
         options_menu.addAction(self.echo_action)
+
+        # display current preset on the menu bar
+        self.preset_field = QLineEdit()
+        self.preset_field.setReadOnly(True)
+        self.preset_field.setPlaceholderText("Current Preset")
+        menu_bar.setCornerWidget(self.preset_field, Qt.TopRightCorner)
+        self.parameter_menu.profile_changed.connect(self.preset_field.setText)
 
         # keep menu actions in sync with console widgets
         self.console.verbose_checkbox.stateChanged.connect(
