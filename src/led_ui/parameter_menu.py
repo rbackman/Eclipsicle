@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QHeaderView, QSpinBox, QFileDialog, QListWidget, QTabWidget, QTextEdit
 )
 from data_tab_widget import DataTabWidget
+from animation_tab_widget import AnimationTabWidget
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor
@@ -21,8 +22,11 @@ from shared import get_param_name
 #  map from parameter name to full parameter info
 ParameterMap: dict[str, dict] = {}
 ParameterIDMap: dict[int, str] = {}
+ParameterDefaults: dict[str, dict] = {}
 
 PARAM_MAP_FILE = os.path.join(os.path.dirname(__file__), "parameter_map.json")
+CONFIG_DIR = os.path.join("data", "configurations")
+ANIM_DIR = os.path.join("data", "animations")
 
 
 def save_parameter_map():
@@ -107,11 +111,12 @@ def loadParameters():
         with open(PARAM_MAP_FILE, "r") as f:
             data = f.read()
             if data:
-                global ParameterMap, ParameterIDMap
+                global ParameterMap, ParameterIDMap, ParameterDefaults
                 ParameterMap = json.loads(data)
+                if not ParameterDefaults:
+                    ParameterDefaults = json.loads(data)
                 ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
                 print("Loaded parameters from file:")
-                # print(ParameterMap)
     except FileNotFoundError:
         print("No parameter map file found, using empty map.")
     except json.JSONDecodeError as e:
@@ -318,6 +323,8 @@ class ParameterMenuWidget(QWidget):
         root = QVBoxLayout(self)
         root.addWidget(self.tabs)
         self.current_profile = ""
+        os.makedirs(CONFIG_DIR, exist_ok=True)
+        os.makedirs(ANIM_DIR, exist_ok=True)
 
         # Parameter tab ---------------------------------------------------
         paramTab = QWidget()
@@ -336,8 +343,12 @@ class ParameterMenuWidget(QWidget):
         self.data_tab = DataTabWidget()
         self.data_tab.save_requested.connect(self.save_profile_as)
         self.data_tab.load_requested.connect(
-            lambda name: self.load_profile_file(os.path.join("data", name)))
+            lambda name: self.load_profile_file(os.path.join(CONFIG_DIR, name)))
         self.tabs.addTab(self.data_tab, "Data")
+
+        # Animation script tab -----------------------------------------
+        self.animation_tab = AnimationTabWidget(ANIM_DIR)
+        self.tabs.addTab(self.animation_tab, "Animations")
 
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
@@ -496,12 +507,17 @@ class ParameterMenuWidget(QWidget):
         self.save_profile_as(f"profile_{timestamp}")
 
     def save_profile_as(self, name: str):
-        os.makedirs("data", exist_ok=True)
+        os.makedirs(CONFIG_DIR, exist_ok=True)
         if not name.endswith(".json"):
             name += ".json"
-        path = os.path.join("data", name)
+        path = os.path.join(CONFIG_DIR, name)
+        diff = {
+            k: prm["value"]
+            for k, prm in ParameterMap.items()
+            if ParameterDefaults.get(k, {}).get("value") != prm.get("value")
+        }
         with open(path, "w") as f:
-            json.dump(ParameterMap, f, indent=2)
+            json.dump(diff, f, indent=2)
         self.current_profile = name
         self.refresh_data_files()
         self.profile_changed.emit(name)
@@ -519,7 +535,10 @@ class ParameterMenuWidget(QWidget):
         with open(path, "r") as f:
             data = json.load(f)
         ParameterMap.clear()
-        ParameterMap.update(data)
+        ParameterMap.update(json.loads(json.dumps(ParameterDefaults)))
+        for k, v in data.items():
+            if k in ParameterMap:
+                ParameterMap[k]["value"] = v
         global ParameterIDMap
         ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
         save_parameter_map()
@@ -535,9 +554,13 @@ class ParameterMenuWidget(QWidget):
         self.profile_changed.emit(self.current_profile)
 
     def refresh_data_files(self):
-        os.makedirs("data", exist_ok=True)
-        files = [f for f in sorted(os.listdir("data")) if f.endswith(".json")]
+        os.makedirs(CONFIG_DIR, exist_ok=True)
+        files = [f for f in sorted(os.listdir(CONFIG_DIR)) if f.endswith(".json")]
         self.data_tab.refresh_files(files)
+        if hasattr(self, 'animation_tab'):
+            os.makedirs(ANIM_DIR, exist_ok=True)
+            anims = [f for f in sorted(os.listdir(ANIM_DIR)) if f.endswith('.led')]
+            self.animation_tab.refresh_files(anims)
 
     def apply_parameter_values(self):
         for prm in ParameterMap.values():
