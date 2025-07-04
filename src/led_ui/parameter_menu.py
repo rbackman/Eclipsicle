@@ -21,10 +21,12 @@ from shared import get_param_name
 ParameterMap: dict[str, dict] = {}
 ParameterIDMap: dict[int, str] = {}
 
+PARAM_MAP_FILE = os.path.join(os.path.dirname(__file__), "parameter_map.json")
+
 
 def save_parameter_map():
     """Persist the current ParameterMap to disk."""
-    with open("parameter_map.json", "w") as f:
+    with open(PARAM_MAP_FILE, "w") as f:
         json.dump(ParameterMap, f, indent=2)
 
 
@@ -101,7 +103,7 @@ def checkParameters(params):
 def loadParameters():
     """Load the parameters from a file."""
     try:
-        with open("parameter_map.json", "r") as f:
+        with open(PARAM_MAP_FILE, "r") as f:
             data = f.read()
             if data:
                 global ParameterMap, ParameterIDMap
