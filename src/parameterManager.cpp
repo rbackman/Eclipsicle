@@ -61,8 +61,6 @@ ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> fi
     }
 }
 
-
-
 IntParameter ParameterManager::getIntParameter(ParameterID id)
 {
     for (int i = 0; i < intParams.size(); i++)
@@ -120,7 +118,7 @@ void ParameterManager::setInt(ParameterID id, int val)
             intParams[i].value = val;
             paramChanged = true;
             if (isVerbose())
-                Serial.printf("updating parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
+                Serial.printf("updating int parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
             return;
         }
     }
@@ -134,7 +132,7 @@ void ParameterManager::setBool(ParameterID id, bool val)
             boolParams[i].value = val;
             paramChanged = true;
             if (isVerbose())
-                Serial.printf("updating parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
+                Serial.printf("updating  bool parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
             return;
         }
     }
@@ -148,7 +146,7 @@ void ParameterManager::setFloat(ParameterID id, float val)
             floatParams[i].value = val;
             paramChanged = true;
             if (isVerbose())
-                Serial.printf("updating parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
+                Serial.printf("updating float parameter %d %s for %s\n", id, getParameterName(id).c_str(), name.c_str());
             return;
         }
     }

@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QStackedWidget, QLabel, QSlider, QCheckBox, QColorDialog, QPushButton,
     QHeaderView, QSpinBox, QFileDialog, QListWidget, QTabWidget, QTextEdit
 )
+from data_tab_widget import DataTabWidget
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor
@@ -298,6 +299,8 @@ class AnimationSendWidget(QWidget):
 
 
 class ParameterMenuWidget(QWidget):
+    profile_changed = pyqtSignal(str)
+
     def __init__(self, console: SerialConsole):
         super().__init__()
         self.console = console
@@ -314,6 +317,7 @@ class ParameterMenuWidget(QWidget):
         self.tabs = QTabWidget()
         root = QVBoxLayout(self)
         root.addWidget(self.tabs)
+        self.current_profile = ""
 
         # Parameter tab ---------------------------------------------------
         paramTab = QWidget()
@@ -329,13 +333,11 @@ class ParameterMenuWidget(QWidget):
         self.tabs.addTab(paramTab, "Parameters")
 
         # Data tab -------------------------------------------------------
-        dataTab = QWidget()
-        dRoot = QVBoxLayout(dataTab)
-        self.dataList = QListWidget()
-        self.dataList.itemDoubleClicked.connect(self._data_double_clicked)
-        dRoot.addWidget(self.dataList)
-        # load from disk action moved to the File menu
-        self.tabs.addTab(dataTab, "Data")
+        self.data_tab = DataTabWidget()
+        self.data_tab.save_requested.connect(self.save_profile_as)
+        self.data_tab.load_requested.connect(
+            lambda name: self.load_profile_file(os.path.join("data", name)))
+        self.tabs.addTab(self.data_tab, "Data")
 
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
@@ -490,12 +492,19 @@ class ParameterMenuWidget(QWidget):
         return False
 
     def save_profile(self):
-        os.makedirs("data", exist_ok=True)
         timestamp = time.strftime("%Y%m%d_%H%M%S")
-        path = os.path.join("data", f"profile_{timestamp}.json")
+        self.save_profile_as(f"profile_{timestamp}")
+
+    def save_profile_as(self, name: str):
+        os.makedirs("data", exist_ok=True)
+        if not name.endswith(".json"):
+            name += ".json"
+        path = os.path.join("data", name)
         with open(path, "w") as f:
             json.dump(ParameterMap, f, indent=2)
+        self.current_profile = name
         self.refresh_data_files()
+        self.profile_changed.emit(name)
 
     def set_default(self):
         self.console.send_cmd("saveDefaults")
@@ -519,20 +528,16 @@ class ParameterMenuWidget(QWidget):
             w = self.pages.widget(0)
             self.pages.removeWidget(w)
             w.deleteLater()
+        self.current_profile = os.path.basename(path)
         print(f"Loaded profile {path}")
         self.refresh_data_files()
         self.apply_parameter_values()
+        self.profile_changed.emit(self.current_profile)
 
     def refresh_data_files(self):
         os.makedirs("data", exist_ok=True)
-        self.dataList.clear()
-        for fname in sorted(os.listdir("data")):
-            if fname.endswith(".json"):
-                self.dataList.addItem(fname)
-
-    def _data_double_clicked(self, item):
-        path = os.path.join("data", item.text())
-        self.load_profile_file(path)
+        files = [f for f in sorted(os.listdir("data")) if f.endswith(".json")]
+        self.data_tab.refresh_files(files)
 
     def apply_parameter_values(self):
         for prm in ParameterMap.values():

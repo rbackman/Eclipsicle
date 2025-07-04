@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 254,
+    "value": 259,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 107,
+    "value": 120,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -80,7 +80,7 @@
   "PARAM_PARTICLE_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 28,
+    "value": 2,
     "name": "Width",
     "min": 1,
     "max": 60
@@ -104,7 +104,7 @@
   "PARAM_SPAWN_RATE": {
     "id": 17,
     "type": "int",
-    "value": 35,
+    "value": 36,
     "name": "Spawn",
     "min": 1,
     "max": 40
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 255,
+    "value": 50,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 12,
     "type": "float",
-    "value": 10.238,
+    "value": 8.435,
     "name": "Time",
     "min": 0.1,
     "max": 20
