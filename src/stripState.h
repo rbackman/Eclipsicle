@@ -95,12 +95,13 @@ public:
     void toggleMode();
 
     void update();
-    String getStripState();
+    String getStripState(bool verbose = false);
+    String getStripStateJson(bool verbose = false);
     int getAnimationCount()
     {
         return animations.size();
     }
-    std::vector<std::unique_ptr<StripAnimation>> getAnimations()
+    std::vector<std::unique_ptr<StripAnimation>> &getAnimations()
     {
         return animations;
     }
