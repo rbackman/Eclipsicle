@@ -30,6 +30,7 @@ class DebouncedSlider(QWidget):
             self.spin.setSingleStep(0.1)
             self.spin.setDecimals(2)
             self.spin.setValue(param['value'])
+            self.slider.setValue(int(param['value'] * self.scale))
         elif type == "int":
             print(
                 f"Creating int slider for {self.shortname} with value {param['value']} range {param['min']} to {param['max']}")
