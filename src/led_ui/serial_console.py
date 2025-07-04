@@ -113,8 +113,7 @@ class SerialConsole(QWidget):
                                 self.json_signal.emit(data)
 
                             except json.JSONDecodeError as e:
-                                self.log("failed to parse json " + str(e))
-                                self.log(msg)
+                                #  not a json
                                 pass
                         else:
                             self.string_signal.emit(msg)
