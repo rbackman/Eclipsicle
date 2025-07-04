@@ -2,6 +2,8 @@
 #include "animations.h"
 #include "shared.h"
 #include "stripState.h"
+#include <FastLED.h>
+#include <algorithm>
 
 led animationColor;
 int animCount = 0;
@@ -383,6 +385,93 @@ void DoubleRainbowAnimation::update()
         int val = i + scrollPos;
         float hue = fmod(offset + (float(val) / float(numLEDs())) * repeat * 360.0, 360.0);
         colorFromHSV(animationColor, hue / 360.0, 1, brightness / 255.0);
+        setPixel(i, animationColor);
+    }
+}
+
+void FallingBricksAnimation::update()
+{
+    int width = getInt(PARAM_PARTICLE_WIDTH);
+    float speed = getFloat(PARAM_VELOCITY);
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
+    int hueVar = getInt(PARAM_HUE_VARIANCE);
+    int brightness = getInt(PARAM_BRIGHTNESS);
+    float timeScale = getFloat(PARAM_TIME_SCALE);
+    bool reverse = getBool(PARAM_DIRECTION);
+
+    auto mapIdx = [&](int idx) { return reverse ? numLEDs() - 1 - idx : idx; };
+
+    if (brickPos < 0 && stackHeight < numLEDs())
+    {
+        brickPos = reverse ? -width : numLEDs() - 1 + width;
+    }
+
+    if (brickPos >= 0)
+    {
+        brickPos += (reverse ? 1 : -1) * speed * timeScale / 10.0f;
+        if ((!reverse && brickPos - (width - 1) <= stackHeight) ||
+            (reverse && brickPos + (width - 1) >= numLEDs() - 1 - stackHeight))
+        {
+            stackHeight += width;
+            brickPos = -1;
+            if (stackHeight >= numLEDs())
+            {
+                stackHeight = 0;
+            }
+        }
+    }
+
+    int maxBricks = std::max(1, numLEDs() / width);
+    for (int i = 0; i < stackHeight && i < numLEDs(); i++)
+    {
+        int brickIndex = i / width;
+        float t = float(brickIndex) / float(maxBricks - 1);
+        float baseHue = interpolate(hueStart, hueEnd, t);
+        float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
+        float brickHue = fmod(baseHue + n + 360.0f, 360.0f);
+        colorFromHSV(animationColor, brickHue / 360.0f, 1.0f, brightness / 255.0f);
+        setPixel(mapIdx(i), animationColor);
+    }
+
+    if (brickPos >= 0)
+    {
+        for (int i = 0; i < width; i++)
+        {
+            int idx = reverse ? (int)brickPos + i : (int)brickPos - i;
+            if (idx >= 0 && idx < numLEDs())
+            {
+                int brickIndex = stackHeight / width;
+                float t = float(brickIndex) / float(maxBricks - 1);
+                float baseHue = interpolate(hueStart, hueEnd, t);
+                float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
+                float brickHue = fmod(baseHue + n + 360.0f, 360.0f);
+                colorFromHSV(animationColor, brickHue / 360.0f, 1.0f, brightness / 255.0f);
+                setPixel(mapIdx(idx), animationColor);
+            }
+        }
+    }
+}
+
+void NebulaAnimation::update()
+{
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
+    int brightness = getInt(PARAM_BRIGHTNESS);
+    float scale = getFloat(PARAM_NOISE_SCALE);
+    float speed = getFloat(PARAM_NOISE_SPEED);
+    float timeScale = getFloat(PARAM_TIME_SCALE);
+
+    noiseOffset += speed * timeScale;
+
+    for (int i = 0; i < numLEDs(); i++)
+    {
+        float t = float(i) / float(numLEDs());
+        float baseHue = interpolate(hueStart, hueEnd, t);
+        uint8_t noiseVal = inoise8(i * scale * 20, int(noiseOffset * 50));
+        float hue = fmod(baseHue + (noiseVal / 255.0f) * 60.0f, 360.0f);
+        float bright = brightness / 255.0f * pow(noiseVal / 255.0f, 3.0f);
+        colorFromHSV(animationColor, hue / 360.0f, 1.0f, bright);
         setPixel(i, animationColor);
     }
 }

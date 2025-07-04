@@ -30,6 +30,8 @@ There are two major components:
 
 The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types. Parameters are exchanged over serial/Mesh using the IDs from this header so that the C++ firmware and Python UI stay in sync.
 
+Recent updates added a few LED patterns including a falling bricks build-up effect and a "nebula" gradient that uses noise for subtle color variation. The bricks animation now supports a direction toggle and per-brick hue variance with a gradient towards `HueEnd`, while the nebula effect fades in using a noise-driven brightness.
+
 ### UI Data Files
 
 Parameter presets are stored under `src/led_ui/data/configurations` while animation script files live in `src/led_ui/data/animations`.  Presets now store only values that differ from the defaults in `parameter_map.json`.

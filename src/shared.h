@@ -56,7 +56,11 @@
     X(PARAM_BEAT)                  \
     X(PARAM_BEAT_MAX_SIZE)         \
     X(PARAM_BEAT_FADE)             \
+    X(PARAM_NOISE_SCALE)          \
+    X(PARAM_NOISE_SPEED)          \
     X(PARAM_ANIMATION_TYPE)        \
+    X(PARAM_DIRECTION)            \
+    X(PARAM_HUE_VARIANCE)         \
     X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
@@ -263,6 +267,7 @@ static const std::vector<IntParameter> getDefaultIntParameters()
     return {
         {PARAM_HUE, "Hue", 60, 0, 360},
         {PARAM_HUE_END, "HueEnd", 120, 0, 360},
+        {PARAM_HUE_VARIANCE, "HueVar", 0, 0, 180},
         {PARAM_PARTICLE_WIDTH, "Width", 5, 1, 60},
 
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255},
@@ -311,6 +316,7 @@ static const std::vector<BoolParameter> getDefaultBoolParameters()
         {PARAM_SLIDER_GRAVITY, "Gravity", false},
         {PARAM_RECORD_AUDIO, "Record", false},
         {PARAM_PARTICLE_UPDATE_ALL, "UpdateAll", true},
+        {PARAM_DIRECTION, "Dir", false},
 
     };
 }
@@ -330,6 +336,8 @@ static const std::vector<FloatParameter> getDefaultFloatParameters()
         {PARAM_MAX_SPEED, "MaxSpd", 1.0, 1.0, 10.0},
         {PARAM_RAINBOW_REPEAT, "Repeat", 1.0, 1.0, 10.0},
         {PARAM_SLIDER_WIDTH, "Width", 0.6, 0.1, 2.0},
+        {PARAM_NOISE_SCALE, "NScl", 0.2, 0.01, 2.0},
+        {PARAM_NOISE_SPEED, "NSpd", 0.1, 0.0, 5.0},
     };
 }
 
@@ -448,6 +456,8 @@ enum LED_STATE
     X(ANIMATION_TYPE_DOUBLE_RAINBOW)   \
     X(ANIMATION_TYPE_SLIDER)           \
     X(ANIMATION_TYPE_RANDOM)           \
+    X(ANIMATION_TYPE_FALLING_BRICKS)   \
+    X(ANIMATION_TYPE_NEBULA)           \
     X(ANIMATION_TYPE_RANDOM_PARTICLES) \
     X(ANIMATION_TYPE_IDLE)
 
@@ -512,6 +522,8 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLE_RAINBOW"},
     {ANIMATION_TYPE_SLIDER, "SLIDER"},
     {ANIMATION_TYPE_RANDOM, "RANDOM"},
+    {ANIMATION_TYPE_FALLING_BRICKS, "FALLING_BRICKS"},
+    {ANIMATION_TYPE_NEBULA, "NEBULA"},
 
     {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOM_PARTICLES"}};
 

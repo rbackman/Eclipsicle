@@ -94,7 +94,7 @@
     "max": 255
   },
   "PARAM_ANIMATION_TYPE": {
-    "id": 45,
+    "id": 47,
     "type": "int",
     "value": 0,
     "name": "AnimType",
@@ -348,5 +348,35 @@
     "name": "Width",
     "min": 0.1,
     "max": 2
+  },
+  "PARAM_NOISE_SCALE": {
+    "id": 45,
+    "type": "float",
+    "value": 0.2,
+    "name": "NScl",
+    "min": 0.01,
+    "max": 2
+  },
+  "PARAM_NOISE_SPEED": {
+    "id": 46,
+    "type": "float",
+    "value": 0.1,
+    "name": "NSpd",
+    "min": 0,
+    "max": 5
+  },
+  "PARAM_DIRECTION": {
+    "id": 48,
+    "type": "bool",
+    "value": false,
+    "name": "Dir"
+  },
+  "PARAM_HUE_VARIANCE": {
+    "id": 49,
+    "type": "int",
+    "value": 0,
+    "name": "HueVar",
+    "min": 0,
+    "max": 180
   }
 }
