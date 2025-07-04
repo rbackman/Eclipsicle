@@ -21,6 +21,14 @@ from shared import get_param_name
 ParameterMap: dict[str, dict] = {}
 ParameterIDMap: dict[int, str] = {}
 
+PARAM_MAP_FILE = os.path.join(os.path.dirname(__file__), "parameter_map.json")
+
+
+def save_parameter_map():
+    """Persist the current ParameterMap to disk."""
+    with open(PARAM_MAP_FILE, "w") as f:
+        json.dump(ParameterMap, f, indent=2)
+
 
 # ───────────────────────────── MENU + PARAM ------------------------------------------------------------------
 # (unchanged skeleton – plug your full MENU_TREE and PARAM_MAP here)
@@ -89,17 +97,13 @@ def checkParameters(params):
         ParameterMap[name] = prm
         ParameterIDMap[prm["id"]] = name
     print("parameters added to map:")
-    mapAsString = json.dumps(params, indent=2)
-
-    # save the map to a file
-    with open("parameter_map.json", "w") as f:
-        f.write(mapAsString)
+    save_parameter_map()
 
 
 def loadParameters():
     """Load the parameters from a file."""
     try:
-        with open("parameter_map.json", "r") as f:
+        with open(PARAM_MAP_FILE, "r") as f:
             data = f.read()
             if data:
                 global ParameterMap, ParameterIDMap
@@ -208,6 +212,7 @@ class ParamPage(QWidget):
     def _send(self, pid, val):
         if pid in ParameterIDMap:
             ParameterMap[ParameterIDMap[pid]]["value"] = val
+            save_parameter_map()
         if (len(ParameterMap)):
             # send short version if available
             cmd = "p:" + str(pid) + ":" + str(val)
@@ -335,6 +340,7 @@ class ParameterMenuWidget(QWidget):
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
         loadParameters()
+        self.update_widgets_from_map()
         self.refresh_data_files()
 
         stateTab = QWidget()
@@ -507,6 +513,7 @@ class ParameterMenuWidget(QWidget):
         ParameterMap.update(data)
         global ParameterIDMap
         ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
+        save_parameter_map()
         self.cache.clear()
         while self.pages.count():
             w = self.pages.widget(0)
@@ -541,3 +548,4 @@ class ParameterMenuWidget(QWidget):
                 pid = prm.get("id")
                 val = prm.get("value")
                 page.set_param_value(pid, val)
+        save_parameter_map()

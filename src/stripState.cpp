@@ -83,20 +83,20 @@ String StripState::getStripState(bool verbose)
 
 String StripState::getStripStateJson(bool verbose)
 {
-    DynamicJsonDocument doc(2048);
+    JsonDocument doc;
     doc["type"] = "stripState";
     doc["strip"] = stripIndex + 1;
     doc["state"] = getLedStateName(ledState);
     if (verbose)
     {
-        JsonArray arr = doc.createNestedArray("animations");
+        JsonArray arr = doc["animations"].to<JsonArray>();
         for (const auto &anim : animations)
         {
-            JsonObject a = arr.createNestedObject();
+            JsonObject a = arr.add<JsonObject>();
             a["type"] = getAnimationName(anim->getAnimationType()).c_str();
             a["start"] = anim->getStartLED();
             a["end"] = anim->getEndLED();
-            JsonObject params = a.createNestedObject("params");
+            JsonObject params = a["params"].to<JsonObject>();
             for (const auto &p : anim->getIntParameters())
             {
                 params[getParameterName(p.id).c_str()] = p.value;
