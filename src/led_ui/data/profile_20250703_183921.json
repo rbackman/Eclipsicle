@@ -104,7 +104,7 @@
   "PARAM_SPAWN_RATE": {
     "id": 17,
     "type": "int",
-    "value": 21,
+    "value": 9,
     "name": "Spawn",
     "min": 1,
     "max": 40
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 12,
     "type": "float",
-    "value": 8.435,
+    "value": 6.258,
     "name": "Time",
     "min": 0.1,
     "max": 20
