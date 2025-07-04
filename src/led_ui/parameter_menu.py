@@ -457,8 +457,10 @@ class ParameterMenuWidget(QWidget):
         path = os.path.join("data", f"profile_{timestamp}.json")
         with open(path, "w") as f:
             json.dump(ParameterMap, f, indent=2)
-        self.console.send_cmd("saveDefaults")
         self.refresh_data_files()
+
+    def set_default(self):
+        self.console.send_cmd("saveDefaults")
 
     def load_profile(self):
         path, _ = QFileDialog.getOpenFileName(self, "Load Parameter Profile", "", "JSON Files (*.json)")
@@ -499,4 +501,4 @@ class ParameterMenuWidget(QWidget):
             val = prm.get("value")
             cmd = f"p:{pid}:{val}"
             self.console.send_cmd(cmd)
-        self.console.send_cmd("saveDefaults")
+        self.set_default()
