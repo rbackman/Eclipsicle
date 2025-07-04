@@ -139,7 +139,11 @@ class FallingBricksAnimation : public StripAnimation
 
 public:
     void update();
-    FallingBricksAnimation(StripState *state, int startLED, int endLED) : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_FALLING_BRICKS, {PARAM_PARTICLE_WIDTH, PARAM_VELOCITY, PARAM_HUE, PARAM_BRIGHTNESS, PARAM_TIME_SCALE})
+    FallingBricksAnimation(StripState *state, int startLED, int endLED)
+        : StripAnimation(state, startLED, endLED, ANIMATION_TYPE_FALLING_BRICKS,
+                          {PARAM_PARTICLE_WIDTH, PARAM_VELOCITY, PARAM_HUE,
+                           PARAM_HUE_VARIANCE, PARAM_BRIGHTNESS, PARAM_TIME_SCALE,
+                           PARAM_DIRECTION})
     {
     }
 };

@@ -30,7 +30,7 @@ There are two major components:
 
 The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types. Parameters are exchanged over serial/Mesh using the IDs from this header so that the C++ firmware and Python UI stay in sync.
 
-Recent updates added a few new LED patterns including a falling bricks build-up effect and a "nebula" gradient that uses noise for subtle color variation.
+Recent updates added a few new LED patterns including a falling bricks build-up effect and a "nebula" gradient that uses noise for subtle color variation. The bricks pattern now supports a direction toggle and hue variance, while the nebula effect fades in using a noise driven brightness.
 
 ### UI Data Files
 

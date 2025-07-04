@@ -59,6 +59,8 @@
     X(PARAM_NOISE_SCALE)          \
     X(PARAM_NOISE_SPEED)          \
     X(PARAM_ANIMATION_TYPE)        \
+    X(PARAM_DIRECTION)            \
+    X(PARAM_HUE_VARIANCE)         \
     X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
@@ -265,6 +267,7 @@ static const std::vector<IntParameter> getDefaultIntParameters()
     return {
         {PARAM_HUE, "Hue", 60, 0, 360},
         {PARAM_HUE_END, "HueEnd", 120, 0, 360},
+        {PARAM_HUE_VARIANCE, "HueVar", 0, 0, 180},
         {PARAM_PARTICLE_WIDTH, "Width", 5, 1, 60},
 
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255},
@@ -313,6 +316,7 @@ static const std::vector<BoolParameter> getDefaultBoolParameters()
         {PARAM_SLIDER_GRAVITY, "Gravity", false},
         {PARAM_RECORD_AUDIO, "Record", false},
         {PARAM_PARTICLE_UPDATE_ALL, "UpdateAll", true},
+        {PARAM_DIRECTION, "Dir", false},
 
     };
 }

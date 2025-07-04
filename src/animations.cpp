@@ -393,18 +393,23 @@ void FallingBricksAnimation::update()
     int width = getInt(PARAM_PARTICLE_WIDTH);
     float speed = getFloat(PARAM_VELOCITY);
     int hue = getInt(PARAM_HUE);
+    int hueVar = getInt(PARAM_HUE_VARIANCE);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float timeScale = getFloat(PARAM_TIME_SCALE);
+    bool reverse = getBool(PARAM_DIRECTION);
+
+    auto mapIdx = [&](int idx) { return reverse ? numLEDs() - 1 - idx : idx; };
 
     if (brickPos < 0 && stackHeight < numLEDs())
     {
-        brickPos = numLEDs() - 1 + width;
+        brickPos = reverse ? -width : numLEDs() - 1 + width;
     }
 
     if (brickPos >= 0)
     {
-        brickPos -= speed * timeScale / 10.0f;
-        if (brickPos - (width - 1) <= stackHeight)
+        brickPos += (reverse ? 1 : -1) * speed * timeScale / 10.0f;
+        if ((!reverse && brickPos - (width - 1) <= stackHeight) ||
+            (reverse && brickPos + (width - 1) >= numLEDs() - 1 - stackHeight))
         {
             stackHeight += width;
             brickPos = -1;
@@ -417,19 +422,25 @@ void FallingBricksAnimation::update()
 
     for (int i = 0; i < stackHeight && i < numLEDs(); i++)
     {
-        colorFromHSV(animationColor, hue / 360.0, 1.0, brightness / 255.0);
-        setPixel(i, animationColor);
+        int brickIndex = i / width;
+        float n = (inoise8(brickIndex * 50) / 255.0f) * 2.0f * hueVar - hueVar;
+        float brickHue = fmod(hue + n + 360.0f, 360.0f);
+        colorFromHSV(animationColor, brickHue / 360.0f, 1.0, brightness / 255.0f);
+        setPixel(mapIdx(i), animationColor);
     }
 
     if (brickPos >= 0)
     {
         for (int i = 0; i < width; i++)
         {
-            int idx = (int)brickPos - i;
+            int idx = reverse ? (int)brickPos + i : (int)brickPos - i;
             if (idx >= 0 && idx < numLEDs())
             {
-                colorFromHSV(animationColor, hue / 360.0, 1.0, brightness / 255.0);
-                setPixel(idx, animationColor);
+                int brickIndex = stackHeight / width;
+                float n = (inoise8(brickIndex * 50) / 255.0f) * 2.0f * hueVar - hueVar;
+                float brickHue = fmod(hue + n + 360.0f, 360.0f);
+                colorFromHSV(animationColor, brickHue / 360.0f, 1.0, brightness / 255.0f);
+                setPixel(mapIdx(idx), animationColor);
             }
         }
     }
@@ -452,7 +463,8 @@ void NebulaAnimation::update()
         float baseHue = interpolate(hueStart, hueEnd, t);
         uint8_t noiseVal = inoise8(i * scale * 20, int(noiseOffset * 50));
         float hue = fmod(baseHue + (noiseVal / 255.0f) * 60.0f, 360.0f);
-        colorFromHSV(animationColor, hue / 360.0f, 1.0f, brightness / 255.0f);
+        float bright = brightness / 255.0f * pow(noiseVal / 255.0f, 3.0f);
+        colorFromHSV(animationColor, hue / 360.0f, 1.0f, bright);
         setPixel(i, animationColor);
     }
 }

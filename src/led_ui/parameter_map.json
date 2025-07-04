@@ -364,5 +364,19 @@
     "name": "NSpd",
     "min": 0,
     "max": 5
+  },
+  "PARAM_DIRECTION": {
+    "id": 48,
+    "type": "bool",
+    "value": false,
+    "name": "Dir"
+  },
+  "PARAM_HUE_VARIANCE": {
+    "id": 49,
+    "type": "int",
+    "value": 0,
+    "name": "HueVar",
+    "min": 0,
+    "max": 180
   }
 }
