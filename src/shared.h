@@ -461,6 +461,7 @@ enum LED_STATE
     X(ANIMATION_TYPE_BRICKS)           \
     X(ANIMATION_TYPE_NEBULA)           \
     X(ANIMATION_TYPE_RANDOM_PARTICLES) \
+    X(ANIMATION_TYPE_SINGLE_COLOR)     \
     X(ANIMATION_TYPE_IDLE)
 
 enum ANIMATION_TYPE
@@ -508,12 +509,14 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_NONE, "NONE"},
     {ANIMATION_TYPE_PARTICLES, "PARTICLES"},
     {ANIMATION_TYPE_RAINBOW, "RAINBOW"},
+
     {ANIMATION_TYPE_DOUBLE_RAINBOW, "DOUBLERAINBOW"},
     {ANIMATION_TYPE_SLIDER, "SLIDER"},
     {ANIMATION_TYPE_RANDOM, "RANDOM"},
     {ANIMATION_TYPE_BRICKS, "BRICKS"},
     {ANIMATION_TYPE_NEBULA, "NEBULA"},
-    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOMPARTICLES"}};
+    {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOMPARTICLES"},
+    {ANIMATION_TYPE_SINGLE_COLOR, "SINGLECOLOR"}};
 
 const std::vector<LEDRig> slaves = {
     {
@@ -534,10 +537,10 @@ const std::vector<LEDRig> slaves = {
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
             {0, 122, LED_STATE_MULTI_ANIMATION, {
-                                                    {ANIMATION_TYPE_PARTICLES, 0, 27, {{PARAM_HUE, 100}, {PARAM_HUE_END, 120}, {PARAM_TIME_SCALE, 5.0f}}},
-                                                    {ANIMATION_TYPE_BRICKS, 28, 44},
-                                                    {ANIMATION_TYPE_PARTICLES, 45, 72, {{PARAM_HUE, 200}, {PARAM_HUE_END, 240}, {PARAM_TIME_SCALE, 5.0f}}},
-                                                    {ANIMATION_TYPE_RAINBOW, 73, 121},
+                                                    {ANIMATION_TYPE_SINGLE_COLOR, 0, 27, {{PARAM_HUE, 100}}},
+                                                    // {ANIMATION_TYPE_SINGLE_COLOR, 28, 44},
+                                                    // {ANIMATION_TYPE_SINGLE_COLOR, 45, 72, {{PARAM_HUE, 200}, {PARAM_HUE_END, 240}, {PARAM_TIME_SCALE, 5.0f}}},
+                                                    // {ANIMATION_TYPE_SINGLE_COLOR, 73, 121},
                                                 }},
 
         },

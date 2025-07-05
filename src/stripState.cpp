@@ -145,6 +145,8 @@ std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_
         return std::make_unique<NebulaAnimation>(stripState, start, end, params);
     case ANIMATION_TYPE_RANDOM_PARTICLES:
         return std::make_unique<ParticleAnimation>(stripState, true, start, end, params);
+    case ANIMATION_TYPE_SINGLE_COLOR:
+        return std::make_unique<SingleColorAnimation>(stripState, start, end, params);
     default:
         throw std::invalid_argument("Unknown animation type");
     }

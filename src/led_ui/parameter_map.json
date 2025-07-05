@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 173,
+    "value": 346,
     "name": "Hue",
     "min": 0,
     "max": 360

@@ -102,6 +102,16 @@ public:
     }
 };
 
+class SingleColorAnimation : public StripAnimation
+{
+public:
+    void update();
+
+    SingleColorAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_SINGLE_COLOR, {PARAM_HUE, PARAM_BRIGHTNESS}, paramOverrides)
+    {
+    }
+};
+
 class RandomAnimation : public StripAnimation
 {
 public:

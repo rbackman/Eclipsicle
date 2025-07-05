@@ -399,7 +399,8 @@ void FallingBricksAnimation::update()
     float timeScale = getFloat(PARAM_TIME_SCALE);
     bool reverse = getBool(PARAM_REVERSE);
 
-    auto mapIdx = [&](int idx) { return reverse ? numLEDs() - 1 - idx : idx; };
+    auto mapIdx = [&](int idx)
+    { return reverse ? numLEDs() - 1 - idx : idx; };
 
     int maxBricks = std::max(1, numLEDs() / width);
 
@@ -458,7 +459,7 @@ void FallingBricksAnimation::update()
             if (idx >= 0 && idx < numLEDs())
             {
                 colorFromHSV(animationColor, brick.hue / 360.0f, 1.0f,
-                              brightness / 255.0f);
+                             brightness / 255.0f);
                 setPixel(idx, animationColor);
             }
         }
@@ -484,6 +485,18 @@ void NebulaAnimation::update()
         float hue = fmod(baseHue + (noiseVal / 255.0f) * 60.0f, 360.0f);
         float bright = brightness / 255.0f * pow(noiseVal / 255.0f, 3.0f);
         colorFromHSV(animationColor, hue / 360.0f, 1.0f, bright);
+        setPixel(i, animationColor);
+    }
+}
+
+void SingleColorAnimation::update()
+{
+    int hue = getInt(PARAM_HUE);
+    int brightness = getInt(PARAM_BRIGHTNESS);
+
+    colorFromHSV(animationColor, hue / 360.0f, 1.0f, brightness / 255.0f);
+    for (int i = 0; i < numLEDs(); i++)
+    {
         setPixel(i, animationColor);
     }
 }
