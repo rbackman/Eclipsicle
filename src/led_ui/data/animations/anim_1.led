@@ -1,7 +1,6 @@
 
 Animations:
-    BRICKS  width:1  reverse:true time_scale:20 
-    BRICKS   hue:200 hue_variance:40   width:3    time_scale:20
+    Particles spawn_rate:50
 
 PARAMETERS:
   brightness: 100
