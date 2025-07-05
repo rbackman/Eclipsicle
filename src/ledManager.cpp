@@ -3,8 +3,6 @@
 #include "stripState.h"
 #include "ledManager.h"
 #include "leds.h"
-#include "stripState.h"
-#include <FastLED.h>
 
 LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
@@ -64,18 +62,22 @@ void LEDManager::initStrips()
         {
         case 0:
             Serial.println("Adding strip 1");
-            FastLED.addLeds<NEOPIXEL, LED_PIN_1>(strip->leds, strip->getNumLEDS());
+            FastLED.addLeds<LED_TYPE, LED_PIN_1>(
+                strip->leds, strip->getNumLEDS());
             break;
         case 1:
             Serial.println("Adding strip 2");
-            FastLED.addLeds<NEOPIXEL, LED_PIN_2>(strip->leds, strip->getNumLEDS());
+            FastLED.addLeds<LED_TYPE, LED_PIN_2>(
+                strip->leds, strip->getNumLEDS());
             break;
         case 2:
             Serial.println("Adding strip 3");
-            FastLED.addLeds<NEOPIXEL, LED_PIN_3>(strip->leds, strip->getNumLEDS());
+            FastLED.addLeds<LED_TYPE, LED_PIN_3>(
+                strip->leds, strip->getNumLEDS());
             break;
         case 3:
-            FastLED.addLeds<NEOPIXEL, LED_PIN_4>(strip->leds, strip->getNumLEDS());
+            FastLED.addLeds<LED_TYPE, LED_PIN_4>(
+                strip->leds, strip->getNumLEDS());
             break;
 
         default:

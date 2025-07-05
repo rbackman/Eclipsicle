@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 283,
+    "value": 173,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 175,
+    "value": 179,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -80,7 +80,7 @@
   "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 1,
+    "value": 4,
     "name": "Width",
     "min": 1,
     "max": 60
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 15.444,
+    "value": 61.776,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -358,7 +358,7 @@
   "PARAM_HUE_VARIANCE": {
     "id": 47,
     "type": "int",
-    "value": 1,
+    "value": 180,
     "name": "HueVar",
     "min": 0,
     "max": 180
