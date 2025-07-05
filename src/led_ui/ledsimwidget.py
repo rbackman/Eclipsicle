@@ -85,7 +85,12 @@ class LEDSimWidget(QWidget):
             if segment:
                 color, count = segment.split(":")
                 hc, vc = color.split(",")
-                hue = int(hc)
+                hue_byte = int(hc)
+                # Incoming hue from the ESP is in the 0-255 range like FastLED's
+                # CHSV. Convert it to degrees (0-359) so our Qt display matches
+                # the actual LED colour. Using 359 in the scaling ensures that
+                # a hue of 255 maps to 359 rather than wrapping back to 0.
+                hue = int(hue_byte * 359 / 255)
                 value = int(vc)
                 leds.extend([(hue, value)] * int(count))
         return leds
