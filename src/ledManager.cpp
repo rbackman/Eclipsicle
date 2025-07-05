@@ -231,7 +231,7 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
         // return stripStates[currentStrip]->respondToParameterMessage(parameter);
         for (int i = 0; i < stripStates.size(); i++)
         {
-            stripStates[i]->respondToParameterMessage(parameter)
+            stripStates[i]->respondToParameterMessage(parameter);
         }
     }
     return false;

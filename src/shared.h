@@ -520,100 +520,45 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOMPARTICLES"},
     {ANIMATION_TYPE_SINGLE_COLOR, "SINGLECOLOR"}};
 
+const LEDRig eclipse = {
+    "Eclipsicle",
+    {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
+    {
+        {0, 164, LED_STATE_SINGLE_ANIMATION, {
+                                                 {ANIMATION_TYPE_RAINBOW, 0, 163},
+                                             },
+         {32, 65, 90}},
+        {1, 200, LED_STATE_SINGLE_ANIMATION, {
+                                                 {ANIMATION_TYPE_SLIDER, 0, 200},
+                                             },
+         {32, 65, 90}},
+    },
+
+};
+const LEDRig tesseratic = {
+    "Tesseratica",
+    {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+    {
+        {0, 122, LED_STATE_MULTI_ANIMATION, {
+                                                {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+                                            },
+         {28, 44, 72}},
+        {1, 122, LED_STATE_MULTI_ANIMATION, {
+                                                {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+                                            },
+         {28, 44, 72}},
+        {2, 122, LED_STATE_MULTI_ANIMATION, {
+                                                {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+                                            },
+         {28, 44, 72}},
+    },
+
+};
 const std::vector<LEDRig> slaves = {
-    {
-        "Eclipsicle",
-        {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
-        {
-            {0, 164, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_RAINBOW, 0, 163},
-                                                 }},
-            {1, 200, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_SLIDER, 0, 200},
-                                                 }},
+    eclipse,
+    tesseratic,
 
-        },
-    },
-    {
-        "Tesseratica",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {0, 122, LED_STATE_MULTI_ANIMATION, {
-                                                    {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
-
-                                                }},
-            {1, 122, LED_STATE_MULTI_ANIMATION, {
-                                                    {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
-
-                                                }},
-            {2, 122, LED_STATE_MULTI_ANIMATION, {
-                                                    {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
-
-                                                }},
-
-        },
-    },
-    {
-        "tradeday",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {0, 100, LED_STATE_SINGLE_ANIMATION, {}},
-        },
-    },
-    {
-        "simpled",
-        {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-        {
-            {0, 164, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_PARTICLES, 0, 164},
-                                                 }},
-
-        },
-    },
-    {
-        "Bike",
-        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
-        {
-            {0, 48, LED_STATE_SINGLE_ANIMATION, {
-                                                    {ANIMATION_TYPE_SLIDER, 0, 48},
-                                                }},
-            {1, 48, LED_STATE_SINGLE_ANIMATION, {
-                                                    {ANIMATION_TYPE_SLIDER, 0, 48},
-                                                }},
-            {2, 18, LED_STATE_SINGLE_ANIMATION, {
-                                                    {ANIMATION_TYPE_SLIDER, 0, 18},
-                                                }},
-        },
-    },
-    {
-
-        "Spinner",
-        {0xD0, 0xEF, 0x76, 0x58, 0x45, 0xB4},
-        {
-            {0, 280, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_IDLE, 0, 280},
-                                                 }},
-            {1, 280, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_IDLE, 0, 280},
-                                                 }},
-        },
-    },
-
-    {
-        "Bike",
-        {0xD0, 0xEF, 0x76, 0x57, 0x3F, 0xA0},
-        {
-            {0, 100, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_IDLE, 0, 100},
-                                                 }},
-            {1, 100, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_IDLE, 0, 100},
-                                                 }},
-            {2, 100, LED_STATE_SINGLE_ANIMATION, {
-                                                     {ANIMATION_TYPE_IDLE, 0, 100},
-                                                 }},
-        },
-    }};
+};
 const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 
 void colorFromHSV(led &color, float h, float s, float v);
