@@ -4,6 +4,7 @@
 #include "stripState.h"
 #include "animations.h"
 #include <ArduinoJson.h>
+#include <ctype.h>
 int val = 0;
 int minr = 0;
 int maxr = 0;
@@ -270,14 +271,140 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
     return false;
 }
 
+static void skipSpaces(const String &expr, int &pos)
+{
+    while (pos < expr.length() && isspace(static_cast<unsigned char>(expr[pos])))
+    {
+        pos++;
+    }
+}
+
+static float parseExpression(const String &expr, int &pos, const std::map<String, float> &vars);
+static float parseTerm(const String &expr, int &pos, const std::map<String, float> &vars);
+static float parseFactor(const String &expr, int &pos, const std::map<String, float> &vars);
+
+static float parseFactor(const String &expr, int &pos, const std::map<String, float> &vars)
+{
+    skipSpaces(expr, pos);
+    bool neg = false;
+    if (pos < expr.length() && expr[pos] == '-')
+    {
+        neg = true;
+        pos++;
+    }
+    skipSpaces(expr, pos);
+    if (pos < expr.length() && expr[pos] == '(')
+    {
+        pos++;
+        float val = parseExpression(expr, pos, vars);
+        skipSpaces(expr, pos);
+        if (pos < expr.length() && expr[pos] == ')')
+        {
+            pos++;
+        }
+        return neg ? -val : val;
+    }
+
+    int start = pos;
+    while (pos < expr.length() && (isalnum(expr[pos]) || expr[pos] == '_' || expr[pos] == '.'))
+    {
+        pos++;
+    }
+    String token = expr.substring(start, pos);
+    float val = 0.0f;
+    if (token.length() == 0)
+    {
+        return 0.0f;
+    }
+    if ((token[0] >= '0' && token[0] <= '9') || token[0] == '.' || (token[0] == '-' && token.length() > 1))
+    {
+        val = token.toFloat();
+    }
+    else
+    {
+        auto it = vars.find(token);
+        if (it != vars.end())
+        {
+            val = it->second;
+        }
+    }
+    if (neg)
+    {
+        val = -val;
+    }
+    return val;
+}
+
+static float parseTerm(const String &expr, int &pos, const std::map<String, float> &vars)
+{
+    float val = parseFactor(expr, pos, vars);
+    while (true)
+    {
+        skipSpaces(expr, pos);
+        if (pos < expr.length() && (expr[pos] == '*' || expr[pos] == '/'))
+        {
+            char op = expr[pos++];
+            float rhs = parseFactor(expr, pos, vars);
+            if (op == '*')
+            {
+                val *= rhs;
+            }
+            else
+            {
+                val /= rhs;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    return val;
+}
+
+static float parseExpression(const String &expr, int &pos, const std::map<String, float> &vars)
+{
+    float val = parseTerm(expr, pos, vars);
+    while (true)
+    {
+        skipSpaces(expr, pos);
+        if (pos < expr.length() && (expr[pos] == '+' || expr[pos] == '-'))
+        {
+            char op = expr[pos++];
+            float rhs = parseTerm(expr, pos, vars);
+            if (op == '+')
+            {
+                val += rhs;
+            }
+            else
+            {
+                val -= rhs;
+            }
+        }
+        else
+        {
+            break;
+        }
+    }
+    return val;
+}
+
+static float evaluateExpression(const String &expr, const std::map<String, float> &vars)
+{
+    int pos = 0;
+    return parseExpression(expr, pos, vars);
+}
+
 bool StripState::parseAnimationScript(String script)
 {
     script.replace('|', '\n');
     std::vector<String> lines = splitString(script, '\n');
     bool inParams = false;
     bool inAnims = false;
+    bool inVars = false;
     String configFile;
     std::map<ParameterID, float> paramOverrides;
+    std::map<String, float> variables;
     struct AnimLine
     {
         ANIMATION_TYPE type;
@@ -298,6 +425,17 @@ bool StripState::parseAnimationScript(String script)
             configFile.trim();
             continue;
         }
+        if (line.equalsIgnoreCase("Variables:") || line.equalsIgnoreCase("VARIABLES:"))
+        {
+            if (isVerbose())
+            {
+                Serial.printf("Entering variables section\n");
+            }
+            inVars = true;
+            inParams = false;
+            inAnims = false;
+            continue;
+        }
         if (line.equalsIgnoreCase("Parameters:") || line.equalsIgnoreCase("PARAMETERS:"))
         {
             if (isVerbose())
@@ -306,6 +444,7 @@ bool StripState::parseAnimationScript(String script)
             }
             inParams = true;
             inAnims = false;
+            inVars = false;
             continue;
         }
         if (line.equalsIgnoreCase("Animations:") || line.equalsIgnoreCase("ANIMATIONS:"))
@@ -316,6 +455,24 @@ bool StripState::parseAnimationScript(String script)
             }
             inAnims = true;
             inParams = false;
+            inVars = false;
+            continue;
+        }
+        if (inVars)
+        {
+            int colon = line.indexOf(':');
+            if (colon == -1)
+                continue;
+            String key = line.substring(0, colon);
+            String val = line.substring(colon + 1);
+            key.trim();
+            val.trim();
+            float v = evaluateExpression(val, variables);
+            variables[key] = v;
+            if (isVerbose())
+            {
+                Serial.printf("Variable %s = %f\n", key.c_str(), v);
+            }
             continue;
         }
         if (inParams)
@@ -327,6 +484,10 @@ bool StripState::parseAnimationScript(String script)
             String val = line.substring(colon + 1);
             key.trim();
             val.trim();
+            if (variables.find(val) != variables.end())
+            {
+                val = String(variables[val]);
+            }
             key.toUpperCase();
             String full = "PARAM_" + key;
             ParameterID pid = getParameterID(full.c_str());
@@ -378,6 +539,10 @@ bool StripState::parseAnimationScript(String script)
                 String v = t.substring(c + 1);
                 k.trim();
                 v.trim();
+                if (variables.find(v) != variables.end())
+                {
+                    v = String(variables[v]);
+                }
                 if (k.equalsIgnoreCase("start"))
                 {
                     start = v.toInt();
