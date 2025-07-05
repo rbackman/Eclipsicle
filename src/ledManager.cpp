@@ -35,7 +35,7 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
         LEDParams params = rig.strips[i];
 
         StripState *strip = new StripState(params.state, params.numLEDS, params.stripIndex,
-                                           params.nodes, params.nodePositions);
+                                           params.nodes);
         for (int j = 0; j < params.animations.size(); j++)
         {
             AnimationParams anim = params.animations[j];

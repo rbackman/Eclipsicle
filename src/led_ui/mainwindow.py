@@ -29,7 +29,12 @@ class MainWindow(QMainWindow):
         self.led_sim_widget = LEDSimWidget(self.console)
         self.console.add_string_listener(self.led_sim_widget.process_string)
 
-        square_nodes = [(0,0,0),(1,0,0),(1,1,0),(0,1,0)]
+        square_nodes = [
+            (0, 0.0, 0.0, 0.0),
+            (10, 1.0, 0.0, 0.0),
+            (20, 1.0, 1.0, 0.0),
+            (30, 0.0, 1.0, 0.0),
+        ]
         self.led_3d_widget = LED3DWidget(self.console, square_nodes, 40)
         self.console.add_string_listener(self.led_3d_widget.process_string)
         self.led_3d_widget.setVisible(False)

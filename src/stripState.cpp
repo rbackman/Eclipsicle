@@ -55,11 +55,9 @@ String rleCompresssCRGB(const CRGB *leds, int numLEDS)
 }
 
 StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX,
-                       std::vector<int> nodes,
-                       std::vector<Node3D> nodePositions)
+                       std::vector<Node3D> nodes)
     : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}),
-      ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), nodes(nodes),
-      nodePositions(nodePositions)
+      ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), nodes(nodes)
 
 {
     leds = new CRGB[numLEDS];

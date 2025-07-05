@@ -6,10 +6,10 @@ from PyQt5.QtGui import QColor
 import numpy as np
 
 class LED3DWidget(QWidget):
-    def __init__(self, console, node_positions, led_count):
+    def __init__(self, console, nodes, led_count):
         super().__init__()
         self.console = console
-        self.node_positions = node_positions
+        self.nodes = nodes
         self.led_count = led_count
         self.layout = QVBoxLayout(self)
 
@@ -42,13 +42,14 @@ class LED3DWidget(QWidget):
         self.setVisible(enabled)
 
     def _rebuild_positions(self):
-        idxs = [0] + [n for n in self.node_positions[1:]]
         pos = []
-        for i in range(len(self.node_positions) - 1):
-            start_i = idxs[i]
-            end_i = idxs[i+1]
-            start_p = np.array(self.node_positions[i])
-            end_p = np.array(self.node_positions[i+1])
+        for i in range(len(self.nodes) - 1):
+            start_n = self.nodes[i]
+            end_n = self.nodes[i + 1]
+            start_i = start_n[0]
+            end_i = end_n[0]
+            start_p = np.array(start_n[1:])
+            end_p = np.array(end_n[1:])
             count = end_i - start_i
             for j in range(count):
                 t = j / max(1, count)
