@@ -488,6 +488,8 @@ struct LEDParams
     int numLEDS;
     LED_STATE state;
     std::vector<AnimationParams> animations;
+    // optional LED node positions dividing the strip
+    std::vector<int> nodes = {};
 };
 
 struct LEDRig

@@ -24,6 +24,9 @@ private:
 
     float scrollPos = 0;
 
+    // led positions that divide the strip into segments
+    std::vector<int> nodes;
+
     std::vector<std::unique_ptr<StripAnimation>> animations;
     LED_STATE ledState = LED_STATE_IDLE;
 
@@ -31,7 +34,7 @@ public:
     bool isActive = true;
 
     CRGB *leds;
-    StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX);
+    StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, std::vector<int> nodes = {});
 
     void setNumLEDS(int num)
     {
@@ -98,6 +101,11 @@ public:
     void update();
     String getStripState(bool verbose = false);
     String getStripStateJson(bool verbose = false);
+    int getMidLed() const { return numLEDS / 2; }
+    int getNode(int idx) const {
+        if (idx <= 0 || idx > nodes.size()) return 0;
+        return nodes[idx-1];
+    }
     int getAnimationCount()
     {
         return animations.size();

@@ -54,7 +54,9 @@ String rleCompresssCRGB(const CRGB *leds, int numLEDS)
     return result;
 }
 
-StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX) : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}), ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX)
+StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, std::vector<int> nodes)
+    : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}),
+      ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), nodes(nodes)
 
 {
     leds = new CRGB[numLEDS];
@@ -547,7 +549,19 @@ bool StripState::parseAnimationScript(String script)
                 }
                 if (k.equalsIgnoreCase("start"))
                 {
-                    start = v.toInt();
+                    if (v.equalsIgnoreCase("mid"))
+                    {
+                        start = getMidLed();
+                    }
+                    else if (v.startsWith("n"))
+                    {
+                        int idx = v.substring(1).toInt();
+                        start = getNode(idx);
+                    }
+                    else
+                    {
+                        start = v.toInt();
+                    }
                     if (isVerbose())
                     {
                         Serial.printf("\tstart = %d\n", start);
@@ -555,7 +569,19 @@ bool StripState::parseAnimationScript(String script)
                 }
                 else if (k.equalsIgnoreCase("end"))
                 {
-                    end = v.toInt();
+                    if (v.equalsIgnoreCase("mid"))
+                    {
+                        end = getMidLed();
+                    }
+                    else if (v.startsWith("n"))
+                    {
+                        int idx = v.substring(1).toInt();
+                        end = getNode(idx);
+                    }
+                    else
+                    {
+                        end = v.toInt();
+                    }
                     if (isVerbose())
                     {
                         Serial.printf("\tend = %d\n", end);
