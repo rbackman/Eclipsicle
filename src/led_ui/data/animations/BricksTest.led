@@ -1,7 +1,7 @@
 
 Animations:
-    BRICKS start:0 end:29  width:1  reverse:true time_scale:20 
-    BRICKS start:41 end:70  hue:200 hue_variance:40   width:3    
+    BRICKS    width:1 hue:255   reverse:true time_scale:20 
+    BRICKS   hue:200 hue_variance:40   width:3    time_scale:15
 
 PARAMETERS:
   brightness: 100
