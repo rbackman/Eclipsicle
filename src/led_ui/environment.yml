@@ -12,3 +12,4 @@ dependencies:
       - qdarkstyle  # Optional: nice dark theme
       - qtawesome
       - pyqtgraph
+      - PyOpenGL
