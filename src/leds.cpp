@@ -3,12 +3,8 @@
 
 #include <Adafruit_NeoPixel.h>
 #define FASTLED_ESP32_DMA
-#include "FastLED.h"
 #include "leds.h"
 #include "sensors.h"
-
-#define LED_TYPE WS2811
-#define COLOR_ORDER GRB
 
 // #define LED_PIN_1 2
 // #define LED_PIN_2 4
