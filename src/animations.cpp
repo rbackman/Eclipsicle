@@ -504,7 +504,7 @@ void SingleColorAnimation::update()
     float hueValue = hue / 360.0f;               // convert to 0-1 range
     float brightnessValue = brightness / 255.0f; // convert to 0-1 range
     colorFromHSV(animationColor, hueValue, 1.0f, brightnessValue);
-    Serial.printf("%g rgb: %d %d %d\n", hueValue, animationColor.r, animationColor.g, animationColor.b);
+
     for (int i = 0; i < numLEDs(); i++)
     {
 
