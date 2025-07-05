@@ -171,6 +171,8 @@ class AnimationTabWidget(QWidget):
             if section in ("animations", "parameters"):
                 for match in re.finditer(r"(\w+):", line):
                     name = match.group(1).lower()
+                    if name in ("start", "end"):
+                        continue
                     if name not in known:
                         unknown.add(name)
             indent = "    " if section else ""
