@@ -40,3 +40,16 @@ Animation scripts (`*.led`) begin with a `ConfigFile:` line naming the base para
 
 Within the UI, open an animation file and use the **Send** button to transmit it to the device. Newlines are encoded as `|` characters when sent via the `script:` command.
 
+### Simulating with QEMU
+
+PlatformIO can run the firmware under QEMU for automated testing.  An example
+environment called `esp32s3_qemu` is provided in `platformio.ini`.  Build and
+test it without uploading using:
+
+```bash
+pio test -e esp32s3_qemu --without-uploading
+```
+
+Refer to the [PlatformIO QEMU documentation](https://docs.platformio.org/en/latest/advanced/unit-testing/simulators/qemu.html)
+for more details on the simulator setup.
+
