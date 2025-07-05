@@ -1,0 +1,7 @@
+Animations:
+    Rainbow end:n1 hue:150 time_scale:60
+    Nebula start:n1 end:n2 hue:10
+    Particles start:n2 end:n3 hue:240 time_scale:60 spawn:50
+    Nebula start:n3 hue:350
+Parameters:
+    brightness:10

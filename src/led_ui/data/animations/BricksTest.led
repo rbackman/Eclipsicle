@@ -2,4 +2,4 @@ Animations:
     BRICKS width:3 hue:1 hue_end:1 hue_variance:0 reverse:true time_scale:20
     BRICKS width:3 hue:200 hue_end:200 hue_variance:0 time_scale:20
 Parameters:
-    brightness:100
+    brightness:10
