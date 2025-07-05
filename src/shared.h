@@ -481,6 +481,14 @@ struct AnimationParams
 
     std::map<ParameterID, float> params = {};
 };
+
+struct Node3D
+{
+    int index = 0; // LED index corresponding to this node
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+};
 struct LEDParams
 {
 
@@ -490,6 +498,8 @@ struct LEDParams
     std::vector<AnimationParams> animations;
     // optional LED node positions dividing the strip
     std::vector<int> nodes = {};
+    // 3D coordinates for each node in the same order as 'nodes'
+    std::vector<Node3D> nodePositions = {};
 };
 
 struct LEDRig
@@ -527,11 +537,11 @@ const LEDRig eclipse = {
         {0, 164, LED_STATE_SINGLE_ANIMATION, {
                                                  {ANIMATION_TYPE_RAINBOW, 0, 163},
                                              },
-         {32, 65, 90}},
+         {32, 65, 90}, {}},
         {1, 200, LED_STATE_SINGLE_ANIMATION, {
                                                  {ANIMATION_TYPE_SLIDER, 0, 200},
                                              },
-         {32, 65, 90}},
+         {32, 65, 90}, {}},
     },
 
 };
@@ -542,21 +552,42 @@ const LEDRig tesseratic = {
         {0, 122, LED_STATE_MULTI_ANIMATION, {
                                                 {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
                                             },
-         {28, 44, 72}},
+         {28, 44, 72}, {}},
         {1, 122, LED_STATE_MULTI_ANIMATION, {
                                                 {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
                                             },
-         {28, 44, 72}},
+         {28, 44, 72}, {}},
         {2, 122, LED_STATE_MULTI_ANIMATION, {
                                                 {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
                                             },
-         {28, 44, 72}},
+         {28, 44, 72}, {}},
+    },
+
+};
+
+const LEDRig squareLoop = {
+    "SquareLoop",
+    {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF},
+    {
+        {0, 40, LED_STATE_SINGLE_ANIMATION,
+            {
+                {ANIMATION_TYPE_RAINBOW, 0, 39},
+            },
+            {10,20,30},
+            {
+                {0, 0.0f, 0.0f, 0.0f},
+                {10, 1.0f, 0.0f, 0.0f},
+                {20, 1.0f, 1.0f, 0.0f},
+                {30, 0.0f, 1.0f, 0.0f},
+            }
+        },
     },
 
 };
 const std::vector<LEDRig> slaves = {
     eclipse,
     tesseratic,
+    squareLoop,
 
 };
 const int LED_STATE_COUNT = LED_STATE_NAMES.size();

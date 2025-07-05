@@ -13,6 +13,7 @@ from parameter_menu import ParameterMenuWidget
 from serial_console import SerialConsole
 from device_selector import DeviceSelector
 from ledsimwidget import LEDSimWidget
+from led3dwidget import LED3DWidget
 
 
 class MainWindow(QMainWindow):
@@ -27,9 +28,16 @@ class MainWindow(QMainWindow):
         self.console.add_json_listener(self.parameter_menu.json_received)
         self.led_sim_widget = LEDSimWidget(self.console)
         self.console.add_string_listener(self.led_sim_widget.process_string)
+
+        square_nodes = [(0,0,0),(1,0,0),(1,1,0),(0,1,0)]
+        self.led_3d_widget = LED3DWidget(self.console, square_nodes, 40)
+        self.console.add_string_listener(self.led_3d_widget.process_string)
+        self.led_3d_widget.setVisible(False)
+
         central_widget = QWidget()
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.led_sim_widget)
+        main_layout.addWidget(self.led_3d_widget)
         main_layout.addWidget(self.parameter_menu)
 
         self.console.setVisible(False)
@@ -74,6 +82,11 @@ class MainWindow(QMainWindow):
         self.sim_action.triggered.connect(self.toggle_simulation)
         view_menu.addAction(self.sim_action)
 
+        self.sim3d_action = QAction('Show 3D View', self, checkable=True)
+        self.sim3d_action.setChecked(False)
+        self.sim3d_action.triggered.connect(self.toggle_3d)
+        view_menu.addAction(self.sim3d_action)
+
         self.console_action = QAction('Show Console', self, checkable=True)
         self.console_action.setChecked(False)
         self.console_action.triggered.connect(self.toggle_console)
@@ -106,6 +119,8 @@ class MainWindow(QMainWindow):
             lambda state: self.echo_action.setChecked(bool(state)))
         self.led_sim_widget.simulate_checkbox.stateChanged.connect(
             lambda state: self.sim_action.setChecked(state == Qt.Checked))
+        self.led_3d_widget.simulate_checkbox.stateChanged.connect(
+            lambda state: self.sim3d_action.setChecked(state == Qt.Checked))
 
 
     def update_brightness(self, label, value):
@@ -142,6 +157,16 @@ class MainWindow(QMainWindow):
         self.led_sim_widget.setVisible(enabled)
         if hasattr(self, 'sim_action'):
             self.sim_action.setChecked(enabled)
+
+    def toggle_3d(self):
+        if isinstance(self.sender(), QAction):
+            enabled = self.sender().isChecked()
+        else:
+            enabled = not self.led_3d_widget.simulate_checkbox.isChecked()
+        self.led_3d_widget.simulate_checkbox.setChecked(enabled)
+        self.led_3d_widget.setVisible(enabled)
+        if hasattr(self, 'sim3d_action'):
+            self.sim3d_action.setChecked(enabled)
 
     def send_parameter(self, param, value, boolValue=False):
         data = {

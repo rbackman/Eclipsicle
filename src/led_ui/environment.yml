@@ -11,3 +11,4 @@ dependencies:
   - pip:
       - qdarkstyle  # Optional: nice dark theme
       - qtawesome
+      - pyqtgraph

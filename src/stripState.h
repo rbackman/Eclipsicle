@@ -26,6 +26,8 @@ private:
 
     // led positions that divide the strip into segments
     std::vector<int> nodes;
+    // 3D coordinates for nodes
+    std::vector<Node3D> nodePositions;
 
     std::vector<std::unique_ptr<StripAnimation>> animations;
     LED_STATE ledState = LED_STATE_IDLE;
@@ -34,7 +36,9 @@ public:
     bool isActive = true;
 
     CRGB *leds;
-    StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX, std::vector<int> nodes = {});
+    StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX,
+               std::vector<int> nodes = {},
+               std::vector<Node3D> nodePositions = {});
 
     void setNumLEDS(int num)
     {
@@ -105,6 +109,13 @@ public:
     int getNode(int idx) const {
         if (idx <= 0 || idx > nodes.size()) return 0;
         return nodes[idx-1];
+    }
+    Node3D getNode3D(int idx) const {
+        if (idx <= 0 || idx > nodePositions.size()) return Node3D{};
+        return nodePositions[idx-1];
+    }
+    const std::vector<Node3D>& getNodePositions() const {
+        return nodePositions;
     }
     int getAnimationCount()
     {
