@@ -537,10 +537,16 @@ const std::vector<LEDRig> slaves = {
         {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
         {
             {0, 122, LED_STATE_MULTI_ANIMATION, {
-                                                    {ANIMATION_TYPE_SINGLE_COLOR, 0, 27, {{PARAM_HUE, 100}}},
-                                                    // {ANIMATION_TYPE_SINGLE_COLOR, 28, 44},
-                                                    // {ANIMATION_TYPE_SINGLE_COLOR, 45, 72, {{PARAM_HUE, 200}, {PARAM_HUE_END, 240}, {PARAM_TIME_SCALE, 5.0f}}},
-                                                    // {ANIMATION_TYPE_SINGLE_COLOR, 73, 121},
+                                                    {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+
+                                                }},
+            {1, 122, LED_STATE_MULTI_ANIMATION, {
+                                                    {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+
+                                                }},
+            {2, 122, LED_STATE_MULTI_ANIMATION, {
+                                                    {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+
                                                 }},
 
         },

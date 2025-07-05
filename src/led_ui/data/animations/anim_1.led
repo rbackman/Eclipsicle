@@ -1,12 +1,9 @@
-
 Variables:
-  BaseHue:120
-  Offset:30
-  Color:BaseHue + Offset
-  Speed:1.0 * 2
-
+    BaseHue:120
+    Offset:30
+    Color:BaseHue + Offset
+    Speed:1.0 * 60
 Animations:
-    Particles hue:Color hue_end:Color spawn_rate:Speed
-
-PARAMETERS:
-  brightness: 100
+    Particles hue:Color hue_end:Color spawn_rate:Speed time_scale:80
+Parameters:
+    brightness:100

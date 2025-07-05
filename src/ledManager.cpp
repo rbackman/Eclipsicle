@@ -180,15 +180,15 @@ bool LEDManager::handleLEDCommand(String command)
 
         for (int i = 0; i < stripStates.size(); i++)
         {
-            if (currentStrip == 0 || currentStrip == i + 1)
+            // if (currentStrip == 0 || currentStrip == i + 1)
+            // {
+
+            if (stripStates[i]->respondToText(command))
             {
 
-                if (stripStates[i]->respondToText(command))
-                {
-
-                    res = true;
-                }
+                res = true;
             }
+            // }
         }
 
         return res;
@@ -221,14 +221,18 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
     }
     else
     {
-        int currentStrip = getInt(PARAM_CURRENT_STRIP);
-        // Serial.println("update current strip " + String(currentStrip));
-        if (currentStrip < 0 || currentStrip >= stripStates.size())
+        // int currentStrip = getInt(PARAM_CURRENT_STRIP);
+        // // Serial.println("update current strip " + String(currentStrip));
+        // if (currentStrip < 0 || currentStrip >= stripStates.size())
+        // {
+        //     Serial.printf("Invalid current strip %d, valid range is 0 to %d\n", currentStrip, stripStates.size() - 1);
+        //     return false;
+        // }
+        // return stripStates[currentStrip]->respondToParameterMessage(parameter);
+        for (int i = 0; i < stripStates.size(); i++)
         {
-            Serial.printf("Invalid current strip %d, valid range is 0 to %d\n", currentStrip, stripStates.size() - 1);
-            return false;
+            stripStates[i]->respondToParameterMessage(parameter)
         }
-        return stripStates[currentStrip]->respondToParameterMessage(parameter);
     }
     return false;
 }
