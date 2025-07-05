@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 346,
+    "value": 75,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -80,7 +80,7 @@
   "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 4,
+    "value": 9,
     "name": "Width",
     "min": 1,
     "max": 60
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 50,
+    "value": 255,
     "name": "Brightness",
     "min": 0,
     "max": 255

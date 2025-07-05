@@ -24,6 +24,12 @@ void StripAnimation::setPixel(int index, led color)
         stripState->setPixel(index + start, color);
     }
 }
+void StripAnimation::setPixelHSV(int index, float hue, float saturation, float value)
+{
+
+    colorFromHSV(animationColor, hue, saturation, value);
+    setPixel(index, animationColor);
+}
 
 String StripAnimation::describe()
 {
@@ -111,10 +117,9 @@ void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart
             adjustedBrightness *= 0.9f + 0.2f * random(0, 1000) / 1000.0f; // ±10%
         }
 
-        float hue = interpolate(hueStart, hueEnd, t);
-        // Serial.printf("Fading particle tail at index %d with hue %f brightness %f\n", fadePos, hue, adjustedBrightness);
-        colorFromHSV(animationColor, hue / 360.0, 1.0, adjustedBrightness / 255.0);
-        setPixel(fadePos, animationColor);
+        float hue = interpolate(hueStart, hueEnd, t) / 360.0f; // convert to 0-1 range
+
+        setPixelHSV(fadePos, hue, 1.0, adjustedBrightness / 255.0);
     }
 }
 void ParticleAnimation::updateParticles()
@@ -287,8 +292,8 @@ void RainbowAnimation::update()
     {
         int val = i + scrollPos;
         float hue = fmod(offset + (float(val) / float(numLEDs())) * repeat * 360.0, 360.0);
-        colorFromHSV(animationColor, hue / 360.0, 1, brightness / 255.0);
-        setPixel(i, animationColor);
+
+        setPixelHSV(i, hue / 360.0, 1.0, brightness / 255.0);
     }
 }
 void ParticleAnimation::update()
@@ -335,8 +340,9 @@ void RandomAnimation::update()
         int val = i + scrollPos;
         if (random(0, 100) > randomOff)
         {
-            colorFromHSV(animationColor, float(val) / float(numLEDs()), 1, brightness / 255.0);
-            setPixel(i, animationColor);
+
+            float hue = fmod(float(val) / float(numLEDs()) * 360.0, 360.0);
+            setPixelHSV(i, hue / 360.0, 1.0, brightness / 255.0);
         }
     }
 }
@@ -364,8 +370,8 @@ void SliderAnimation::update()
         {
             float t = float(val) / float(width / 2);
             float hueValue = fmod(hue + t * repeat * 360.0, 360.0);
-            colorFromHSV(animationColor, hueValue / 360.0, 1, brightness / 255.0);
-            setPixel(i, animationColor);
+
+            setPixelHSV(i, hueValue / 360.0, 1.0, brightness / 255.0);
         }
     }
 }
@@ -384,8 +390,8 @@ void DoubleRainbowAnimation::update()
     {
         int val = i + scrollPos;
         float hue = fmod(offset + (float(val) / float(numLEDs())) * repeat * 360.0, 360.0);
-        colorFromHSV(animationColor, hue / 360.0, 1, brightness / 255.0);
-        setPixel(i, animationColor);
+
+        setPixelHSV(i, hue / 360.0, 1.0, brightness / 255.0);
     }
 }
 void FallingBricksAnimation::update()
@@ -446,8 +452,8 @@ void FallingBricksAnimation::update()
         float baseHue = interpolate(hueStart, hueEnd, t);
         float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
         float brickHue = fmod(baseHue + n + 360.0f, 360.0f);
-        colorFromHSV(animationColor, brickHue / 360.0f, 1.0f, brightness / 255.0f);
-        setPixel(mapIdx(i), animationColor);
+
+        setPixelHSV(mapIdx(i), brickHue / 360.0f, 1.0f, brightness / 255.0f);
     }
 
     // Draw falling brick
@@ -458,9 +464,10 @@ void FallingBricksAnimation::update()
             int idx = reverse ? (int)brick.pos + i : (int)brick.pos - i;
             if (idx >= 0 && idx < numLEDs())
             {
-                colorFromHSV(animationColor, brick.hue / 360.0f, 1.0f,
-                             brightness / 255.0f);
-                setPixel(idx, animationColor);
+                // colorFromHSV(animationColor, brick.hue / 360.0f, 1.0f,
+                //              brightness / 255.0f);
+                // setPixel(idx, animationColor);
+                setPixelHSV(mapIdx(idx), brick.hue / 360.0f, 1.0f, brightness / 255.0f);
             }
         }
     }
@@ -484,8 +491,9 @@ void NebulaAnimation::update()
         uint8_t noiseVal = inoise8(i * scale * 20, int(noiseOffset * 100));
         float hue = fmod(baseHue + (noiseVal / 255.0f) * 60.0f, 360.0f);
         float bright = brightness / 255.0f * pow(noiseVal / 255.0f, 3.0f);
-        colorFromHSV(animationColor, hue / 360.0f, 1.0f, bright);
-        setPixel(i, animationColor);
+        // colorFromHSV(animationColor, hue / 360.0f, 1.0f, bright);
+        // setPixel(i, animationColor);
+        setPixelHSV(i, hue / 360.0f, 1.0f, bright);
     }
 }
 
@@ -493,10 +501,13 @@ void SingleColorAnimation::update()
 {
     int hue = getInt(PARAM_HUE);
     int brightness = getInt(PARAM_BRIGHTNESS);
-
-    colorFromHSV(animationColor, hue / 360.0f, 1.0f, brightness / 255.0f);
+    float hueValue = hue / 360.0f;               // convert to 0-1 range
+    float brightnessValue = brightness / 255.0f; // convert to 0-1 range
+    colorFromHSV(animationColor, hueValue, 1.0f, brightnessValue);
+    Serial.printf("%g rgb: %d %d %d\n", hueValue, animationColor.r, animationColor.g, animationColor.b);
     for (int i = 0; i < numLEDs(); i++)
     {
+
         setPixel(i, animationColor);
     }
 }

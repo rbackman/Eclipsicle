@@ -85,7 +85,6 @@ void LEDManager::initStrips()
             break;
         }
     }
-    setInt(PARAM_BRIGHTNESS, 50);
 }
 LEDManager::LEDManager(std::string name, std::vector<StripState *> strips) : ParameterManager(name.c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
@@ -203,9 +202,8 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
     if (parameter.paramID == PARAM_BRIGHTNESS)
     {
         setBrightness(parameter.value);
-        return true;
     }
-    else if (parameter.paramID == PARAM_CURRENT_STRIP)
+    if (parameter.paramID == PARAM_CURRENT_STRIP)
     {
         setInt(PARAM_CURRENT_STRIP, parameter.value);
         for (int i = 0; i < stripStates.size(); i++)

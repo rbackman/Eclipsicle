@@ -104,13 +104,12 @@ bool isSlider(SensorID id)
   }
   return false;
 }
-
-void colorFromHSV(led &color, float h, float s, float v)
+void colorFromHSV(led &color, float h, float s, float value)
 {
-  // FastLED uses HSV values in the range 0-1 for the conversion.  Some
-  // callers pass brightness in the 0-255 range, so normalise here to
-  // prevent colour distortion.
-  float value = v > 1.0f ? v / 255.0f : v;
+  // Clamp or wrap hue to [0, 1)
+  h = fmodf(h, 1.0f);
+  if (h < 0)
+    h += 1.0f;
 
   float r, g, b;
   int i = int(h * 6);
@@ -118,6 +117,7 @@ void colorFromHSV(led &color, float h, float s, float v)
   float p = value * (1 - s);
   float q = value * (1 - f * s);
   float t = value * (1 - (1 - f) * s);
+
   switch (i % 6)
   {
   case 0:

@@ -1,0 +1,4 @@
+ConfigFile:
+Parameters:
+Animations:
+    SingleColor hue:20 start:20 end: 40

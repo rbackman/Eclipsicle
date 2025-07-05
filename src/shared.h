@@ -275,7 +275,7 @@ static const std::vector<IntParameter> getDefaultIntParameters()
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255},
         {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255},
         {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40},
-        {PARAM_BRIGHTNESS, "Brightness", 50, 0, 255},
+        {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255},
         {PARAM_FADE, "Fade", 100, 0, 255},
         {PARAM_LIFE, "Life", -1, -1, 100},
 

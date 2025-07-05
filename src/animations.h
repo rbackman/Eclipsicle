@@ -64,6 +64,7 @@ public:
         return end;
     }
     void setPixel(int index, led color);
+    void setPixelHSV(int index, float hue, float saturation, float value);
     String describe();
 };
 
