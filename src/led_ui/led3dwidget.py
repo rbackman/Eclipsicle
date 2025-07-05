@@ -42,23 +42,33 @@ class LED3DWidget(QWidget):
         self.setVisible(enabled)
 
     def _rebuild_positions(self):
+        node_list = list(self.nodes)
+        if node_list:
+            last_idx = node_list[-1][0]
+            if last_idx < self.led_count:
+                first = node_list[0]
+                node_list.append((self.led_count, first[1], first[2], first[3]))
+
         pos = []
-        for i in range(len(self.nodes) - 1):
-            start_n = self.nodes[i]
-            end_n = self.nodes[i + 1]
+        for i in range(len(node_list) - 1):
+            start_n = node_list[i]
+            end_n = node_list[i + 1]
             start_i = start_n[0]
             end_i = end_n[0]
-            start_p = np.array(start_n[1:])
-            end_p = np.array(end_n[1:])
-            count = end_i - start_i
+            start_p = np.array(start_n[1:], dtype=float)
+            end_p = np.array(end_n[1:], dtype=float)
+            count = max(0, end_i - start_i)
             for j in range(count):
                 t = j / max(1, count)
                 p = start_p + t * (end_p - start_p)
                 pos.append(p)
-        self.positions = np.array(pos)
+        self.positions = np.array(pos, dtype=float)
 
     def _update_scatter(self):
-        colors = [QColor(r, g, b).getRgbF() for r, g, b in self.led_colors]
+        colors = np.array(
+            [QColor(r, g, b).getRgbF() for r, g, b in self.led_colors],
+            dtype=float,
+        )
         self.scatter.setData(pos=self.positions, size=5, color=colors)
 
     def process_string(self, string):
