@@ -43,11 +43,10 @@ String rleCompresssCRGB(const CRGB *leds, int numLEDS)
         }
         else
         {
-            // send just the hue value
-            int hue = 0;
+            // Compress by hue/value; saturation is assumed full.
             CHSV hsv = rgb2hsv_approximate(leds[i]);
 
-            result += String(hsv.hue) + "," + String(hsv.value) + ":" + String(count) + ";";
+            result += String(hsv.hue) + "," + String(hsv.val) + ":" + String(count) + ";";
             count = 1;
         }
     }
@@ -220,7 +219,9 @@ void StripState::update()
 
         int pointHue = getInt(PARAM_HUE);
 
-        colorFromHSV(tempColor, float(pointHue) / float(255), 1, 255);
+        // point control uses full brightness; colour conversion expects value in
+        // the range 0-1
+        colorFromHSV(tempColor, float(pointHue) / 255.0f, 1.0f, 1.0f);
         setPixel(pointPosition, tempColor);
     }
     break;
