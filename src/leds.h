@@ -11,7 +11,7 @@
 #endif
 
 #ifndef COLOR_ORDER
-#define COLOR_ORDER GRB
+#define COLOR_ORDER RGB
 #endif
 
 ByteRow base64Decode(uint8_t *input, int len);

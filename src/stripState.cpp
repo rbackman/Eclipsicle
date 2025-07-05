@@ -221,7 +221,7 @@ void StripState::update()
 
         // point control uses full brightness; colour conversion expects value in
         // the range 0-1
-        colorFromHSV(tempColor, float(pointHue) / 255.0f, 1.0f, 1.0f);
+        colorFromHSV(tempColor, float(pointHue) / 360.0f, 1.0f, 1.0f);
         setPixel(pointPosition, tempColor);
     }
     break;
