@@ -50,6 +50,10 @@ test it without uploading using:
 pio test -e esp32s3_qemu --without-uploading
 ```
 
+The `tool-qemu-xtensa` package used by this environment currently only
+provides binaries for Linux hosts. Windows users should run PlatformIO inside
+a WSL or other Linux environment in order to use QEMU.
+
 Refer to the [PlatformIO QEMU documentation](https://docs.platformio.org/en/latest/advanced/unit-testing/simulators/qemu.html)
 for more details on the simulator setup.
 
