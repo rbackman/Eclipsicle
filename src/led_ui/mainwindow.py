@@ -44,9 +44,13 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.led_sim_widget)
 
         view_layout = QHBoxLayout()
+        # Give the parameter tree a reasonable width so the 3D view can expand
+        self.parameter_menu.setMaximumWidth(300)
         view_layout.addWidget(self.parameter_menu)
         view_layout.addWidget(self.led_3d_widget)
-        main_layout.addLayout(view_layout)
+        view_layout.setStretch(0, 0)
+        view_layout.setStretch(1, 1)
+        main_layout.addLayout(view_layout, 1)
 
         self.console.setVisible(False)
         main_layout.addWidget(self.console)
