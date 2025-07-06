@@ -68,21 +68,24 @@ conda env create -f src/led_ui/environment.yml
 conda activate led-ui
 ```
 
-Then build the executable from `offline_main.py` using the helper script:
+Then build the executable from `offline_main.py` using the helper script.
+This step also compiles the small C++ simulators used for unit tests so
+they can run without a `make` installation:
 
 ```bash
 python src/led_ui/build_exe.py
 ```
 
-The resulting binary will be placed under `dist/`.  It allows running the
-animation UI without connecting to an ESP32 which is useful for unit tests
-and local simulation.
+The resulting binary will be placed under `dist/` and the simulator
+executables appear in `tools/`.  This allows running the animation UI and
+logic locally without connecting to an ESP32.
 
 To quickly test the C++ animation logic on the host PC you can also build
-the small demo in `tools/`:
+the small demo programs in `tools/`.  A Python helper script builds both
+executables without requiring `make`:
 
 ```bash
-make -C tools
+python tools/build.py
 ./tools/simulate_bricks
 ./tools/simulate_strip
 ```

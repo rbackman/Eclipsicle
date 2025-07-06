@@ -14,13 +14,6 @@ String getLedStateName(LED_STATE state) {
 #include "../src/stripState.h"
 #include "../src/animations.h"
 #include <FastLED.h>
-
-CHSV rgb2hsv_approximate(const CRGB& rgb) {
-    uint8_t h = rgb.r; // simplistic placeholder
-    uint8_t s = 255;
-    uint8_t v = rgb.g;
-    return CHSV{h,s,v};
-}
 #include <iostream>
 #include <thread>
 #include <chrono>
