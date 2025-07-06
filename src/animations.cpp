@@ -86,50 +86,32 @@ void ParticleAnimation::updateRandomParticles()
 }
 void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction)
 {
-
-    // Serial.printf("Fading particle tail at position %g width %d hueStart %d hueEnd %d brightness %d fadeSpeed %f direction %d\n", position, width, hueStart, hueEnd, brightness, fadeSpeed, direction);
+    // Smoothly draw a fading trail behind the particle.
     for (int i = 0; i < width; i++)
     {
-        int fadePos = position - i * direction;
-        // Serial.printf("fade %d\n", fadePos);
-        if (fadePos < 0 || fadePos > numLEDs())
+        float fadePos = position - i * direction;
+
+        float t = static_cast<float>(i) / std::max(width - 1, 1);
+        float fade = 1.0f - t;      // start bright at the head
+        fade *= fade;               // quadratic falloff
+        fade = powf(fade, fadeSpeed); // user controlled exponent
+
+        float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
+        float value = (brightness / 255.0f) * clamp(fade, 0.0f, 1.0f);
+
+        // Fractional pixel rendering for smoother output.
+        int lower = floor(fadePos);
+        int upper = lower + 1;
+        float frac = fadePos - lower;
+
+        if (lower >= 0 && lower < numLEDs())
         {
-
-            continue;
+            setPixelHSV(lower, hue, 1.0f, value * (1.0f - frac));
         }
-
-        float t = (float)i / (float)width;
-
-        if (t < 0.0f || t > 1.0f)
+        if (upper >= 0 && upper < numLEDs())
         {
-            Serial.printf("Invalid fade time %f for particle tail %g %g\n", t, i, width);
-            continue;
+            setPixelHSV(upper, hue, 1.0f, value * frac);
         }
-
-        float fade;
-        if (t < 0.2f)
-        {
-            // Head: fade in quickly
-            fade = t / 0.2f;
-        }
-        else
-        {
-            // Tail: fade out smoothly
-            fade = 1.0f - ((t - 0.2f) / 0.8f);
-            fade = pow(fade, fadeSpeed); // apply fade curve
-        }
-        // Serial.printf("Fade position %d t %f fade %f\n", fadePos, t, fade);
-        float adjustedBrightness = brightness * fade;
-
-        // Add randomness in the tail
-        if (t >= 0.2f)
-        {
-            adjustedBrightness *= 0.9f + 0.2f * random(0, 1000) / 1000.0f; // ±10%
-        }
-
-        float hue = interpolate(hueStart, hueEnd, t) / 360.0f; // convert to 0-1 range
-
-        setPixelHSV(fadePos, hue, 1.0, adjustedBrightness / 255.0);
     }
 }
 void ParticleAnimation::updateParticles()
