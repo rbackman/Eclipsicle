@@ -710,6 +710,15 @@ bool StripState::respondToText(String command)
         auto animName = animparts[1];
         animName.trim();
 
+        if (animName == "POINT_CONTROL")
+        {
+            ledState = LED_STATE_POINT_CONTROL;
+            if (isVerbose())
+            {
+                Serial.println("Set LED state to POINT_CONTROL");
+            }
+            return true;
+        }
         ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
         if (animType == ANIMATION_TYPE_NONE)
         {

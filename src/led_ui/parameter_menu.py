@@ -59,7 +59,8 @@ MENU_TREE = {
                        "PARAM_NOISE_SPEED", "PARAM_TIME_SCALE", "PARAM_NOISE_SCALE"],
             "Falling Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
                                "PARAM_WIDTH", "PARAM_SPEED", "PARAM_TIME_SCALE",
-                               "PARAM_HUE_VARIANCE"]
+                               "PARAM_HUE_VARIANCE"],
+            "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"]
 
         },
         "LED": {"Master LED": {}, "Animation Type": {}},
@@ -72,7 +73,7 @@ MENU_TREE = {
                 "All Strips": {},
             },
 
-            "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"]
+
         },
     }
 }
