@@ -78,6 +78,9 @@ class ParticleAnimation : public StripAnimation
     /**
      * Draw a fading tail behind a particle.
      *
+     * Uses fractional pixel blending so tails appear smooth even on
+     * low-density LED strips.
+     *
      * @param position   Current particle position in LED coordinates.
      * @param width      Length of the tail in LEDs.
      * @param hueStart   Hue at the head of the particle (degrees).

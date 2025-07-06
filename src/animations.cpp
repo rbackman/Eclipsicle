@@ -88,11 +88,7 @@ void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart
     // Smoothly draw a fading trail behind the particle.
     for (int i = 0; i < width; i++)
     {
-        int fadePos = position - i * direction;
-        if (fadePos < 0 || fadePos >= numLEDs())
-        {
-            continue;
-        }
+        float fadePos = position - i * direction;
 
         float t = static_cast<float>(i) / std::max(width - 1, 1);
         float fade = 1.0f - t;      // start bright at the head
@@ -102,7 +98,19 @@ void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart
         float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
         float value = (brightness / 255.0f) * clamp(fade, 0.0f, 1.0f);
 
-        setPixelHSV(fadePos, hue, 1.0f, value);
+        // Fractional pixel rendering for smoother output.
+        int lower = floor(fadePos);
+        int upper = lower + 1;
+        float frac = fadePos - lower;
+
+        if (lower >= 0 && lower < numLEDs())
+        {
+            setPixelHSV(lower, hue, 1.0f, value * (1.0f - frac));
+        }
+        if (upper >= 0 && upper < numLEDs())
+        {
+            setPixelHSV(upper, hue, 1.0f, value * frac);
+        }
     }
 }
 void ParticleAnimation::updateParticles()
