@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 86,
+    "value": 52,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 179,
+    "value": 95,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -104,7 +104,7 @@
   "PARAM_SPAWN_RATE": {
     "id": 15,
     "type": "int",
-    "value": 4,
+    "value": 35,
     "name": "Spawn",
     "min": 1,
     "max": 40
@@ -120,7 +120,7 @@
   "PARAM_FADE": {
     "id": 4,
     "type": "int",
-    "value": 100,
+    "value": 223,
     "name": "Fade",
     "min": 0,
     "max": 255
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 124.324,
+    "value": 72.527,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -312,7 +312,7 @@
   "PARAM_VELOCITY": {
     "id": 7,
     "type": "float",
-    "value": 20,
+    "value": 80.392,
     "name": "Vel",
     "min": -100,
     "max": 100
@@ -320,7 +320,7 @@
   "PARAM_ACCELERATION": {
     "id": 9,
     "type": "float",
-    "value": 0,
+    "value": 13.359,
     "name": "Accel",
     "min": -10,
     "max": 100
@@ -358,7 +358,7 @@
   "PARAM_HUE_VARIANCE": {
     "id": 47,
     "type": "int",
-    "value": 180,
+    "value": 0,
     "name": "HueVar",
     "min": 0,
     "max": 180

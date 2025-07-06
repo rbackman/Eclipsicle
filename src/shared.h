@@ -562,9 +562,9 @@ const LEDRig tesseratic = {
     {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
     {
         {0, 122, LED_STATE_MULTI_ANIMATION, {
-                                                {ANIMATION_TYPE_PLANE, -1, -1, {{PARAM_HUE, 100}}},
+                                                {ANIMATION_TYPE_BRICKS, -1, -1, {{PARAM_HUE, 100}}},
                                             },
-         {{28, 0, 0, 0}, {44, 0, 0, 0}, {72, 0, 0, 0}}},
+         {{0, 49.4, -54.8, 54.8}, {28, 21, -26.5, 26.5}, {44, -21, -26.5, 26.5}, {72, -49.4, 54.8, 54.8}}},
         // {1, 122, LED_STATE_MULTI_ANIMATION, {
         //                                         {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
         //                                     },
