@@ -43,14 +43,15 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.led_sim_widget)
 
-        view_layout = QHBoxLayout()
-        # Give the parameter tree a reasonable width so the 3D view can expand
-        self.parameter_menu.setMaximumWidth(300)
-        view_layout.addWidget(self.parameter_menu)
-        view_layout.addWidget(self.led_3d_widget)
-        view_layout.setStretch(0, 0)
-        view_layout.setStretch(1, 1)
-        main_layout.addLayout(view_layout, 1)
+        self.view_layout = QHBoxLayout()
+        # Start with the parameter menu taking all available space. When the 3D
+        # view is shown we cap the menu width so the view can expand.
+        self.parameter_menu.setMaximumWidth(16777215)
+        self.view_layout.addWidget(self.parameter_menu)
+        self.view_layout.addWidget(self.led_3d_widget)
+        self.view_layout.setStretch(0, 1)
+        self.view_layout.setStretch(1, 0)
+        main_layout.addLayout(self.view_layout, 1)
 
         self.console.setVisible(False)
         main_layout.addWidget(self.console)
@@ -176,7 +177,16 @@ class MainWindow(QMainWindow):
         else:
             enabled = not self.led_3d_widget.simulate_checkbox.isChecked()
         self.led_3d_widget.simulate_checkbox.setChecked(enabled)
-        self.led_3d_widget.setVisible(enabled)
+        # When enabling the 3D view keep the parameter menu narrow so the
+        # widget has room to expand, otherwise let the menu fill the window.
+        if enabled:
+            self.parameter_menu.setMaximumWidth(300)
+            self.view_layout.setStretch(0, 0)
+            self.view_layout.setStretch(1, 1)
+        else:
+            self.parameter_menu.setMaximumWidth(16777215)
+            self.view_layout.setStretch(0, 1)
+            self.view_layout.setStretch(1, 0)
         if hasattr(self, 'sim3d_action'):
             self.sim3d_action.setChecked(enabled)
 
