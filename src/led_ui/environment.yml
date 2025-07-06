@@ -13,3 +13,4 @@ dependencies:
       - qtawesome
       - pyqtgraph
       - PyOpenGL
+      - pyinstaller

@@ -11,3 +11,5 @@ tests/falling_bricks_test
 tests/*.o
 tests/*.log
 tools/simulate_bricks
+dist/
+build/

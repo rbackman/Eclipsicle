@@ -57,3 +57,32 @@ a WSL or other Linux environment in order to use QEMU.
 Refer to the [PlatformIO QEMU documentation](https://docs.platformio.org/en/latest/advanced/unit-testing/simulators/qemu.html)
 for more details on the simulator setup.
 
+### Building a standalone simulator
+
+The PyQt interface can be packaged as a Windows executable using
+[PyInstaller](https://pyinstaller.org/).  First install the UI
+dependencies including the `pyinstaller` package:
+
+```bash
+conda env create -f src/led_ui/environment.yml
+conda activate led-ui
+```
+
+Then build the executable from `offline_main.py` using the helper script:
+
+```bash
+python src/led_ui/build_exe.py
+```
+
+The resulting binary will be placed under `dist/`.  It allows running the
+animation UI without connecting to an ESP32 which is useful for unit tests
+and local simulation.
+
+To quickly test the C++ animation logic on the host PC you can also build
+the small demo in `tools/`:
+
+```bash
+make -C tools
+./tools/simulate_bricks
+```
+
