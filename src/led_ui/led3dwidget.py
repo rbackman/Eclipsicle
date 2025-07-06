@@ -10,9 +10,15 @@ class LED3DWidget(QWidget):
     def __init__(self, console, nodes, led_count):
         super().__init__()
         self.console = console
-        self.nodes = nodes
-        self.led_count = led_count
+        # maintain a map of strip -> {"nodes": [(index,x,y,z)],
+        #  "led_count": int, "led_colors": [(r,g,b)]}
+        self.strips = {0: {"nodes": list(nodes),
+                           "led_count": led_count,
+                           "led_colors": [(255, 0, 0)] * led_count}}
         self.layout = QVBoxLayout(self)
+        # orientation flag -- incoming coordinates use Y as the up axis
+        # but GLViewWidget uses Z-up, so swap Y and Z when plotting
+        self.y_up = True
 
         self.simulate_checkbox = QCheckBox('Simulate')
         self.simulate_checkbox.setChecked(False)
@@ -27,13 +33,13 @@ class LED3DWidget(QWidget):
 
         self.layout.addWidget(self.updateNodesButton)
 
-        self.led_colors = [(255, 0, 0)] * self.led_count
         self._rebuild_positions()
         self._update_scatter()
+        self._update_camera()
         self._sim_state_changed(self.simulate_checkbox.checkState())
 
     def request_nodes(self):
-        self.nodes = []
+        # request nodes for all strips; device will broadcast
         self.console.send_cmd("get_nodes")
 
     def _sim_state_changed(self, state):
@@ -45,56 +51,131 @@ class LED3DWidget(QWidget):
         self.setVisible(enabled)
 
     def _rebuild_positions(self):
-        node_list = list(self.nodes)
-        if node_list:
-            last_idx = node_list[-1][0]
-            if last_idx < self.led_count:
-                first = node_list[0]
-                node_list.append(
-                    (self.led_count, first[1], first[2], first[3]))
+        all_pos = []
+        for strip_index in sorted(self.strips.keys()):
+            strip = self.strips[strip_index]
+            nodes = list(strip.get("nodes", []))
+            led_count = strip.get("led_count", 0)
+            if nodes:
+                last_idx = nodes[-1][0]
+                if last_idx < led_count:
+                    first = nodes[0]
+                    nodes.append((led_count, first[1], first[2], first[3]))
+            else:
+                continue
 
-        pos = []
-        for i in range(len(node_list) - 1):
-            start_n = node_list[i]
-            end_n = node_list[i + 1]
-            start_i = start_n[0]
-            end_i = end_n[0]
-            start_p = np.array(start_n[1:], dtype=float)
-            end_p = np.array(end_n[1:], dtype=float)
-            count = max(0, end_i - start_i)
-            for j in range(count):
-                t = j / max(1, count)
-                p = start_p + t * (end_p - start_p)
-                pos.append(p)
-        self.positions = np.array(pos, dtype=float)
+            pos = []
+            for i in range(len(nodes) - 1):
+                start_n = nodes[i]
+                end_n = nodes[i + 1]
+                start_i = start_n[0]
+                end_i = end_n[0]
+                start_p = np.array(start_n[1:], dtype=float)
+                end_p = np.array(end_n[1:], dtype=float)
+                if self.y_up:
+                    start_p = start_p[[0, 2, 1]]
+                    end_p = end_p[[0, 2, 1]]
+                count = max(0, end_i - start_i)
+                for j in range(count):
+                    t = j / max(1, count)
+                    p = start_p + t * (end_p - start_p)
+                    pos.append(p)
+            strip["positions"] = np.array(pos, dtype=float)
+            all_pos.append(strip["positions"])
+
+        if all_pos:
+            self.positions = np.concatenate(all_pos, axis=0)
+        else:
+            self.positions = np.zeros((0, 3))
+
+        self._update_camera()
+
+    def _update_camera(self):
+        """Zoom and center the view so all points are visible."""
+        if self.positions.size == 0:
+            return
+        mins = self.positions.min(axis=0)
+        maxs = self.positions.max(axis=0)
+        center = (mins + maxs) / 2.0
+        span = np.linalg.norm(maxs - mins)
+        try:
+            self.view.opts['center'] = pg.Vector(center[0], center[1], center[2])
+        except Exception:
+            # fallback if pg.Vector is unavailable
+            self.view.opts['center'] = center
+        self.view.opts['distance'] = max(span * 1.2, 1.0)
 
     def _update_scatter(self):
-        colors = np.array(
-            [QColor(r, g, b).getRgbF() for r, g, b in self.led_colors],
-            dtype=float,
-        )
+        color_arrays = []
+        for strip_index in sorted(self.strips.keys()):
+            strip = self.strips[strip_index]
+            leds = strip.get("led_colors", [])
+            display = []
+            for r, g, b in leds:
+                if r == 0 and g == 0 and b == 0:
+                    disp = QColor(50, 50, 50)
+                else:
+                    disp = QColor(r, g, b)
+                display.append(disp.getRgbF())
+            color_arrays.append(np.array(display, dtype=float))
+        if color_arrays:
+            colors = np.concatenate(color_arrays, axis=0)
+        else:
+            colors = np.zeros((0, 4))
         self.scatter.setData(pos=self.positions, size=5, color=colors)
 
     def process_string(self, string):
         if string.startswith("sim:"):
-            compressed_data = string.split("sim:")[1].strip()
-            self.led_colors = self.parse_rle(compressed_data)
-            self._update_scatter()
-            return True
-        if string.startswith("nodes:"):
-            nodes_data = string.split("nodes:")[1].strip()
-
-            for node in nodes_data.split(":"):
-                if node:
-                    parts = node.split(",")
-                    index = int(parts[0])
-                    coords = tuple(float(x) for x in parts[1:])
-                    print(f"Node {index} at {coords}")
-                    self.nodes.append((index, *coords))
-            self.nodes.append(self.nodes[0])  # Close the loop
+            data = string.split("sim:", 1)[1].strip()
+            strip_index = 0
+            if ':' in data and data.split(':', 1)[0].isdigit():
+                prefix, data = data.split(':', 1)
+                strip_index = int(prefix)
+            colors = self.parse_rle(data)
+            strip = self.strips.setdefault(strip_index, {
+                "nodes": [],
+                "led_count": len(colors),
+                "led_colors": colors,
+            })
+            strip["led_colors"] = colors
+            strip["led_count"] = len(colors)
             self._rebuild_positions()
             self._update_scatter()
+            self._update_camera()
             return True
+        if string.startswith("nodes:"):
+            parts = string.split(":")
+            if len(parts) >= 4:
+                strip_index = int(parts[1])
+                led_count = int(parts[2])
+                node_count = int(parts[3])
+                nodes = []
+                for i in range(node_count):
+                    if 4 + i < len(parts):
+                        node_str = parts[4 + i]
+                        if node_str:
+                            n_parts = node_str.split(",")
+                            if len(n_parts) >= 4:
+                                idx = int(n_parts[0])
+                                coords = tuple(float(x) for x in n_parts[1:4])
+                                nodes.append((idx, *coords))
+                strip = self.strips.setdefault(strip_index, {
+                    "nodes": nodes,
+                    "led_count": led_count,
+                    "led_colors": [(255, 0, 0)] * led_count,
+                })
+                strip["nodes"] = nodes
+                strip["led_count"] = led_count
+                if len(strip["led_colors"]) < led_count:
+                    strip["led_colors"].extend(
+                        [(255, 0, 0)] * (led_count - len(strip["led_colors"]))
+                    )
+                elif len(strip["led_colors"]) > led_count:
+                    strip["led_colors"] = strip["led_colors"][:led_count]
+                self._rebuild_positions()
+                self._update_scatter()
+                self._update_camera()
+                return True
         return False
 
     def parse_rle(self, data):
