@@ -246,7 +246,7 @@ void StripState::update()
         if (counter % simulateCount == 0)
         {
             String compressed = rleCompresssCRGB(leds, numLEDS);
-            Serial.printf("\nsim:%s\n", compressed.c_str());
+            Serial.printf("\nsim:%d:%s\n", stripIndex, compressed.c_str());
         }
     }
 }
@@ -679,11 +679,13 @@ bool StripState::respondToText(String command)
     if (command.startsWith("get_nodes"))
     {
         String nodeString = "nodes:";
+        nodeString += String(stripIndex) + ":" + String(numLEDS) + ":" + String(nodes.size()) + ":";
         for (const auto &node : nodes)
         {
             nodeString += String(node.index) + "," + String(node.x) + "," + String(node.y) + "," + String(node.z) + ":";
         }
         Serial.println(nodeString);
+        return true;
     }
     if (command.startsWith("simulate:"))
     {

@@ -64,10 +64,11 @@ class LEDSimWidget(QWidget):
 
     def process_string(self, string):
         if string.startswith("sim:"):
-            # check if there is multiple sim: in the string
-            compressed_data = string.split("sim:")[1].strip()
-
-            self.update_leds(compressed_data)
+            # message may be sim:data or sim:stripIndex:data
+            data = string.split("sim:", 1)[1].strip()
+            if ':' in data and data.split(':', 1)[0].isdigit():
+                _, data = data.split(':', 1)
+            self.update_leds(data)
             return True
         if string.startswith("state:"):
             print(string)
