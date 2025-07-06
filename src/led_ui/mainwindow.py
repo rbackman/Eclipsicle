@@ -42,8 +42,11 @@ class MainWindow(QMainWindow):
         central_widget = QWidget()
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.led_sim_widget)
-        main_layout.addWidget(self.led_3d_widget)
-        main_layout.addWidget(self.parameter_menu)
+
+        view_layout = QHBoxLayout()
+        view_layout.addWidget(self.parameter_menu)
+        view_layout.addWidget(self.led_3d_widget)
+        main_layout.addLayout(view_layout)
 
         self.console.setVisible(False)
         main_layout.addWidget(self.console)
