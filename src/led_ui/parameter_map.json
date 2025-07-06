@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 124.324,
+    "value": 13.9,
     "name": "Time",
     "min": 0,
     "max": 200
