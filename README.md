@@ -84,5 +84,6 @@ the small demo in `tools/`:
 ```bash
 make -C tools
 ./tools/simulate_bricks
+./tools/simulate_strip
 ```
 

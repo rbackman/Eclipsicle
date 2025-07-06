@@ -1,5 +1,8 @@
 #include "shared.h"
+#ifdef ARDUINO
 #include <WiFi.h>
+#endif
+#include <cmath>
 
 bool _verbose = true;
 String _name = "default";
