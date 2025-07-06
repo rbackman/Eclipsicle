@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QSpinBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
@@ -15,11 +15,7 @@ class LED3DWidget(QWidget):
 
         self.simulate_checkbox = QCheckBox('Simulate')
         self.simulate_checkbox.setChecked(False)
-        self.simCountSpinbox = QSpinBox()
-        self.simCountSpinbox.setRange(-1, 10000)
-        self.simCountSpinbox.setValue(1)
         self.simulate_checkbox.stateChanged.connect(self._sim_state_changed)
-        self.layout.addWidget(self.simCountSpinbox)
 
         self.view = gl.GLViewWidget()
         self.layout.addWidget(self.view)
@@ -35,8 +31,7 @@ class LED3DWidget(QWidget):
     def _sim_state_changed(self, state):
         enabled = state == Qt.Checked
         if enabled:
-            self.console.send_cmd(
-                f"simulate:{self.simCountSpinbox.value()}")
+            self.console.send_cmd("simulate:1")
         else:
             self.console.send_cmd("simulate:-1")
         self.setVisible(enabled)
