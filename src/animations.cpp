@@ -4,6 +4,7 @@
 #include "stripState.h"
 #include <FastLED.h>
 #include <algorithm>
+#include <cmath>
 
 led animationColor;
 int animCount = 0;

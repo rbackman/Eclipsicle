@@ -4,6 +4,8 @@
 #include "stripState.h"
 #include "animations.h"
 #include <ArduinoJson.h>
+#include <stdexcept>
+#include <cmath>
 #include <ctype.h>
 int val = 0;
 int minr = 0;
