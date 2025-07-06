@@ -75,6 +75,17 @@ class ParticleAnimation : public StripAnimation
     Particle particles[NUM_PARTICLES];
     bool randomMode = false;
 
+    /**
+     * Draw a fading tail behind a particle.
+     *
+     * @param position   Current particle position in LED coordinates.
+     * @param width      Length of the tail in LEDs.
+     * @param hueStart   Hue at the head of the particle (degrees).
+     * @param hueEnd     Hue at the end of the tail (degrees).
+     * @param brightness Base brightness for the head (0-255).
+     * @param fadeSpeed  Exponent controlling how quickly the tail fades.
+     * @param direction  Direction of motion: 1 forward, -1 backward.
+     */
     void fadeParticleTail(float position, int width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction);
 
     void spawnParticle(int position, float velocity, int hueStart, int hueEnd, int brightness, int width, int life);
