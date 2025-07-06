@@ -90,3 +90,8 @@ python tools/build.py
 ./tools/simulate_strip
 ```
 
+This step requires a C++ compiler (`g++` or `clang++`) to be available on
+your PATH. On Windows you can install the
+[MSYS2 toolchain](https://www.msys2.org/) or the Visual Studio Build Tools
+to provide one.
+
