@@ -2,9 +2,9 @@
 
 import sys
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget,
-    QPushButton, QLabel, QSlider, QCheckBox, QColorDialog, QHBoxLayout,
-    QSpinBox, QComboBox, QMenuBar, QAction, QLineEdit
+    QApplication, QMainWindow, QVBoxLayout, QWidget, QSplitter,
+    QPushButton, QLabel, QSlider, QCheckBox, QColorDialog,
+    QMenuBar, QAction, QLineEdit
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor
@@ -43,15 +43,12 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.led_sim_widget)
 
-        self.view_layout = QHBoxLayout()
-        # Start with the parameter menu taking all available space. When the 3D
-        # view is shown we cap the menu width so the view can expand.
-        self.parameter_menu.setMaximumWidth(16777215)
-        self.view_layout.addWidget(self.parameter_menu)
-        self.view_layout.addWidget(self.led_3d_widget)
-        self.view_layout.setStretch(0, 1)
-        self.view_layout.setStretch(1, 0)
-        main_layout.addLayout(self.view_layout, 1)
+        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter.addWidget(self.parameter_menu)
+        self.splitter.addWidget(self.led_3d_widget)
+        self.splitter.setStretchFactor(0, 0)
+        self.splitter.setStretchFactor(1, 1)
+        main_layout.addWidget(self.splitter, 1)
 
         self.console.setVisible(False)
         main_layout.addWidget(self.console)
@@ -177,16 +174,9 @@ class MainWindow(QMainWindow):
         else:
             enabled = not self.led_3d_widget.simulate_checkbox.isChecked()
         self.led_3d_widget.simulate_checkbox.setChecked(enabled)
-        # When enabling the 3D view keep the parameter menu narrow so the
-        # widget has room to expand, otherwise let the menu fill the window.
-        if enabled:
-            self.parameter_menu.setMaximumWidth(300)
-            self.view_layout.setStretch(0, 0)
-            self.view_layout.setStretch(1, 1)
-        else:
-            self.parameter_menu.setMaximumWidth(16777215)
-            self.view_layout.setStretch(0, 1)
-            self.view_layout.setStretch(1, 0)
+        self.led_3d_widget.setVisible(enabled)
+        if enabled and self.splitter.sizes()[1] == 0:
+            self.splitter.setSizes([200, max(100, self.width() - 200)])
         if hasattr(self, 'sim3d_action'):
             self.sim3d_action.setChecked(enabled)
 
