@@ -5,6 +5,7 @@ import pyqtgraph.opengl as gl
 from PyQt5.QtGui import QColor
 import numpy as np
 
+
 class LED3DWidget(QWidget):
     def __init__(self, console, nodes, led_count):
         super().__init__()
@@ -16,17 +17,24 @@ class LED3DWidget(QWidget):
         self.simulate_checkbox = QCheckBox('Simulate')
         self.simulate_checkbox.setChecked(False)
         self.simulate_checkbox.stateChanged.connect(self._sim_state_changed)
-
+        self.updateNodesButton = pg.QtWidgets.QPushButton('Update Nodes')
+        self.updateNodesButton.clicked.connect(self.request_nodes)
         self.view = gl.GLViewWidget()
         self.layout.addWidget(self.view)
         self.view.opts['distance'] = 4
         self.scatter = gl.GLScatterPlotItem()
         self.view.addItem(self.scatter)
 
+        self.layout.addWidget(self.updateNodesButton)
+
         self.led_colors = [(255, 0, 0)] * self.led_count
         self._rebuild_positions()
         self._update_scatter()
         self._sim_state_changed(self.simulate_checkbox.checkState())
+
+    def request_nodes(self):
+        self.nodes = []
+        self.console.send_cmd("get_nodes")
 
     def _sim_state_changed(self, state):
         enabled = state == Qt.Checked
@@ -42,7 +50,8 @@ class LED3DWidget(QWidget):
             last_idx = node_list[-1][0]
             if last_idx < self.led_count:
                 first = node_list[0]
-                node_list.append((self.led_count, first[1], first[2], first[3]))
+                node_list.append(
+                    (self.led_count, first[1], first[2], first[3]))
 
         pos = []
         for i in range(len(node_list) - 1):
@@ -72,6 +81,20 @@ class LED3DWidget(QWidget):
             self.led_colors = self.parse_rle(compressed_data)
             self._update_scatter()
             return True
+        if string.startswith("nodes:"):
+            nodes_data = string.split("nodes:")[1].strip()
+
+            for node in nodes_data.split(":"):
+                if node:
+                    parts = node.split(",")
+                    index = int(parts[0])
+                    coords = tuple(float(x) for x in parts[1:])
+                    print(f"Node {index} at {coords}")
+                    self.nodes.append((index, *coords))
+            self.nodes.append(self.nodes[0])  # Close the loop
+            self._rebuild_positions()
+            self._update_scatter()
+            return True
         return False
 
     def parse_rle(self, data):
@@ -84,6 +107,6 @@ class LED3DWidget(QWidget):
                 hue = int(hue_byte * 359 / 255)
                 value = int(vc)
                 qcolor = QColor.fromHsv(hue, 255, value)
-                leds.extend([(qcolor.red(), qcolor.green(), qcolor.blue())] * int(count))
+                leds.extend(
+                    [(qcolor.red(), qcolor.green(), qcolor.blue())] * int(count))
         return leds
-

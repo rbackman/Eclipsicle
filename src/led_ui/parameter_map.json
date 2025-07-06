@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 9,
+    "value": 226,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -184,7 +184,7 @@
   "PARAM_OFFSET": {
     "id": 13,
     "type": "int",
-    "value": 0,
+    "value": 10,
     "name": "Offset",
     "min": 0,
     "max": 255
@@ -288,7 +288,7 @@
   "PARAM_SCROLL_SPEED": {
     "id": 18,
     "type": "float",
-    "value": 1,
+    "value": 29.304,
     "name": "Speed",
     "min": 0,
     "max": 100
@@ -296,9 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
- 
-    "value": 72.527,
- 
+    "value": 12.454,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -306,7 +304,7 @@
   "PARAM_REPEAT": {
     "id": 12,
     "type": "float",
-    "value": 1,
+    "value": 8.839,
     "name": "Repeat",
     "min": 1,
     "max": 10

@@ -676,6 +676,15 @@ bool StripState::respondToText(String command)
         String script = command.substring(String("script:").length());
         return parseAnimationScript(script);
     }
+    if (command.startsWith("get_nodes"))
+    {
+        String nodeString = "nodes:";
+        for (const auto &node : nodes)
+        {
+            nodeString += String(node.index) + "," + String(node.x) + "," + String(node.y) + "," + String(node.z) + ":";
+        }
+        Serial.println(nodeString);
+    }
     if (command.startsWith("simulate:"))
     {
         auto simParts = splitString(command, ':');
