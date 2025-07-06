@@ -59,6 +59,11 @@
     X(PARAM_ANIMATION_TYPE)        \
     X(PARAM_REVERSE)               \
     X(PARAM_HUE_VARIANCE)          \
+    X(PARAM_POS_X)                 \
+    X(PARAM_POS_Y)                 \
+    X(PARAM_POS_Z)                 \
+    X(PARAM_RADIUS)                \
+    X(PARAM_THICKNESS)             \
     X(PARAM_UNKNOWN)
 
 // This is the maximum value that your ADC can read. For the ESP32, this is typically 4095
@@ -340,6 +345,11 @@ static const std::vector<FloatParameter> getDefaultFloatParameters()
 
         {PARAM_NOISE_SCALE, "NScl", 0.2, 0.01, 2.0},
         {PARAM_NOISE_SPEED, "NSpd", 0.1, 0.0, 5.0},
+        {PARAM_POS_X, "PosX", 0.0, -100.0, 100.0},
+        {PARAM_POS_Y, "PosY", 0.0, -100.0, 100.0},
+        {PARAM_POS_Z, "PosZ", 0.0, -100.0, 100.0},
+        {PARAM_RADIUS, "Radius", 10.0, 0.0, 200.0},
+        {PARAM_THICKNESS, "Thick", 1.0, 0.0, 50.0},
     };
 }
 
@@ -462,6 +472,8 @@ enum LED_STATE
     X(ANIMATION_TYPE_NEBULA)           \
     X(ANIMATION_TYPE_RANDOM_PARTICLES) \
     X(ANIMATION_TYPE_SINGLE_COLOR)     \
+    X(ANIMATION_TYPE_SPHERE)           \
+    X(ANIMATION_TYPE_PLANE)            \
     X(ANIMATION_TYPE_IDLE)
 
 enum ANIMATION_TYPE
@@ -526,7 +538,9 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_BRICKS, "BRICKS"},
     {ANIMATION_TYPE_NEBULA, "NEBULA"},
     {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOMPARTICLES"},
-    {ANIMATION_TYPE_SINGLE_COLOR, "SINGLECOLOR"}};
+    {ANIMATION_TYPE_SINGLE_COLOR, "SINGLECOLOR"},
+    {ANIMATION_TYPE_SPHERE, "SPHERE"},
+    {ANIMATION_TYPE_PLANE, "PLANE"}};
 
 const LEDRig eclipse = {
     "Eclipsicle",
@@ -535,11 +549,11 @@ const LEDRig eclipse = {
         {0, 164, LED_STATE_SINGLE_ANIMATION, {
                                                  {ANIMATION_TYPE_RAINBOW, 0, 163},
                                              },
-         {{32,0,0,0},{65,0,0,0},{90,0,0,0}}},
+         {{32, 0, 0, 0}, {65, 0, 0, 0}, {90, 0, 0, 0}}},
         {1, 200, LED_STATE_SINGLE_ANIMATION, {
                                                  {ANIMATION_TYPE_SLIDER, 0, 200},
                                              },
-         {{32,0,0,0},{65,0,0,0},{90,0,0,0}}},
+         {{32, 0, 0, 0}, {65, 0, 0, 0}, {90, 0, 0, 0}}},
     },
 
 };
@@ -548,17 +562,17 @@ const LEDRig tesseratic = {
     {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
     {
         {0, 122, LED_STATE_MULTI_ANIMATION, {
-                                                {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+                                                {ANIMATION_TYPE_PLANE, -1, -1, {{PARAM_HUE, 100}}},
                                             },
-         {{28,0,0,0},{44,0,0,0},{72,0,0,0}}},
-        {1, 122, LED_STATE_MULTI_ANIMATION, {
-                                                {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
-                                            },
-         {{28,0,0,0},{44,0,0,0},{72,0,0,0}}},
-        {2, 122, LED_STATE_MULTI_ANIMATION, {
-                                                {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
-                                            },
-         {{28,0,0,0},{44,0,0,0},{72,0,0,0}}},
+         {{28, 0, 0, 0}, {44, 0, 0, 0}, {72, 0, 0, 0}}},
+        // {1, 122, LED_STATE_MULTI_ANIMATION, {
+        //                                         {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+        //                                     },
+        //  {{28, 0, 0, 0}, {44, 0, 0, 0}, {72, 0, 0, 0}}},
+        // {2, 122, LED_STATE_MULTI_ANIMATION, {
+        //                                         {ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}}},
+        //                                     },
+        //  {{28, 0, 0, 0}, {44, 0, 0, 0}, {72, 0, 0, 0}}},
     },
 
 };
@@ -567,17 +581,15 @@ const LEDRig squareLoop = {
     "SquareLoop",
     {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF},
     {
-        {0, 40, LED_STATE_SINGLE_ANIMATION,
-            {
-                {ANIMATION_TYPE_RAINBOW, 0, 39},
-            },
-            {
-                {0, 0.0f, 0.0f, 0.0f},
-                {10, 1.0f, 0.0f, 0.0f},
-                {20, 1.0f, 1.0f, 0.0f},
-                {30, 0.0f, 1.0f, 0.0f},
-            }
-        },
+        {0, 40, LED_STATE_SINGLE_ANIMATION, {
+                                                {ANIMATION_TYPE_RAINBOW, 0, 39},
+                                            },
+         {
+             {0, 0.0f, 0.0f, 0.0f},
+             {10, 1.0f, 0.0f, 0.0f},
+             {20, 1.0f, 1.0f, 0.0f},
+             {30, 0.0f, 1.0f, 0.0f},
+         }},
     },
 
 };

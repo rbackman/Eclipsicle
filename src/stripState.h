@@ -103,17 +103,24 @@ public:
     String getStripState(bool verbose = false);
     String getStripStateJson(bool verbose = false);
     int getMidLed() const { return numLEDS / 2; }
-    int getNode(int idx) const {
-        if (idx <= 0 || idx > nodes.size()) return 0;
-        return nodes[idx-1].index;
+    int getNode(int idx) const
+    {
+        if (idx <= 0 || idx > nodes.size())
+            return 0;
+        return nodes[idx - 1].index;
     }
-    Node3D getNode3D(int idx) const {
-        if (idx <= 0 || idx > nodes.size()) return Node3D{};
-        return nodes[idx-1];
+    Node3D getNode3D(int idx) const
+    {
+        if (idx <= 0 || idx > nodes.size())
+            return Node3D{};
+        return nodes[idx - 1];
     }
-    const std::vector<Node3D>& getNodes() const {
+    const std::vector<Node3D> &getNodes() const
+    {
         return nodes;
     }
+    // get interpolated world position for a LED index
+    Node3D getLEDPosition(int ledIndex);
     int getAnimationCount()
     {
         return animations.size();

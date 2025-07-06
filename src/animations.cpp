@@ -24,6 +24,15 @@ void StripAnimation::setPixel(int index, led color)
         stripState->setPixel(index + start, color);
     }
 }
+Node3D StripAnimation::getLEDPosition(int ledIndex)
+{
+    if (ledIndex < 0 || ledIndex >= numLEDs())
+    {
+        Serial.printf("Invalid LED index %d for strip animation\n", ledIndex);
+        return Node3D{};
+    }
+    return stripState->getNode3D(ledIndex + start);
+}
 void StripAnimation::setPixelHSV(int index, float hue, float saturation, float value)
 {
 
@@ -509,5 +518,48 @@ void SingleColorAnimation::update()
     {
 
         setPixel(i, animationColor);
+    }
+}
+
+void SphereAnimation::update()
+{
+    int hue = getInt(PARAM_HUE);
+    int brightness = getInt(PARAM_BRIGHTNESS);
+    float cx = getFloat(PARAM_POS_X);
+    float cy = getFloat(PARAM_POS_Y);
+    float cz = getFloat(PARAM_POS_Z);
+    float radius = getFloat(PARAM_RADIUS);
+    float thick = getFloat(PARAM_THICKNESS);
+
+    for (int i = 0; i < numLEDs(); i++)
+    {
+        Node3D pos = getLEDPosition(i + start);
+        float dx = pos.x - cx;
+        float dy = pos.y - cy;
+        float dz = pos.z - cz;
+        float dist = sqrtf(dx * dx + dy * dy + dz * dz);
+        float delta = fabs(dist - radius);
+        float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
+        if (t <= 0.0f)
+            continue;
+        setPixelHSV(i, hue / 360.0f, 1.0f, (brightness / 255.0f) * t);
+    }
+}
+
+void PlaneAnimation::update()
+{
+    int hue = getInt(PARAM_HUE);
+    int brightness = getInt(PARAM_BRIGHTNESS);
+    float planeZ = getFloat(PARAM_POS_Z);
+    float thick = getFloat(PARAM_THICKNESS);
+
+    for (int i = 0; i < numLEDs(); i++)
+    {
+        Node3D pos = getLEDPosition(i + start);
+        float delta = fabs(pos.z - planeZ);
+        float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
+        if (t <= 0.0f)
+            continue;
+        setPixelHSV(i, hue / 360.0f, 1.0f, (brightness / 255.0f) * t);
     }
 }

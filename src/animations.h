@@ -63,6 +63,7 @@ public:
     {
         return end;
     }
+    Node3D getLEDPosition(int ledIndex);
     void setPixel(int index, led color);
     void setPixelHSV(int index, float hue, float saturation, float value);
     String describe();
@@ -170,6 +171,30 @@ class NebulaAnimation : public StripAnimation
 public:
     void update();
     NebulaAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {}) : StripAnimation(state, start, end, ANIMATION_TYPE_NEBULA, {PARAM_HUE, PARAM_HUE_END, PARAM_BRIGHTNESS, PARAM_NOISE_SCALE, PARAM_NOISE_SPEED, PARAM_TIME_SCALE}, paramOverrides)
+    {
+    }
+};
+
+class SphereAnimation : public StripAnimation
+{
+public:
+    void update();
+    SphereAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {})
+        : StripAnimation(state, start, end, ANIMATION_TYPE_SPHERE,
+                         {PARAM_HUE, PARAM_BRIGHTNESS, PARAM_POS_X, PARAM_POS_Y, PARAM_POS_Z, PARAM_RADIUS, PARAM_THICKNESS},
+                         paramOverrides)
+    {
+    }
+};
+
+class PlaneAnimation : public StripAnimation
+{
+public:
+    void update();
+    PlaneAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {})
+        : StripAnimation(state, start, end, ANIMATION_TYPE_PLANE,
+                         {PARAM_HUE, PARAM_BRIGHTNESS, PARAM_POS_Z, PARAM_THICKNESS},
+                         paramOverrides)
     {
     }
 };
