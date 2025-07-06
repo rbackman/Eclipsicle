@@ -362,5 +362,45 @@
     "name": "HueVar",
     "min": 0,
     "max": 180
+  },
+  "PARAM_POS_X": {
+    "id": 48,
+    "type": "float",
+    "value": 0,
+    "name": "PosX",
+    "min": -100,
+    "max": 100
+  },
+  "PARAM_POS_Y": {
+    "id": 49,
+    "type": "float",
+    "value": 0,
+    "name": "PosY",
+    "min": -100,
+    "max": 100
+  },
+  "PARAM_POS_Z": {
+    "id": 50,
+    "type": "float",
+    "value": 0,
+    "name": "PosZ",
+    "min": -100,
+    "max": 100
+  },
+  "PARAM_RADIUS": {
+    "id": 51,
+    "type": "float",
+    "value": 10,
+    "name": "Radius",
+    "min": 0,
+    "max": 200
+  },
+  "PARAM_THICKNESS": {
+    "id": 52,
+    "type": "float",
+    "value": 1,
+    "name": "Thick",
+    "min": 0,
+    "max": 50
   }
 }

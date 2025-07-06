@@ -114,6 +114,8 @@ public:
     const std::vector<Node3D>& getNodes() const {
         return nodes;
     }
+    // get interpolated world position for a LED index
+    Node3D getLEDPosition(int ledIndex) const;
     int getAnimationCount()
     {
         return animations.size();
