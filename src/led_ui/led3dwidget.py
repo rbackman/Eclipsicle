@@ -16,6 +16,9 @@ class LED3DWidget(QWidget):
                            "led_count": led_count,
                            "led_colors": [(255, 0, 0)] * led_count}}
         self.layout = QVBoxLayout(self)
+        # orientation flag -- incoming coordinates use Y as the up axis
+        # but GLViewWidget uses Z-up, so swap Y and Z when plotting
+        self.y_up = True
 
         self.simulate_checkbox = QCheckBox('Simulate')
         self.simulate_checkbox.setChecked(False)
@@ -32,6 +35,7 @@ class LED3DWidget(QWidget):
 
         self._rebuild_positions()
         self._update_scatter()
+        self._update_camera()
         self._sim_state_changed(self.simulate_checkbox.checkState())
 
     def request_nodes(self):
@@ -68,6 +72,9 @@ class LED3DWidget(QWidget):
                 end_i = end_n[0]
                 start_p = np.array(start_n[1:], dtype=float)
                 end_p = np.array(end_n[1:], dtype=float)
+                if self.y_up:
+                    start_p = start_p[[0, 2, 1]]
+                    end_p = end_p[[0, 2, 1]]
                 count = max(0, end_i - start_i)
                 for j in range(count):
                     t = j / max(1, count)
@@ -81,17 +88,36 @@ class LED3DWidget(QWidget):
         else:
             self.positions = np.zeros((0, 3))
 
+        self._update_camera()
+
+    def _update_camera(self):
+        """Zoom and center the view so all points are visible."""
+        if self.positions.size == 0:
+            return
+        mins = self.positions.min(axis=0)
+        maxs = self.positions.max(axis=0)
+        center = (mins + maxs) / 2.0
+        span = np.linalg.norm(maxs - mins)
+        try:
+            self.view.opts['center'] = pg.Vector(center[0], center[1], center[2])
+        except Exception:
+            # fallback if pg.Vector is unavailable
+            self.view.opts['center'] = center
+        self.view.opts['distance'] = max(span * 1.2, 1.0)
+
     def _update_scatter(self):
         color_arrays = []
         for strip_index in sorted(self.strips.keys()):
             strip = self.strips[strip_index]
             leds = strip.get("led_colors", [])
-            color_arrays.append(
-                np.array(
-                    [QColor(r, g, b).getRgbF() for r, g, b in leds],
-                    dtype=float,
-                )
-            )
+            display = []
+            for r, g, b in leds:
+                if r == 0 and g == 0 and b == 0:
+                    disp = QColor(50, 50, 50)
+                else:
+                    disp = QColor(r, g, b)
+                display.append(disp.getRgbF())
+            color_arrays.append(np.array(display, dtype=float))
         if color_arrays:
             colors = np.concatenate(color_arrays, axis=0)
         else:
@@ -115,6 +141,7 @@ class LED3DWidget(QWidget):
             strip["led_count"] = len(colors)
             self._rebuild_positions()
             self._update_scatter()
+            self._update_camera()
             return True
         if string.startswith("nodes:"):
             parts = string.split(":")
@@ -147,6 +174,7 @@ class LED3DWidget(QWidget):
                     strip["led_colors"] = strip["led_colors"][:led_count]
                 self._rebuild_positions()
                 self._update_scatter()
+                self._update_camera()
                 return True
         return False
 
