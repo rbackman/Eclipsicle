@@ -63,6 +63,7 @@ public:
     {
         return end;
     }
+    Node3D getLEDPosition(int ledIndex);
     void setPixel(int index, led color);
     void setPixelHSV(int index, float hue, float saturation, float value);
     String describe();

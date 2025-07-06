@@ -24,6 +24,15 @@ void StripAnimation::setPixel(int index, led color)
         stripState->setPixel(index + start, color);
     }
 }
+Node3D StripAnimation::getLEDPosition(int ledIndex)
+{
+    if (ledIndex < 0 || ledIndex >= numLEDs())
+    {
+        Serial.printf("Invalid LED index %d for strip animation\n", ledIndex);
+        return Node3D{};
+    }
+    return stripState->getNode3D(ledIndex + start);
+}
 void StripAnimation::setPixelHSV(int index, float hue, float saturation, float value)
 {
 
@@ -524,7 +533,7 @@ void SphereAnimation::update()
 
     for (int i = 0; i < numLEDs(); i++)
     {
-        Node3D pos = stripState->getLEDPosition(i + start);
+        Node3D pos = getLEDPosition(i + start);
         float dx = pos.x - cx;
         float dy = pos.y - cy;
         float dz = pos.z - cz;
@@ -546,7 +555,7 @@ void PlaneAnimation::update()
 
     for (int i = 0; i < numLEDs(); i++)
     {
-        Node3D pos = stripState->getLEDPosition(i + start);
+        Node3D pos = getLEDPosition(i + start);
         float delta = fabs(pos.z - planeZ);
         float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
         if (t <= 0.0f)

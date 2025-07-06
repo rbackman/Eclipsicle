@@ -905,20 +905,26 @@ bool StripState::respondToParameterMessage(parameter_message parameter)
     return false;
 }
 
-Node3D StripState::getLEDPosition(int ledIndex) const {
-    if (nodes.empty()) {
+Node3D StripState::getLEDPosition(int ledIndex)
+{
+    if (nodes.empty())
+    {
         return {ledIndex, float(ledIndex), 0.0f, 0.0f};
     }
-    if (ledIndex <= nodes.front().index) {
+    if (ledIndex <= nodes.front().index)
+    {
         return {ledIndex, nodes.front().x, nodes.front().y, nodes.front().z};
     }
-    if (ledIndex >= nodes.back().index) {
+    if (ledIndex >= nodes.back().index)
+    {
         return {ledIndex, nodes.back().x, nodes.back().y, nodes.back().z};
     }
-    for (size_t i = 0; i < nodes.size() - 1; ++i) {
+    for (size_t i = 0; i < nodes.size() - 1; ++i)
+    {
         const auto &a = nodes[i];
         const auto &b = nodes[i + 1];
-        if (ledIndex >= a.index && ledIndex <= b.index) {
+        if (ledIndex >= a.index && ledIndex <= b.index)
+        {
             float t = float(ledIndex - a.index) / float(b.index - a.index);
             float x = a.x + (b.x - a.x) * t;
             float y = a.y + (b.y - a.y) * t;
