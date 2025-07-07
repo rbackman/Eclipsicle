@@ -221,13 +221,12 @@ int ParameterManager::getInt(ParameterID id)
     {
         if (intParams[i].id == id)
         {
-
             return intParams[i].value;
         }
     }
     auto pname = getParameterName(id);
-    intParams.push_back({id, pname, 0, 0, 0});
-    Serial.printf("Error Int Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
+    // intParams.push_back({id, pname, 0, 0, 0});
+    Serial.printf("error: Int Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
     return 0;
 }
 bool ParameterManager::getBool(ParameterID id)

@@ -170,7 +170,7 @@ bool LEDManager::handleLEDCommand(String command)
     else if (command.startsWith("strip:"))
     {
         int strip = command.substring(6).toInt();
-
+        Serial.printf("Setting current strip to %d\n", strip);
         setInt(PARAM_CURRENT_STRIP, strip);
         return true;
     }
@@ -207,6 +207,7 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
     }
     if (parameter.paramID == PARAM_CURRENT_STRIP)
     {
+        Serial.printf("Setting current strip to %d\n", parameter.value);
         setInt(PARAM_CURRENT_STRIP, parameter.value);
         for (int i = 0; i < stripStates.size(); i++)
         {
@@ -232,7 +233,7 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
             }
             return true;
         }
-        // Serial.println("update current strip " + String(currentStrip));
+        Serial.println("update current strip " + String(currentStrip));
         if (currentStrip < 0 || currentStrip >= stripStates.size())
         {
             Serial.printf("Invalid current strip %d, valid range is 0 to %d\n", currentStrip, stripStates.size() - 1);

@@ -133,13 +133,13 @@ void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart
         {
             led temp;
             colorFromHSV(temp, hue, 1.0f, value * (1.0f - frac));
-            blendPixel(lower + start, temp);
+            blendPixel(lower, temp);
         }
         if (upper >= 0 && upper < numLEDs())
         {
             led temp;
             colorFromHSV(temp, hue, 1.0f, value * frac);
-            blendPixel(upper + start, temp);
+            blendPixel(upper, temp);
         }
     }
 }
@@ -543,9 +543,10 @@ void SphereAnimation::update()
     float radius = getFloat(PARAM_RADIUS);
     float thick = getFloat(PARAM_THICKNESS);
 
+    int insphereCount = 0;
     for (int i = 0; i < numLEDs(); i++)
     {
-        Node3D pos = getLEDPosition(i + start);
+        Node3D pos = getLEDPosition(i);
         float dx = pos.x - cx;
         float dy = pos.y - cy;
         float dz = pos.z - cz;
@@ -554,7 +555,12 @@ void SphereAnimation::update()
         float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
         if (t <= 0.0f)
             continue;
+        insphereCount++;
         setPixelHSV(i, hue / 360.0f, 1.0f, (brightness / 255.0f) * t);
+    }
+    if (isVerbose())
+    {
+        Serial.printf("Sphere animation: center(%f, %f, %f) radius: %f thickness: %f insphere count: %d\n", cx, cy, cz, radius, thick, insphereCount);
     }
 }
 
@@ -567,7 +573,7 @@ void PlaneAnimation::update()
 
     for (int i = 0; i < numLEDs(); i++)
     {
-        Node3D pos = getLEDPosition(i + start);
+        Node3D pos = getLEDPosition(i);
         float delta = fabs(pos.z - planeZ);
         float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
         if (t <= 0.0f)

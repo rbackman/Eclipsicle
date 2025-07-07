@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 0.979,
+    "value": 1,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -320,7 +320,7 @@
   "PARAM_ACCELERATION": {
     "id": 9,
     "type": "float",
-    "value": 23.552,
+    "value": 0,
     "name": "Accel",
     "min": -10,
     "max": 100
@@ -382,7 +382,7 @@
   "PARAM_POS_Z": {
     "id": 50,
     "type": "float",
-    "value": 0,
+    "value": 0.826,
     "name": "PosZ",
     "min": -100,
     "max": 100
@@ -390,7 +390,7 @@
   "PARAM_RADIUS": {
     "id": 51,
     "type": "float",
-    "value": 10,
+    "value": 9.302,
     "name": "Radius",
     "min": 0,
     "max": 200
@@ -398,7 +398,7 @@
   "PARAM_THICKNESS": {
     "id": 52,
     "type": "float",
-    "value": 1,
+    "value": 1.908,
     "name": "Thick",
     "min": 0,
     "max": 50

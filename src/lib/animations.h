@@ -35,11 +35,11 @@ class StripAnimation : public ParameterManager
 {
     ANIMATION_TYPE animationType;
     StripState *stripState;
+    int start = -1; // first led in the parent strip -1 means beginning of the strip
+    int end = -1;   // last led in the parent strip -1 means end of the strip
 
 protected:
     float scrollPos = 0.0f;
-    int start = -1; // first led in the parent strip -1 means beginning of the strip
-    int end = -1;   // last led in the parent strip -1 means end of the strip
 
 public:
     virtual void update() = 0;
