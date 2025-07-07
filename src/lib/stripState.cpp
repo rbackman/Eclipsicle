@@ -512,7 +512,7 @@ bool StripState::parseAnimationScript(String script)
             configFile.trim();
             continue;
         }
-        if (line.equalsIgnoreCase("Variables:") || line.equalsIgnoreCase("VARIABLES:"))
+        if (line.equalsIgnoreCase("Variables:") || line.equalsIgnoreCase("VARIABLES:") || line.equalsIgnoreCase("v:"))
         {
             if (isVerbose())
             {
@@ -523,7 +523,7 @@ bool StripState::parseAnimationScript(String script)
             inAnims = false;
             continue;
         }
-        if (line.equalsIgnoreCase("Parameters:") || line.equalsIgnoreCase("PARAMETERS:"))
+        if (line.equalsIgnoreCase("Parameters:") || line.equalsIgnoreCase("PARAMETERS:") || line.equalsIgnoreCase("p:"))
         {
             if (isVerbose())
             {
@@ -534,7 +534,7 @@ bool StripState::parseAnimationScript(String script)
             inVars = false;
             continue;
         }
-        if (line.equalsIgnoreCase("Animations:") || line.equalsIgnoreCase("ANIMATIONS:"))
+        if (line.equalsIgnoreCase("Animations:") || line.equalsIgnoreCase("ANIMATIONS:") || line.equalsIgnoreCase("a:"))
         {
             if (isVerbose())
             {

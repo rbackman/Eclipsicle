@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton, QHBoxLayout, QCheckBox, QSpinBox
+from PyQt5.QtWidgets import (QTextEdit, QLineEdit, QVBoxLayout, QWidget,
+                             QMessageBox, QPushButton, QHBoxLayout, QCheckBox,
+                             QSpinBox, QLabel)
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 
 import serial
@@ -22,6 +24,7 @@ class SerialConsole(QWidget):
 
         self.ser = None
         self.running = False  # Start off
+        self.last_error = ""
         self.string_signal.connect(self.broadcast_string)
         self.json_signal.connect(self.broadcast_json)
         try:
@@ -35,6 +38,10 @@ class SerialConsole(QWidget):
             return
 
         self.init_ui()
+        self.compact = False
+        self.full_visible = True
+        if self.last_error:
+            self.error_label.setText(self.last_error)
 
         self.append_signal.connect(self.output.append)
 
@@ -57,17 +64,43 @@ class SerialConsole(QWidget):
     def add_json_listener(self, listener):
         self.jsonListeners.append(listener)
 
+    def clear(self):
+        """Clear the output console."""
+        self.output.clear()
+        self.error_label.setText("")
+        self.last_error = ""
+
     def init_ui(self):
         layout = QVBoxLayout()
         self.output = QTextEdit()
         self.output.setReadOnly(True)
+        self.error_label = QLabel()
+        self.error_label.setStyleSheet("color: red")
+        self.error_label.setText("")
         self.input = QLineEdit()
         self.echo_checkbox = QCheckBox("Echo")
         self.echo_checkbox.setChecked(False)
+        # make the clear button a small trash icon
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.setIcon(self.style().standardIcon(
+            self.style().SP_DialogResetButton))
+
+        self.clear_button.clicked.connect(self.clear)
+        self.clear_button.setToolTip("Clear the output console")
+        self.clear_button.setShortcut("Ctrl+L")
+    # set size policy to fixed width
+
+        self.clear_button.setMaximumWidth(50)
 
         self.input.returnPressed.connect(self.manual_send)
+        hlayout = QHBoxLayout()
 
+        hlayout.addWidget(self.error_label)
+        hlayout.addStretch(1)
+        hlayout.addWidget(self.clear_button)
+        layout.addLayout(hlayout)
         layout.addWidget(self.output)
+
         hlayout = QHBoxLayout()
 
         self.verbose_checkbox = QCheckBox('Verbose')
@@ -84,6 +117,14 @@ class SerialConsole(QWidget):
         layout.addLayout(hlayout)
 
         self.setLayout(layout)
+
+    def showCompact(self, compact: bool):
+        """Show only the error label when compact is True."""
+        self.compact = compact
+        for w in (self.output, self.input, self.echo_checkbox,
+                  self.verbose_checkbox):
+            w.setVisible(not compact)
+        self.error_label.setVisible(compact)
 
     def request_states(self):
         motor = self.motors[self.motorToCheck]
@@ -128,6 +169,15 @@ class SerialConsole(QWidget):
         print(msg)
         if self.running:
             self.append_signal.emit(msg)
+
+    def logError(self, msg: str):
+        """Log an error message in red and remember it."""
+        self.last_error = msg
+        print(f"ERROR: {msg}")
+        if self.running:
+            self.append_signal.emit(f"<span style='color:red'>{msg}</span>")
+        if hasattr(self, 'error_label'):
+            self.error_label.setText(msg)
 
     def send_json(self, data):
         if not self.ser or not self.ser.is_open:

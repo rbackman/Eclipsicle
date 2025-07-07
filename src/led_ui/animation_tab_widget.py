@@ -201,7 +201,11 @@ class AnimationTabWidget(QWidget):
                     with open(path, "w") as f:
                         json.dump(animations, f, indent=2)
                 except Exception as e:
-                    print(f"Error saving animation map: {e}")
+                    if self.console:
+                        self.console.logError(
+                            f"Error saving animation map: {e}")
+                    else:
+                        print(f"Error saving animation map: {e}")
 
     def _eval_value(self, expr: str, variables: dict) -> str:
         """Evaluate an expression using the provided variables."""
@@ -230,8 +234,12 @@ class AnimationTabWidget(QWidget):
             lower = line.lower()
             if lower in ("animations:", "parameters:", "variables:"):
                 section = lower[:-1]
-                if section != "variables":
-                    lines.append(section.capitalize() + ":")
+                if section == "animations":
+                    lines.append("a:")
+                elif section == "parameters":
+                    lines.append("p:")
+                else:
+                    lines.append("v:")
                 continue
             if section == "variables":
                 if ':' in line:

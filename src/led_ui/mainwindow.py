@@ -50,7 +50,8 @@ class MainWindow(QMainWindow):
         self.splitter.setStretchFactor(1, 1)
         main_layout.addWidget(self.splitter, 1)
 
-        self.console.setVisible(False)
+        self.console.showCompact(True)
+        self.console.full_visible = False
         main_layout.addWidget(self.console)
         main_layout.addWidget(DeviceSelector(
             lambda port: self.console.connect(port), port))
@@ -159,8 +160,8 @@ class MainWindow(QMainWindow):
         if isinstance(self.sender(), QAction):
             visible = self.sender().isChecked()
         else:
-            visible = not self.console.isVisible()
-        self.console.setVisible(visible)
+            visible = not self.console.full_visible
+        self.console.showCompact(not visible)
         if hasattr(self, 'console_action'):
             self.console_action.setChecked(visible)
 

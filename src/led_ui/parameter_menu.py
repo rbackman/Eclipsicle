@@ -29,6 +29,17 @@ CONFIG_DIR = os.path.join("data", "configurations")
 ANIM_DIR = os.path.join("data", "animations")
 
 
+def _load_anim_names() -> set:
+    """Return set of animation names from animation_map.json."""
+    path = os.path.join(os.path.dirname(__file__), "animation_map.json")
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+        return {k.lower() for k in data.keys()}
+    except Exception:
+        return set()
+
+
 def save_parameter_map():
     """Persist the current ParameterMap to disk."""
     with open(PARAM_MAP_FILE, "w") as f:
@@ -58,10 +69,10 @@ MENU_TREE = {
             "Nebula": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
                        "PARAM_NOISE_SPEED", "PARAM_TIME_SCALE", "PARAM_NOISE_SCALE"],
             "Falling Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
-                               "PARAM_WIDTH", "PARAM_SPEED", "PARAM_TIME_SCALE",
+                               "PARAM_WIDTH",   "PARAM_TIME_SCALE",
                                "PARAM_HUE_VARIANCE"],
             "Sphere": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_RADIUS", "PARAM_THICKNESS", "PARAM_POS_X", "PARAM_POS_Y", "PARAM_POS_Z"],
-            "Plane": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Z"],
+            "Plane":  ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Z"],
             "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED", "PARAM_HUE", "PARAM_BRIGHTNESS",]
 
         },
@@ -267,7 +278,7 @@ class AnimationSendWidget(QWidget):
         self.led_selectLayout.addWidget(self.endSSpinbox)
         self.led_selectWidget.setVisible(False)
         self.overwrite_toggle = QCheckBox("Overwrite Animation")
-        self.overwrite_toggle.setChecked(False)
+        self.overwrite_toggle.setChecked(True)
         self.layout.addWidget(self.overwrite_toggle)
         self.partial_animation_toggle = QCheckBox("Partial Animation")
         self.partial_animation_toggle.setChecked(False)
@@ -369,6 +380,7 @@ class ParameterMenuWidget(QWidget):
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
         loadParameters()
+        self._validate_menu_tree()
         self.update_widgets_from_map()
         self.refresh_data_files()
 
@@ -406,6 +418,28 @@ class ParameterMenuWidget(QWidget):
             leaf = leaf.child(0)
         # self.tree.setCurrentItem(leaf)
 
+    def _validate_menu_tree(self):
+        names = _load_anim_names()
+        if not names:
+            return
+
+        def collect(branch):
+            out = []
+            if isinstance(branch, list):
+                return out
+            for key, sub in branch.items():
+                if isinstance(sub, (list, dict)):
+                    out.append(key)
+                if isinstance(sub, dict):
+                    out.extend(collect(sub))
+            return out
+
+        patterns = collect(MENU_TREE.get("Main", {}).get("Patterns", {}))
+        for p in patterns:
+            if p.lower().replace(" ", "") not in {n.replace(" ", "") for n in names}:
+                print(
+                    f"Warning: pattern '{p}' missing from animation_map.json")
+
     def get_tree_path(self, item: QTreeWidgetItem):
         """Get the full path of the item in the tree."""
         path = []
@@ -419,7 +453,7 @@ class ParameterMenuWidget(QWidget):
             return
         name = cur.text(0)
         treePath = self.get_tree_path(cur)
-        isPatternType = treePath[-2] == "Patterns"
+        isPatternType = "Patterns" in treePath
 
         # use treepath to look for an array in MENU_TREE
         treedata = MENU_TREE
@@ -427,16 +461,32 @@ class ParameterMenuWidget(QWidget):
             if part in treedata:
                 treedata = treedata[part]
             else:
-                print(f"Path {treePath} not found in MENU_TREE")
+                if self.console:
+                    self.console.logError(
+                        f"Path {treePath} not found in MENU_TREE")
+                else:
+                    print(f"Path {treePath} not found in MENU_TREE")
                 return
-        # if the last part is a list, it is a pattern type
-        if isinstance(treedata, list):
-            # has parameters so make a page
+
+        def _gather_params(branch):
+            if isinstance(branch, list):
+                return list(branch)
+            if isinstance(branch, dict):
+                out = []
+                for v in branch.values():
+                    out.extend(_gather_params(v))
+                return out
+            return []
+
+        param_list = []
+        if isinstance(treedata, list) or isinstance(treedata, dict):
+            param_list = _gather_params(treedata)
+
+        if param_list:
             if name not in self.cache:
-                # pmap = PARAM_MAP.get(name, [])
                 data = {}
 
-                for prm in treedata:
+                for prm in param_list:
                     if prm in ParameterMap:
                         pdata = ParameterMap[prm]
                         dtype = pdata.get("type", "int")
@@ -469,11 +519,15 @@ class ParameterMenuWidget(QWidget):
                                 "max": pdata.get("max", 1.0)
                             }
                     else:
-                        print(f"Parameter {prm} not found in ParameterMap")
+                        if self.console:
+                            self.console.logError(
+                                f"Parameter {prm} not found in ParameterMap")
+                        else:
+                            print(f"Parameter {prm} not found in ParameterMap")
                         continue
 
                 print(
-                    f"Loading parameters for {name} with map: {treedata}  \n {data}   \n")
+                    f"Loading parameters for {name} with map: {param_list}  \n {data}   \n")
                 page = ParamPage(data,
                                  self.console) if data else QWidget()
                 self.cache[name] = page
@@ -507,6 +561,11 @@ class ParameterMenuWidget(QWidget):
 
             data = obj["data"]
             checkParameters(data)
+            self.cache.clear()
+            while self.pages.count():
+                w = self.pages.widget(0)
+                self.pages.removeWidget(w)
+                w.deleteLater()
             return True
         if obj.get("type") == "stripState":
             self.stateText.setPlainText(json.dumps(obj, indent=2))
