@@ -29,6 +29,7 @@ public:
     void toggleMode();
     String getStripState(bool verbose = false);
     String getStripStateJson(bool verbose = false);
+    String getStripStateCompact(bool verbose = false);
     int getCurrentStrip();
     std::vector<StripState*> &getStrips() { return stripStates; }
     bool respondToParameterMessage(parameter_message parameter);

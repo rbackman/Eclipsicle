@@ -146,8 +146,69 @@ class AnimationTabWidget(QWidget):
         script = self.editor.toPlainText()
         if not script.strip():
             return
-        encoded = script.replace('\n', '|')
+        compressed = self._compress_script(script)
+        encoded = compressed.replace('\n', '|')
         self.console.send_cmd(f"script:{encoded}")
+
+    def _load_param_map(self):
+        """Return mapping of parameter names to IDs."""
+        path = os.path.join(os.path.dirname(__file__), "parameter_map.json")
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+            mapping = {}
+            for key, info in data.items():
+                pid = info.get("id")
+                name = info.get("name", "")
+                mapping[key.lower()] = pid
+                mapping[key.replace("PARAM_", "").lower()] = pid
+                if name:
+                    mapping[name.lower()] = pid
+            return mapping
+        except Exception:
+            return {}
+
+    def _compress_script(self, text: str) -> str:
+        """Replace parameter names with numeric IDs for compact transfer."""
+        mapping = self._load_param_map()
+        if not mapping:
+            return text
+        lines = []
+        section = None
+        for raw in text.splitlines():
+            line = raw.strip()
+            if not line:
+                continue
+            lower = line.lower()
+            if lower in ("animations:", "parameters:", "variables:"):
+                section = lower[:-1]
+                lines.append(section.capitalize() + ":")
+                continue
+            if section == "parameters":
+                if ':' in line:
+                    k, v = [p.strip() for p in line.split(':', 1)]
+                    pid = mapping.get(k.lower())
+                    if pid is not None:
+                        lines.append(f"{pid}:{v}")
+                        continue
+                lines.append(line)
+            elif section == "animations":
+                tokens = []
+                for t in line.split():
+                    if ':' in t:
+                        k, v = t.split(':', 1)
+                        kl = k.lower()
+                        pid = mapping.get(kl)
+                        if pid is not None and kl not in ("start", "end"):
+                            tokens.append(f"{pid}:{v}")
+                        else:
+                            tokens.append(f"{k}:{v}")
+                    else:
+                        tokens.append(t)
+                lines.append(' '.join(tokens))
+            else:
+                lines.append(line)
+        return '\n'.join(lines)
 
     def format_script(self):
         """Format the current script and warn about unknown parameters."""

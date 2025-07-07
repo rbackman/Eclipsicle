@@ -358,6 +358,13 @@ bool processCmd(String command)
     Serial.println(state + ";");
     return true;
   }
+  else if (command == "getStripStateCompact")
+  {
+    String state = ledManager->getStripStateCompact(true);
+    state.replace('\n', '|');
+    Serial.println(state);
+    return true;
+  }
 #ifdef USE_LEDS
   else if (ledManager->handleLEDCommand(command))
   {

@@ -67,6 +67,26 @@ String StripAnimation::describe()
     return desc;
 }
 
+String StripAnimation::describeCompact()
+{
+    String desc = getAnimationName(animationType).c_str();
+    desc += " start:" + String(start);
+    desc += " end:" + String(end);
+    for (const auto &p : getIntParameters())
+    {
+        desc += " " + String(p.id) + ":" + String(p.value);
+    }
+    for (const auto &p : getFloatParameters())
+    {
+        desc += " " + String(p.id) + ":" + String(p.value, 2);
+    }
+    for (const auto &p : getBoolParameters())
+    {
+        desc += " " + String(p.id) + ":" + String(p.value ? "1" : "0");
+    }
+    return desc;
+}
+
 void ParticleAnimation::updateRandomParticles()
 {
 

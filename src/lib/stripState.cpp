@@ -130,6 +130,30 @@ String StripState::getStripStateJson(bool verbose)
     return output;
 }
 
+String StripState::getStripStateCompact()
+{
+    String out = "Parameters:\n";
+    for (const auto &p : getIntParameters())
+    {
+        out += String(p.id) + ":" + String(p.value) + "\n";
+    }
+    for (const auto &p : getFloatParameters())
+    {
+        out += String(p.id) + ":" + String(p.value, 2) + "\n";
+    }
+    for (const auto &p : getBoolParameters())
+    {
+        out += String(p.id) + ":" + String(p.value ? "1" : "0") + "\n";
+    }
+    out += "Animations:\n";
+    for (const auto &anim : animations)
+    {
+        out += anim->describeCompact();
+        out += "\n";
+    }
+    return out;
+}
+
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
 {
     switch (animType)
@@ -509,20 +533,37 @@ bool StripState::parseAnimationScript(String script)
             {
                 val = String(variables[val]);
             }
-            key.toUpperCase();
-            String full = "PARAM_" + key;
-            ParameterID pid = getParameterID(full.c_str());
+            ParameterID pid = PARAM_UNKNOWN;
+            bool numeric = true;
+            for (int i = 0; i < key.length(); ++i)
+            {
+                if (!isDigit(key[i]))
+                {
+                    numeric = false;
+                    break;
+                }
+            }
+            if (numeric)
+            {
+                pid = (ParameterID)key.toInt();
+            }
+            else
+            {
+                key.toUpperCase();
+                String full = "PARAM_" + key;
+                pid = getParameterID(full.c_str());
+            }
             if (pid != PARAM_UNKNOWN)
             {
                 paramOverrides[pid] = val.toFloat();
                 if (isVerbose())
                 {
-                    Serial.printf("Parameter override: %s = %s\n", full.c_str(), val.c_str());
+                    Serial.printf("Parameter override: %d = %s\n", pid, val.c_str());
                 }
             }
             else
             {
-                Serial.printf("Unknown parameter in script: %s\n", full.c_str());
+                Serial.printf("Unknown parameter in script: %s\n", key.c_str());
             }
             continue;
         }
@@ -606,9 +647,26 @@ bool StripState::parseAnimationScript(String script)
                 }
                 else
                 {
-                    k.toUpperCase();
-                    String full = "PARAM_" + k;
-                    ParameterID pid = getParameterID(full.c_str());
+                    ParameterID pid = PARAM_UNKNOWN;
+                    bool numeric = true;
+                    for (int cidx = 0; cidx < k.length(); ++cidx)
+                    {
+                        if (!isDigit(k[cidx]))
+                        {
+                            numeric = false;
+                            break;
+                        }
+                    }
+                    if (numeric)
+                    {
+                        pid = (ParameterID)k.toInt();
+                    }
+                    else
+                    {
+                        k.toUpperCase();
+                        String full = "PARAM_" + k;
+                        pid = getParameterID(full.c_str());
+                    }
                     if (isBoolParameter(pid))
                     {
                         if (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("1"))
@@ -633,7 +691,7 @@ bool StripState::parseAnimationScript(String script)
                     }
                     else
                     {
-                        Serial.printf("Unknown parameter in script: %s\n", full.c_str());
+                        Serial.printf("Unknown parameter in script: %s\n", k.c_str());
                     }
                     if (pid != PARAM_UNKNOWN)
                     {
