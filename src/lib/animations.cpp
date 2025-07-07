@@ -520,7 +520,8 @@ void NebulaAnimation::update()
 
 void SingleColorAnimation::update()
 {
-    int hue = getInt(PARAM_HUE);
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float hueValue = hue / 360.0f;               // convert to 0-1 range
     float brightnessValue = brightness / 255.0f; // convert to 0-1 range
@@ -535,7 +536,8 @@ void SingleColorAnimation::update()
 
 void SphereAnimation::update()
 {
-    int hue = getInt(PARAM_HUE);
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float cx = getFloat(PARAM_POS_X);
     float cy = getFloat(PARAM_POS_Y);
@@ -552,11 +554,12 @@ void SphereAnimation::update()
         float dz = pos.z - cz;
         float dist = sqrtf(dx * dx + dy * dy + dz * dz);
         float delta = fabs(dist - radius);
-        float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
+        float t = 1.0f - clamp(thick > 0 ? delta / thick : 1.0f, 0.0f, 1.0f);
         if (t <= 0.0f)
             continue;
         insphereCount++;
-        setPixelHSV(i, hue / 360.0f, 1.0f, (brightness / 255.0f) * t);
+        float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
+        setPixelHSV(i, hue, 1.0f, brightness / 255.0f);
     }
     if (isVerbose())
     {
@@ -566,7 +569,8 @@ void SphereAnimation::update()
 
 void PlaneAnimation::update()
 {
-    int hue = getInt(PARAM_HUE);
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float planeZ = getFloat(PARAM_POS_Z);
     float thick = getFloat(PARAM_THICKNESS);
@@ -575,9 +579,10 @@ void PlaneAnimation::update()
     {
         Node3D pos = getLEDPosition(i);
         float delta = fabs(pos.z - planeZ);
-        float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
+        float t = 1.0f - clamp(thick > 0 ? delta / thick : 1.0f, 0.0f, 1.0f);
         if (t <= 0.0f)
             continue;
-        setPixelHSV(i, hue / 360.0f, 1.0f, (brightness / 255.0f) * t);
+        float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
+        setPixelHSV(i, hue, 1.0f, brightness / 255.0f);
     }
 }

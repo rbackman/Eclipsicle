@@ -197,7 +197,9 @@ public:
     void update();
     SphereAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {})
         : StripAnimation(state, start, end, ANIMATION_TYPE_SPHERE,
-                         {PARAM_HUE, PARAM_BRIGHTNESS, PARAM_POS_X, PARAM_POS_Y, PARAM_POS_Z, PARAM_RADIUS, PARAM_THICKNESS},
+                         {PARAM_HUE, PARAM_HUE_END, PARAM_BRIGHTNESS,
+                          PARAM_POS_X, PARAM_POS_Y, PARAM_POS_Z,
+                          PARAM_RADIUS, PARAM_THICKNESS},
                          paramOverrides)
     {
     }
@@ -209,7 +211,8 @@ public:
     void update();
     PlaneAnimation(StripState *state, int start, int end, std::map<ParameterID, float> paramOverrides = {})
         : StripAnimation(state, start, end, ANIMATION_TYPE_PLANE,
-                         {PARAM_HUE, PARAM_BRIGHTNESS, PARAM_POS_Z, PARAM_THICKNESS},
+                         {PARAM_HUE, PARAM_HUE_END, PARAM_BRIGHTNESS,
+                          PARAM_POS_Z, PARAM_THICKNESS},
                          paramOverrides)
     {
     }
