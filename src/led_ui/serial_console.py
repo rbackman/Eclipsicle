@@ -1,4 +1,6 @@
-from PyQt5.QtWidgets import QTextEdit, QLineEdit, QVBoxLayout, QWidget, QMessageBox, QPushButton, QHBoxLayout, QCheckBox, QSpinBox
+from PyQt5.QtWidgets import (QTextEdit, QLineEdit, QVBoxLayout, QWidget,
+                             QMessageBox, QPushButton, QHBoxLayout, QCheckBox,
+                             QSpinBox, QLabel)
 from PyQt5.QtCore import pyqtSignal, QTimer, Qt
 
 import serial
@@ -36,6 +38,8 @@ class SerialConsole(QWidget):
             return
 
         self.init_ui()
+        self.compact = False
+        self.full_visible = True
         if self.last_error:
             self.error_label.setText(self.last_error)
 
@@ -91,6 +95,19 @@ class SerialConsole(QWidget):
         layout.addLayout(hlayout)
 
         self.setLayout(layout)
+
+    def showCompact(self, compact: bool):
+        """Show only the error label when compact is True."""
+        self.compact = compact
+        for w in (self.output, self.input, self.echo_checkbox,
+                  self.verbose_checkbox):
+            w.setVisible(not compact)
+
+    def setVisible(self, visible: bool):
+        """Override to keep the error label visible when hiding."""
+        self.full_visible = visible
+        self.showCompact(not visible)
+        super().setVisible(True)
 
     def request_states(self):
         motor = self.motors[self.motorToCheck]
