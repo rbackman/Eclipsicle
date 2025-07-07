@@ -460,7 +460,10 @@ class ParameterMenuWidget(QWidget):
             if part in treedata:
                 treedata = treedata[part]
             else:
-                print(f"Path {treePath} not found in MENU_TREE")
+                if self.console:
+                    self.console.logError(f"Path {treePath} not found in MENU_TREE")
+                else:
+                    print(f"Path {treePath} not found in MENU_TREE")
                 return
         def _gather_params(branch):
             if isinstance(branch, list):
@@ -513,7 +516,11 @@ class ParameterMenuWidget(QWidget):
                                 "max": pdata.get("max", 1.0)
                             }
                     else:
-                        print(f"Parameter {prm} not found in ParameterMap")
+                        if self.console:
+                            self.console.logError(
+                                f"Parameter {prm} not found in ParameterMap")
+                        else:
+                            print(f"Parameter {prm} not found in ParameterMap")
                         continue
 
                 print(

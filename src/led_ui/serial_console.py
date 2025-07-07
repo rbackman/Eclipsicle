@@ -22,6 +22,7 @@ class SerialConsole(QWidget):
 
         self.ser = None
         self.running = False  # Start off
+        self.last_error = ""
         self.string_signal.connect(self.broadcast_string)
         self.json_signal.connect(self.broadcast_json)
         try:
@@ -35,6 +36,8 @@ class SerialConsole(QWidget):
             return
 
         self.init_ui()
+        if self.last_error:
+            self.error_label.setText(self.last_error)
 
         self.append_signal.connect(self.output.append)
 
@@ -61,6 +64,9 @@ class SerialConsole(QWidget):
         layout = QVBoxLayout()
         self.output = QTextEdit()
         self.output.setReadOnly(True)
+        self.error_label = QLabel()
+        self.error_label.setStyleSheet("color: red")
+        self.error_label.setText("")
         self.input = QLineEdit()
         self.echo_checkbox = QCheckBox("Echo")
         self.echo_checkbox.setChecked(False)
@@ -68,6 +74,7 @@ class SerialConsole(QWidget):
         self.input.returnPressed.connect(self.manual_send)
 
         layout.addWidget(self.output)
+        layout.addWidget(self.error_label)
         hlayout = QHBoxLayout()
 
         self.verbose_checkbox = QCheckBox('Verbose')
@@ -128,6 +135,15 @@ class SerialConsole(QWidget):
         print(msg)
         if self.running:
             self.append_signal.emit(msg)
+
+    def logError(self, msg: str):
+        """Log an error message in red and remember it."""
+        self.last_error = msg
+        print(f"ERROR: {msg}")
+        if self.running:
+            self.append_signal.emit(f"<span style='color:red'>{msg}</span>")
+        if hasattr(self, 'error_label'):
+            self.error_label.setText(msg)
 
     def send_json(self, data):
         if not self.ser or not self.ser.is_open:

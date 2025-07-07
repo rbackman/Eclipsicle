@@ -201,7 +201,11 @@ class AnimationTabWidget(QWidget):
                     with open(path, "w") as f:
                         json.dump(animations, f, indent=2)
                 except Exception as e:
-                    print(f"Error saving animation map: {e}")
+                    if self.console:
+                        self.console.logError(
+                            f"Error saving animation map: {e}")
+                    else:
+                        print(f"Error saving animation map: {e}")
 
     def _eval_value(self, expr: str, variables: dict) -> str:
         """Evaluate an expression using the provided variables."""
