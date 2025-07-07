@@ -64,6 +64,12 @@ class SerialConsole(QWidget):
     def add_json_listener(self, listener):
         self.jsonListeners.append(listener)
 
+    def clear(self):
+        """Clear the output console."""
+        self.output.clear()
+        self.error_label.setText("")
+        self.last_error = ""
+
     def init_ui(self):
         layout = QVBoxLayout()
         self.output = QTextEdit()
@@ -74,11 +80,27 @@ class SerialConsole(QWidget):
         self.input = QLineEdit()
         self.echo_checkbox = QCheckBox("Echo")
         self.echo_checkbox.setChecked(False)
+        # make the clear button a small trash icon
+        self.clear_button = QPushButton("Clear")
+        self.clear_button.setIcon(self.style().standardIcon(
+            self.style().SP_DialogResetButton))
+
+        self.clear_button.clicked.connect(self.clear)
+        self.clear_button.setToolTip("Clear the output console")
+        self.clear_button.setShortcut("Ctrl+L")
+    # set size policy to fixed width
+
+        self.clear_button.setMaximumWidth(50)
 
         self.input.returnPressed.connect(self.manual_send)
+        hlayout = QHBoxLayout()
 
+        hlayout.addWidget(self.error_label)
+        hlayout.addStretch(1)
+        hlayout.addWidget(self.clear_button)
+        layout.addLayout(hlayout)
         layout.addWidget(self.output)
-        layout.addWidget(self.error_label)
+
         hlayout = QHBoxLayout()
 
         self.verbose_checkbox = QCheckBox('Verbose')
@@ -102,12 +124,7 @@ class SerialConsole(QWidget):
         for w in (self.output, self.input, self.echo_checkbox,
                   self.verbose_checkbox):
             w.setVisible(not compact)
-
-    def setVisible(self, visible: bool):
-        """Override to keep the error label visible when hiding."""
-        self.full_visible = visible
-        self.showCompact(not visible)
-        super().setVisible(True)
+        self.error_label.setVisible(compact)
 
     def request_states(self):
         motor = self.motors[self.motorToCheck]

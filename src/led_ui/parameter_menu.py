@@ -69,10 +69,10 @@ MENU_TREE = {
             "Nebula": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
                        "PARAM_NOISE_SPEED", "PARAM_TIME_SCALE", "PARAM_NOISE_SCALE"],
             "Falling Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
-                               "PARAM_WIDTH", "PARAM_SPEED", "PARAM_TIME_SCALE",
+                               "PARAM_WIDTH",   "PARAM_TIME_SCALE",
                                "PARAM_HUE_VARIANCE"],
             "Sphere": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_RADIUS", "PARAM_THICKNESS", "PARAM_POS_X", "PARAM_POS_Y", "PARAM_POS_Z"],
-            "Plane": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Z"],
+            "Plane":  ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Z"],
             "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED", "PARAM_HUE", "PARAM_BRIGHTNESS",]
 
         },
@@ -278,7 +278,7 @@ class AnimationSendWidget(QWidget):
         self.led_selectLayout.addWidget(self.endSSpinbox)
         self.led_selectWidget.setVisible(False)
         self.overwrite_toggle = QCheckBox("Overwrite Animation")
-        self.overwrite_toggle.setChecked(False)
+        self.overwrite_toggle.setChecked(True)
         self.layout.addWidget(self.overwrite_toggle)
         self.partial_animation_toggle = QCheckBox("Partial Animation")
         self.partial_animation_toggle.setChecked(False)
@@ -437,7 +437,8 @@ class ParameterMenuWidget(QWidget):
         patterns = collect(MENU_TREE.get("Main", {}).get("Patterns", {}))
         for p in patterns:
             if p.lower().replace(" ", "") not in {n.replace(" ", "") for n in names}:
-                print(f"Warning: pattern '{p}' missing from animation_map.json")
+                print(
+                    f"Warning: pattern '{p}' missing from animation_map.json")
 
     def get_tree_path(self, item: QTreeWidgetItem):
         """Get the full path of the item in the tree."""
@@ -461,10 +462,12 @@ class ParameterMenuWidget(QWidget):
                 treedata = treedata[part]
             else:
                 if self.console:
-                    self.console.logError(f"Path {treePath} not found in MENU_TREE")
+                    self.console.logError(
+                        f"Path {treePath} not found in MENU_TREE")
                 else:
                     print(f"Path {treePath} not found in MENU_TREE")
                 return
+
         def _gather_params(branch):
             if isinstance(branch, list):
                 return list(branch)

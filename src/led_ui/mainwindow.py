@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
             visible = self.sender().isChecked()
         else:
             visible = not self.console.full_visible
-        self.console.setVisible(visible)
+        self.console.showCompact(not visible)
         if hasattr(self, 'console_action'):
             self.console_action.setChecked(visible)
 
