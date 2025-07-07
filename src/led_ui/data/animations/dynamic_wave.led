@@ -1,0 +1,6 @@
+Variables:
+    loop_length:10
+Animations:
+    Rainbow repeat:2*sin(t*pi) speed:0
+Parameters:
+    brightness:200

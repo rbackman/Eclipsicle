@@ -241,84 +241,6 @@ void StripState::addAnimation(ANIMATION_TYPE anim, int start, int end, std::map<
 
     animations.emplace_back(std::move(animation));
 }
-void StripState::update()
-{
-    counter++;
-    clearPixels();
-    if (beatSize > 0.1)
-    {
-        float beatFade = getFloat(PARAM_BEAT_FADE);
-        int beatMaxSize = getInt(PARAM_BEAT_MAX_SIZE);
-
-        beatSize = beatSize - beatFade;
-        if (beatSize < 1)
-        {
-            beatSize = 0;
-        }
-        else if (beatSize > beatMaxSize)
-        {
-            beatSize = beatMaxSize;
-        }
-    }
-    else
-    {
-        beatSize = 0;
-    }
-    switch (ledState)
-    {
-    case LED_STATE_IDLE:
-
-        break;
-
-    case LED_STATE_SINGLE_ANIMATION:
-
-    case LED_STATE_MULTI_ANIMATION:
-    {
-
-        for (int i = 0; i < animations.size(); i++)
-        {
-            animations[i].get()->update();
-        }
-    }
-
-    break;
-
-    case LED_STATE_POINT_CONTROL:
-    {
-
-        int pointPosition = getInt(PARAM_CURRENT_LED);
-        int brightness = getInt(PARAM_BRIGHTNESS);
-        int pointHue = getInt(PARAM_HUE);
-        int currentStrip = getInt(PARAM_CURRENT_STRIP);
-        // point control uses full brightness; colour conversion expects value in
-        // the range 0-1
-        float value = (float)brightness / 255.0f;
-        float hue = (float)pointHue / 360.0f;
-        colorFromHSV(tempColor, hue, 1.0f, value);
-
-        if (pointPosition >= 0 && pointPosition < numLEDS)
-        {
-            setPixel(pointPosition, tempColor);
-        }
-        else
-        {
-            // Serial.printf("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
-        }
-    }
-    break;
-    default:
-        break;
-    }
-
-    if (simulateCount > 0)
-    {
-        if (counter % simulateCount == 0)
-        {
-            String compressed = rleCompresssCRGB(leds, numLEDS);
-            Serial.printf("\nsim:%d:%s\n", stripIndex, compressed.c_str());
-        }
-    }
-}
 enum MatchType
 {
     MATCH_TYPE_NONE,
@@ -396,7 +318,34 @@ static float parseFactor(const String &expr, int &pos, const std::map<String, fl
     {
         return 0.0f;
     }
-    if ((token[0] >= '0' && token[0] <= '9') || token[0] == '.' || (token[0] == '-' && token.length() > 1))
+    skipSpaces(expr, pos);
+    if (pos < expr.length() && expr[pos] == '(')
+    {
+        // function call like sin(expr)
+        pos++; // skip '('
+        float arg = parseExpression(expr, pos, vars);
+        skipSpaces(expr, pos);
+        if (pos < expr.length() && expr[pos] == ')')
+            pos++;
+        if (token.equalsIgnoreCase("sin"))
+        {
+            val = sin(arg);
+        }
+        else if (token.equalsIgnoreCase("cos"))
+        {
+            val = cos(arg);
+        }
+        else if (token.equalsIgnoreCase("noise"))
+        {
+            val = inoise8((uint16_t)(arg * 1000)) / 255.0f;
+        }
+        else
+        {
+            // unknown function
+            val = 0.0f;
+        }
+    }
+    else if ((token[0] >= '0' && token[0] <= '9') || token[0] == '.' || (token[0] == '-' && token.length() > 1))
     {
         val = token.toFloat();
     }
@@ -406,6 +355,10 @@ static float parseFactor(const String &expr, int &pos, const std::map<String, fl
         if (it != vars.end())
         {
             val = it->second;
+        }
+        else if (token.equalsIgnoreCase("pi"))
+        {
+            val = M_PI;
         }
     }
     if (neg)
@@ -469,10 +422,12 @@ static float parseExpression(const String &expr, int &pos, const std::map<String
     return val;
 }
 
-static float evaluateExpression(const String &expr, const std::map<String, float> &vars)
+static float evaluateExpression(const String &expr, const std::map<String, float> &vars, float t = 0.0f)
 {
+    std::map<String, float> v = vars;
+    v["t"] = t;
     int pos = 0;
-    return parseExpression(expr, pos, vars);
+    return parseExpression(expr, pos, v);
 }
 
 bool StripState::parseAnimationScript(String script)
@@ -491,6 +446,7 @@ bool StripState::parseAnimationScript(String script)
         int start;
         int end;
         std::map<ParameterID, float> params;
+        std::map<ParameterID, String> exprs;
     };
     std::vector<AnimLine> anims;
 
@@ -621,6 +577,7 @@ bool StripState::parseAnimationScript(String script)
             int start = 0;
             int end = getNumLEDS() - 1;
             std::map<ParameterID, float> params;
+            std::map<ParameterID, String> exprs;
             for (int i = 1; i < tokens.size(); ++i)
             {
                 String t = tokens[i];
@@ -631,6 +588,7 @@ bool StripState::parseAnimationScript(String script)
                 String v = t.substring(c + 1);
                 k.trim();
                 v.trim();
+                String rawV = v;
                 if (variables.find(v) != variables.end())
                 {
                     v = String(variables[v]);
@@ -725,21 +683,58 @@ bool StripState::parseAnimationScript(String script)
                     }
                     if (pid != PARAM_UNKNOWN)
                     {
-                        params[pid] = v.toFloat();
+                        auto isNumeric = [](const String &s)
+                        {
+                            if (s.length() == 0)
+                                return false;
+                            for (int ii = 0; ii < s.length(); ++ii)
+                            {
+                                char ch = s[ii];
+                                if (!(isdigit(ch) || ch == '.' || ch == '-'))
+                                    return false;
+                            }
+                            return true;
+                        };
+                        bool dynamic = rawV.indexOf('t') != -1 || rawV.indexOf("sin") != -1 || rawV.indexOf("noise") != -1;
+                        if (!dynamic && !isNumeric(v))
+                        {
+                            dynamic = true;
+                        }
+                        if (dynamic)
+                        {
+                            exprs[pid] = rawV;
+                        }
+                        params[pid] = evaluateExpression(v, variables, 0.0f);
+                        if (isVerbose())
+                        {
+                            Serial.printf("\tParameter %s = %s (%.2f)\n", k.c_str(), v.c_str(), params[pid]);
+                        }
                     }
                 }
             }
-            anims.push_back({type, start, end, params});
+            anims.push_back({type, start, end, params, exprs});
         }
     }
 
     ledState = LED_STATE_MULTI_ANIMATION;
     animations.clear();
+    dynamicParamExprs.clear();
 
-     for (const auto &a : anims)
+    for (const auto &a : anims)
     {
         addAnimation(a.type, a.start, a.end, a.params);
+        dynamicParamExprs.push_back(a.exprs);
     }
+    scriptVariables = variables;
+    if (variables.find("loop_length") != variables.end())
+    {
+        loopLength = variables["loop_length"] * 1000.0f;
+    }
+    else if (variables.find("looplength") != variables.end())
+    {
+        loopLength = variables["looplength"] * 1000.0f;
+    }
+    timelineStart = millis();
     return true;
 }
 void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params)
@@ -1048,6 +1043,106 @@ Vec3D StripState::getLEDPosition(int ledIndex)
         }
     }
     return {0.0f, 0.0f, 0.0f};
+}
+
+void StripState::update()
+{
+    counter++;
+    clearPixels();
+    if (beatSize > 0.1)
+    {
+        float beatFade = getFloat(PARAM_BEAT_FADE);
+        int beatMaxSize = getInt(PARAM_BEAT_MAX_SIZE);
+
+        beatSize = beatSize - beatFade;
+        if (beatSize < 1)
+        {
+            beatSize = 0;
+        }
+        else if (beatSize > beatMaxSize)
+        {
+            beatSize = beatMaxSize;
+        }
+    }
+    else
+    {
+        beatSize = 0;
+    }
+    switch (ledState)
+    {
+    case LED_STATE_IDLE:
+        break;
+
+    case LED_STATE_SINGLE_ANIMATION:
+    case LED_STATE_MULTI_ANIMATION:
+    {
+        float t = 0.0f;
+        if (loopLength > 0)
+        {
+            unsigned long elapsed = millis() - timelineStart;
+            t = fmod((float)elapsed, loopLength) / loopLength;
+        }
+
+        for (int i = 0; i < animations.size(); i++)
+        {
+            if (i < dynamicParamExprs.size())
+            {
+                for (const auto &p : dynamicParamExprs[i])
+                {
+                    float val = evaluateExpression(p.second, scriptVariables, t);
+                    if (isFloatParameter(p.first))
+                    {
+                        animations[i]->setFloat(p.first, val);
+                    }
+                    else if (isIntParameter(p.first))
+                    {
+                        animations[i]->setInt(p.first, (int)val);
+                    }
+                    else if (isBoolParameter(p.first))
+                    {
+                        animations[i]->setBool(p.first, val != 0.0f);
+                    }
+                }
+            }
+            animations[i].get()->update();
+        }
+    }
+    break;
+
+    case LED_STATE_POINT_CONTROL:
+    {
+        int pointPosition = getInt(PARAM_CURRENT_LED);
+        int brightness = getInt(PARAM_BRIGHTNESS);
+        int pointHue = getInt(PARAM_HUE);
+        int currentStrip = getInt(PARAM_CURRENT_STRIP);
+        // point control uses full brightness; colour conversion expects value in
+        // the range 0-1
+        float value = (float)brightness / 255.0f;
+        float hue = (float)pointHue / 360.0f;
+        colorFromHSV(tempColor, hue, 1.0f, value);
+
+        if (pointPosition >= 0 && pointPosition < numLEDS)
+        {
+            setPixel(pointPosition, tempColor);
+        }
+        else
+        {
+            // Serial.printf("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
+        }
+    }
+    break;
+    default:
+        break;
+    }
+
+    if (simulateCount > 0)
+    {
+        if (counter % simulateCount == 0)
+        {
+            String compressed = rleCompresssCRGB(leds, numLEDS);
+            Serial.printf("\nsim:%d:%s\n", stripIndex, compressed.c_str());
+        }
+    }
 }
 
 #endif
