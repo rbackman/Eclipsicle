@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 60,
+    "value": 280,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 120,
+    "value": 165,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -80,7 +80,7 @@
   "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 5,
+    "value": 13,
     "name": "Width",
     "min": 1,
     "max": 60
@@ -104,7 +104,7 @@
   "PARAM_SPAWN_RATE": {
     "id": 15,
     "type": "int",
-    "value": 31,
+    "value": 40,
     "name": "Spawn",
     "min": 1,
     "max": 40
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 255,
+    "value": 216,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -120,7 +120,7 @@
   "PARAM_FADE": {
     "id": 4,
     "type": "int",
-    "value": 219,
+    "value": 100,
     "name": "Fade",
     "min": 0,
     "max": 255
@@ -208,15 +208,15 @@
   "PARAM_CURRENT_STRIP": {
     "id": 33,
     "type": "int",
-    "value": 0,
+    "value": -1,
     "name": "CurrentStrip",
-    "min": 0,
-    "max": 3
+    "min": -1,
+    "max": 4
   },
   "PARAM_CURRENT_LED": {
     "id": 34,
     "type": "int",
-    "value": 1,
+    "value": 87,
     "name": "CurrentLED",
     "min": 0,
     "max": 255
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 1,
+    "value": 191.935,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -344,7 +344,7 @@
   "PARAM_NOISE_SPEED": {
     "id": 44,
     "type": "float",
-    "value": 0.1,
+    "value": 3.339,
     "name": "NSpd",
     "min": 0,
     "max": 5
@@ -366,7 +366,7 @@
   "PARAM_POS_X": {
     "id": 48,
     "type": "float",
-    "value": 0,
+    "value": -7.2,
     "name": "PosX",
     "min": -100,
     "max": 100
@@ -382,7 +382,7 @@
   "PARAM_POS_Z": {
     "id": 50,
     "type": "float",
-    "value": 0,
+    "value": 96.694,
     "name": "PosZ",
     "min": -100,
     "max": 100
@@ -390,7 +390,7 @@
   "PARAM_RADIUS": {
     "id": 51,
     "type": "float",
-    "value": 10,
+    "value": 10.853,
     "name": "Radius",
     "min": 0,
     "max": 200
@@ -398,7 +398,7 @@
   "PARAM_THICKNESS": {
     "id": 52,
     "type": "float",
-    "value": 1,
+    "value": 8.519,
     "name": "Thick",
     "min": 0,
     "max": 50

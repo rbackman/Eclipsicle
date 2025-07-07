@@ -4,7 +4,7 @@
 #endif
 #include <cmath>
 
-bool _verbose = true;
+bool _verbose = false;
 String _name = "default";
 
 std::vector<LEDRig> ledRigs = {

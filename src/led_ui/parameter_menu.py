@@ -60,7 +60,9 @@ MENU_TREE = {
             "Falling Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
                                "PARAM_WIDTH", "PARAM_SPEED", "PARAM_TIME_SCALE",
                                "PARAM_HUE_VARIANCE"],
-            "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED"]
+            "Sphere": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_RADIUS", "PARAM_THICKNESS", "PARAM_POS_X", "PARAM_POS_Y", "PARAM_POS_Z"],
+            "Plane": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Z"],
+            "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED", "PARAM_HUE", "PARAM_BRIGHTNESS",]
 
         },
         "LED": {"Master LED": {}, "Animation Type": {}},
@@ -289,6 +291,12 @@ class AnimationSendWidget(QWidget):
 
         animation = self.animation_label.text().split(": ")[1]
         overwrite = self.overwrite_toggle.isChecked()
+        if (animation == "Point Control"):
+            # special case for Point Control, send current strip and led
+
+            self.console.send_cmd(
+                f"setanimation:POINT_CONTROL")
+            return
         if overwrite:
             if self.partial_animation_toggle.isChecked():
                 start_led = self.startSSpinbox.value()

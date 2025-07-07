@@ -37,6 +37,7 @@ class LED3DWidget(QWidget):
         self._update_scatter()
         self._update_camera()
         self._sim_state_changed(self.simulate_checkbox.checkState())
+        self.load_nodes("led_nodes.txt")
 
     def request_nodes(self):
         # request nodes for all strips; device will broadcast
@@ -99,7 +100,8 @@ class LED3DWidget(QWidget):
         center = (mins + maxs) / 2.0
         span = np.linalg.norm(maxs - mins)
         try:
-            self.view.opts['center'] = pg.Vector(center[0], center[1], center[2])
+            self.view.opts['center'] = pg.Vector(
+                center[0], center[1], center[2])
         except Exception:
             # fallback if pg.Vector is unavailable
             self.view.opts['center'] = center
@@ -123,6 +125,32 @@ class LED3DWidget(QWidget):
         else:
             colors = np.zeros((0, 4))
         self.scatter.setData(pos=self.positions, size=5, color=colors)
+
+    def save_nodes(self):
+        """Save the current nodes to a file."""
+        with open("led_nodes.txt", "w") as f:
+            for strip_index, strip in self.strips.items():
+                nodes = strip.get("nodes", [])
+                led_count = strip.get("led_count", 0)
+                f.write(f"nodes:{strip_index}:{led_count}:{len(nodes)}:")
+                for idx, x, y, z in nodes:
+                    f.write(f"{idx},{x},{y},{z}:")
+                f.write("\n")
+
+    def load_nodes(self, filename):
+        """Load nodes from a file."""
+        try:
+            with open(filename,
+                      "r") as f:
+                for line in f:
+                    if self.process_string(line.strip()):
+                        continue
+            self._rebuild_positions()
+            self._update_scatter()
+            self._update_camera()
+            print(f"Loaded nodes from {filename}")
+        except Exception as e:
+            print(f"Error loading nodes from {filename}: {e}")
 
     def process_string(self, string):
         if string.startswith("sim:"):
@@ -175,6 +203,7 @@ class LED3DWidget(QWidget):
                 self._rebuild_positions()
                 self._update_scatter()
                 self._update_camera()
+                self.save_nodes()
                 return True
         return False
 

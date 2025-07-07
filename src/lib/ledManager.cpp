@@ -104,7 +104,7 @@ LEDManager::LEDManager(std::string name, std::vector<StripState *> strips) : Par
         Serial.printf("Adding strip %d with %d LEDs\n", i + 1, strips[i]->getNumLEDS()); // Changed strips[i].getNumLEDS() to strips[i]->getNumLEDS()
     }
     initStrips();
-    setInt(PARAM_CURRENT_STRIP, 1);
+    setInt(PARAM_CURRENT_STRIP, -1);
 }
 int LEDManager::getCurrentStrip()
 {
@@ -223,18 +223,22 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
     }
     else
     {
-        // int currentStrip = getInt(PARAM_CURRENT_STRIP);
-        // // Serial.println("update current strip " + String(currentStrip));
-        // if (currentStrip < 0 || currentStrip >= stripStates.size())
-        // {
-        //     Serial.printf("Invalid current strip %d, valid range is 0 to %d\n", currentStrip, stripStates.size() - 1);
-        //     return false;
-        // }
-        // return stripStates[currentStrip]->respondToParameterMessage(parameter);
-        for (int i = 0; i < stripStates.size(); i++)
+        int currentStrip = getInt(PARAM_CURRENT_STRIP);
+        if (currentStrip == -1)
         {
-            stripStates[i]->respondToParameterMessage(parameter);
+            for (int i = 0; i < stripStates.size(); i++)
+            {
+                stripStates[i]->respondToParameterMessage(parameter);
+            }
+            return true;
         }
+        // Serial.println("update current strip " + String(currentStrip));
+        if (currentStrip < 0 || currentStrip >= stripStates.size())
+        {
+            Serial.printf("Invalid current strip %d, valid range is 0 to %d\n", currentStrip, stripStates.size() - 1);
+            return false;
+        }
+        return stripStates[currentStrip]->respondToParameterMessage(parameter);
     }
     return false;
 }

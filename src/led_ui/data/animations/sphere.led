@@ -1,4 +1,4 @@
 ConfigFile:
 Parameters:
 Animations:
-    Sphere
+    Sphere radius:30 thickness:20

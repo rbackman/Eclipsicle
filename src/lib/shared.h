@@ -296,7 +296,7 @@ static const std::vector<IntParameter> getDefaultIntParameters()
         {PARAM_SOUND_SCALE, "Sound", 0, 0, 1},
 
         {PARAM_MULTIPLIER, "Mult", 0, 0, 1},
-        {PARAM_CURRENT_STRIP, "CurrentStrip", 0, 0, 3},
+        {PARAM_CURRENT_STRIP, "CurrentStrip", -1, -1, 4},
         {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255},
         {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360},
         {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 50, 0, 255},

@@ -58,7 +58,7 @@ String rleCompresssCRGB(const CRGB *leds, int numLEDS)
 
 StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX,
                        std::vector<Node3D> nodes)
-    : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED}),
+    : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED, PARAM_BRIGHTNESS}),
       ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), nodes(nodes)
 
 {
@@ -227,14 +227,24 @@ void StripState::update()
     case LED_STATE_POINT_CONTROL:
     {
 
-        int pointPosition = (int)getInt(PARAM_CURRENT_LED);
-
+        int pointPosition = getInt(PARAM_CURRENT_LED);
+        int brightness = getInt(PARAM_BRIGHTNESS);
         int pointHue = getInt(PARAM_HUE);
-
+        int currentStrip = getInt(PARAM_CURRENT_STRIP);
         // point control uses full brightness; colour conversion expects value in
         // the range 0-1
-        colorFromHSV(tempColor, float(pointHue) / 360.0f, 1.0f, 1.0f);
-        setPixel(pointPosition, tempColor);
+        float value = (float)brightness / 255.0f;
+        float hue = (float)pointHue / 360.0f;
+        colorFromHSV(tempColor, hue, 1.0f, value);
+
+        if (pointPosition >= 0 && pointPosition < numLEDS)
+        {
+            setPixel(pointPosition, tempColor);
+        }
+        else
+        {
+            // Serial.printf("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
+        }
     }
     break;
     default:
@@ -831,6 +841,7 @@ bool StripState::respondToText(String command)
         addAnimation(animType, start, end);
         return true;
     }
+
     return false;
 }
 
@@ -890,6 +901,7 @@ void StripState::clearPixel(int index)
 bool StripState::respondToParameterMessage(parameter_message parameter)
 {
 
+    bool stripTookParam = ParameterManager::respondToParameterMessage(parameter);
     if (parameter.paramID == PARAM_BEAT)
     {
         beatSize = parameter.value;
@@ -922,9 +934,7 @@ bool StripState::respondToParameterMessage(parameter_message parameter)
         }
     }
 
-    bool stripTookParam = ParameterManager::respondToParameterMessage(parameter);
-
-    return false;
+    return stripTookParam;
 }
 
 Node3D StripState::getLEDPosition(int ledIndex)
