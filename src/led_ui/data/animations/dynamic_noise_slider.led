@@ -1,0 +1,6 @@
+Variables:
+    loop_length:8
+Animations:
+    Slider start:0 end:127 hue:200+noise(t*5)*50 width:3 speed:2
+Parameters:
+    brightness:180

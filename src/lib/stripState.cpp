@@ -241,109 +241,6 @@ void StripState::addAnimation(ANIMATION_TYPE anim, int start, int end, std::map<
 
     animations.emplace_back(std::move(animation));
 }
-void StripState::update()
-{
-    counter++;
-    clearPixels();
-    if (beatSize > 0.1)
-    {
-        float beatFade = getFloat(PARAM_BEAT_FADE);
-        int beatMaxSize = getInt(PARAM_BEAT_MAX_SIZE);
-
-        beatSize = beatSize - beatFade;
-        if (beatSize < 1)
-        {
-            beatSize = 0;
-        }
-        else if (beatSize > beatMaxSize)
-        {
-            beatSize = beatMaxSize;
-        }
-    }
-    else
-    {
-        beatSize = 0;
-    }
-    switch (ledState)
-    {
-    case LED_STATE_IDLE:
-
-        break;
-
-    case LED_STATE_SINGLE_ANIMATION:
-
-    case LED_STATE_MULTI_ANIMATION:
-    {
-        float t = 0.0f;
-        if (loopLength > 0)
-        {
-            unsigned long elapsed = millis() - timelineStart;
-            t = fmod((float)elapsed, loopLength) / loopLength;
-        }
-
-        for (int i = 0; i < animations.size(); i++)
-        {
-            if (i < dynamicParamExprs.size())
-            {
-                for (const auto &p : dynamicParamExprs[i])
-                {
-                    float val = evaluateExpression(p.second, scriptVariables, t);
-                    if (isFloatParameter(p.first))
-                    {
-                        animations[i]->setFloat(p.first, val);
-                    }
-                    else if (isIntParameter(p.first))
-                    {
-                        animations[i]->setInt(p.first, (int)val);
-                    }
-                    else if (isBoolParameter(p.first))
-                    {
-                        animations[i]->setBool(p.first, val != 0.0f);
-                    }
-                }
-            }
-            animations[i].get()->update();
-        }
-    }
-
-    break;
-
-    case LED_STATE_POINT_CONTROL:
-    {
-
-        int pointPosition = getInt(PARAM_CURRENT_LED);
-        int brightness = getInt(PARAM_BRIGHTNESS);
-        int pointHue = getInt(PARAM_HUE);
-        int currentStrip = getInt(PARAM_CURRENT_STRIP);
-        // point control uses full brightness; colour conversion expects value in
-        // the range 0-1
-        float value = (float)brightness / 255.0f;
-        float hue = (float)pointHue / 360.0f;
-        colorFromHSV(tempColor, hue, 1.0f, value);
-
-        if (pointPosition >= 0 && pointPosition < numLEDS)
-        {
-            setPixel(pointPosition, tempColor);
-        }
-        else
-        {
-            // Serial.printf("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
-        }
-    }
-    break;
-    default:
-        break;
-    }
-
-    if (simulateCount > 0)
-    {
-        if (counter % simulateCount == 0)
-        {
-            String compressed = rleCompresssCRGB(leds, numLEDS);
-            Serial.printf("\nsim:%d:%s\n", stripIndex, compressed.c_str());
-        }
-    }
-}
 enum MatchType
 {
     MATCH_TYPE_NONE,
@@ -1141,6 +1038,106 @@ Vec3D StripState::getLEDPosition(int ledIndex)
         }
     }
     return {0.0f, 0.0f, 0.0f};
+}
+
+void StripState::update()
+{
+    counter++;
+    clearPixels();
+    if (beatSize > 0.1)
+    {
+        float beatFade = getFloat(PARAM_BEAT_FADE);
+        int beatMaxSize = getInt(PARAM_BEAT_MAX_SIZE);
+
+        beatSize = beatSize - beatFade;
+        if (beatSize < 1)
+        {
+            beatSize = 0;
+        }
+        else if (beatSize > beatMaxSize)
+        {
+            beatSize = beatMaxSize;
+        }
+    }
+    else
+    {
+        beatSize = 0;
+    }
+    switch (ledState)
+    {
+    case LED_STATE_IDLE:
+        break;
+
+    case LED_STATE_SINGLE_ANIMATION:
+    case LED_STATE_MULTI_ANIMATION:
+    {
+        float t = 0.0f;
+        if (loopLength > 0)
+        {
+            unsigned long elapsed = millis() - timelineStart;
+            t = fmod((float)elapsed, loopLength) / loopLength;
+        }
+
+        for (int i = 0; i < animations.size(); i++)
+        {
+            if (i < dynamicParamExprs.size())
+            {
+                for (const auto &p : dynamicParamExprs[i])
+                {
+                    float val = evaluateExpression(p.second, scriptVariables, t);
+                    if (isFloatParameter(p.first))
+                    {
+                        animations[i]->setFloat(p.first, val);
+                    }
+                    else if (isIntParameter(p.first))
+                    {
+                        animations[i]->setInt(p.first, (int)val);
+                    }
+                    else if (isBoolParameter(p.first))
+                    {
+                        animations[i]->setBool(p.first, val != 0.0f);
+                    }
+                }
+            }
+            animations[i].get()->update();
+        }
+    }
+        break;
+
+    case LED_STATE_POINT_CONTROL:
+    {
+        int pointPosition = getInt(PARAM_CURRENT_LED);
+        int brightness = getInt(PARAM_BRIGHTNESS);
+        int pointHue = getInt(PARAM_HUE);
+        int currentStrip = getInt(PARAM_CURRENT_STRIP);
+        // point control uses full brightness; colour conversion expects value in
+        // the range 0-1
+        float value = (float)brightness / 255.0f;
+        float hue = (float)pointHue / 360.0f;
+        colorFromHSV(tempColor, hue, 1.0f, value);
+
+        if (pointPosition >= 0 && pointPosition < numLEDS)
+        {
+            setPixel(pointPosition, tempColor);
+        }
+        else
+        {
+            // Serial.printf("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
+        }
+    }
+        break;
+    default:
+        break;
+    }
+
+    if (simulateCount > 0)
+    {
+        if (counter % simulateCount == 0)
+        {
+            String compressed = rleCompresssCRGB(leds, numLEDS);
+            Serial.printf("\nsim:%d:%s\n", stripIndex, compressed.c_str());
+        }
+    }
 }
 
 #endif

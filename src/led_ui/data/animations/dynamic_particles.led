@@ -1,0 +1,6 @@
+Variables:
+    loop_length:12
+Animations:
+    Particles spawn_rate:5+5*sin(2*pi*t) hue:100+80*sin(2*pi*t)
+Parameters:
+    brightness:150

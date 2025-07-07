@@ -38,6 +38,19 @@ Parameter presets are stored under `src/led_ui/data/configurations` while animat
 
 Animation scripts (`*.led`) begin with a `ConfigFile:` line naming the base parameter preset. Parameters listed under the `Parameters:` section override values from that preset and `Animations:` describes the sequence of animations for the strip.  A `Variables:` section may optionally appear before `Parameters:` to define reusable values that can be referenced elsewhere by name.  Variable values can include simple expressions using `+`, `-`, `*` and `/` and may reference previously defined variables.
 
+### Dynamic parameter expressions
+
+Scripts can also animate individual parameters over a loop by referencing the special time variable `t` inside an expression.  The loop length in seconds is defined by the variable `loop_length`.  Expressions may use `sin()`, `cos()` and `noise()` alongside arithmetic.  For example:
+
+```
+Variables:
+    loop_length:10
+Animations:
+    Rainbow hue:360*t
+```
+
+Here the hue parameter sweeps from 0–360 degrees over ten seconds.  Additional examples live under `src/led_ui/data/animations` such as `dynamic_particles.led` and `dynamic_noise_slider.led`.
+
 Within the UI, open an animation file and use the **Send** button to transmit it to the device. Newlines are encoded as `|` characters when sent via the `script:` command.
 
 ### Simulating with QEMU
