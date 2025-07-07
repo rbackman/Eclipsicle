@@ -25,6 +25,11 @@ void StripAnimation::setPixel(int index, led color)
         stripState->setPixel(index + start, color);
     }
 }
+void StripAnimation::blendPixel(int index, led color)
+{
+
+    stripState->blendPixel(index + start, color);
+}
 Node3D StripAnimation::getLEDPosition(int ledIndex)
 {
     if (ledIndex < 0 || ledIndex >= numLEDs())
@@ -38,7 +43,7 @@ void StripAnimation::setPixelHSV(int index, float hue, float saturation, float v
 {
 
     colorFromHSV(animationColor, hue, saturation, value);
-    setPixel(index, animationColor);
+    stripState->blendPixel(index, animationColor);
 }
 
 String StripAnimation::describe()
@@ -92,8 +97,8 @@ void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart
         float fadePos = position - i * direction;
 
         float t = static_cast<float>(i) / std::max(width - 1, 1);
-        float fade = 1.0f - t;      // start bright at the head
-        fade *= fade;               // quadratic falloff
+        float fade = 1.0f - t;        // start bright at the head
+        fade *= fade;                 // quadratic falloff
         fade = powf(fade, fadeSpeed); // user controlled exponent
 
         float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
@@ -106,11 +111,15 @@ void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart
 
         if (lower >= 0 && lower < numLEDs())
         {
-            setPixelHSV(lower, hue, 1.0f, value * (1.0f - frac));
+            led temp;
+            colorFromHSV(temp, hue, 1.0f, value * (1.0f - frac));
+            blendPixel(lower + start, temp);
         }
         if (upper >= 0 && upper < numLEDs())
         {
-            setPixelHSV(upper, hue, 1.0f, value * frac);
+            led temp;
+            colorFromHSV(temp, hue, 1.0f, value * frac);
+            blendPixel(upper + start, temp);
         }
     }
 }

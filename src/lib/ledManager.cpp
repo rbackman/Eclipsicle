@@ -8,9 +8,10 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
 {
 
     LEDRig rig;
-    for (int i = 0; i < slaves.size(); i++)
+    auto rigs = getLEDRigs();
+    for (int i = 0; i < rigs.size(); i++)
     {
-        LEDRig slave = slaves[i];
+        LEDRig slave = rigs[i];
 
         if (slave.name.compare(slavename) == 0)
         {
