@@ -1,0 +1,6 @@
+Variables:
+    loop_length:6
+Animations:
+    Particles spawn_rate:50 hue:150+150*t hue_end:1 time_scale:60
+Parameters:
+    brightness:150

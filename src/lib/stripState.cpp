@@ -683,7 +683,8 @@ bool StripState::parseAnimationScript(String script)
                     }
                     if (pid != PARAM_UNKNOWN)
                     {
-                        auto isNumeric = [](const String &s) {
+                        auto isNumeric = [](const String &s)
+                        {
                             if (s.length() == 0)
                                 return false;
                             for (int ii = 0; ii < s.length(); ++ii)
@@ -704,6 +705,10 @@ bool StripState::parseAnimationScript(String script)
                             exprs[pid] = rawV;
                         }
                         params[pid] = evaluateExpression(v, variables, 0.0f);
+                        if (isVerbose())
+                        {
+                            Serial.printf("\tParameter %s = %s (%.2f)\n", k.c_str(), v.c_str(), params[pid]);
+                        }
                     }
                 }
             }
@@ -1102,7 +1107,7 @@ void StripState::update()
             animations[i].get()->update();
         }
     }
-        break;
+    break;
 
     case LED_STATE_POINT_CONTROL:
     {
@@ -1125,7 +1130,7 @@ void StripState::update()
             // Serial.printf("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
         }
     }
-        break;
+    break;
     default:
         break;
     }

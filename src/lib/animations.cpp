@@ -372,7 +372,7 @@ void SliderAnimation::update()
 {
     //  slider animation is just a gradient that positioned in the middle of the strip with a width and hue and repeat factor
     int position = numLEDs() / 2 + getInt(PARAM_POSITION);
-    int width = getInt(PARAM_WIDTH) * numLEDs();
+    int width = getInt(PARAM_WIDTH);
     float repeat = getFloat(PARAM_REPEAT);
     int brightness = getInt(PARAM_BRIGHTNESS);
     int hue = getInt(PARAM_HUE);
@@ -385,7 +385,6 @@ void SliderAnimation::update()
 
         if (val > width / 2)
         {
-            setPixel(i, {0, 0, 0}); // turn off pixel
         }
         else
         {

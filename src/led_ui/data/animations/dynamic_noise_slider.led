@@ -1,6 +1,6 @@
 Variables:
-    loop_length:8
+    loop_length:10
 Animations:
-    Slider start:0 end:127 hue:200+noise(t*5)*50 width:3 speed:2
+    Slider hue:250 width:40*sin(t*pi) position:10*cos(t*pi) speed:1 time_scale:10 brightness:10
 Parameters:
-    brightness:180
+    brightness:10
