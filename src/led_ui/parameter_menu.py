@@ -17,21 +17,20 @@ import os
 import time
 
 from serial_console import SerialConsole
-from shared import get_param_name
+from shared import get_param_name, PARAM_MAP_FILE, ANIM_MAP_FILE
 
 #  map from parameter name to full parameter info
 ParameterMap: dict[str, dict] = {}
 ParameterIDMap: dict[int, str] = {}
 ParameterDefaults: dict[str, dict] = {}
 
-PARAM_MAP_FILE = os.path.join(os.path.dirname(__file__), "parameter_map.json")
 CONFIG_DIR = os.path.join("data", "configurations")
 ANIM_DIR = os.path.join("data", "animations")
 
 
 def _load_anim_names() -> set:
     """Return set of animation names from animation_map.json."""
-    path = os.path.join(os.path.dirname(__file__), "animation_map.json")
+    path = ANIM_MAP_FILE
     try:
         with open(path, "r") as f:
             data = json.load(f)

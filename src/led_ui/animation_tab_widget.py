@@ -6,6 +6,8 @@ import os
 import json
 import re
 
+from shared import PARAM_MAP_FILE, ANIM_MAP_FILE
+
 
 class AnimationTabWidget(QWidget):
     """Simple editor for *.led animation scripts."""
@@ -58,7 +60,7 @@ class AnimationTabWidget(QWidget):
 
     def _load_param_names(self):
         """Return a set of known parameter short names."""
-        path = os.path.join(os.path.dirname(__file__), "parameter_map.json")
+        path = PARAM_MAP_FILE
         try:
             with open(path, "r") as f:
                 data = json.load(f)
@@ -153,7 +155,7 @@ class AnimationTabWidget(QWidget):
 
     def _load_param_map(self):
         """Return mapping of parameter names to IDs."""
-        path = os.path.join(os.path.dirname(__file__), "parameter_map.json")
+        path = PARAM_MAP_FILE
         try:
             with open(path, "r") as f:
                 data = json.load(f)
@@ -171,7 +173,7 @@ class AnimationTabWidget(QWidget):
 
     def _load_anim_map(self):
         """Return mapping of animation names to IDs."""
-        path = os.path.join(os.path.dirname(__file__), "animation_map.json")
+        path = ANIM_MAP_FILE
         try:
             with open(path, "r") as f:
                 data = json.load(f)
@@ -195,8 +197,7 @@ class AnimationTabWidget(QWidget):
             animations = data.get("data", {})
             if animations:
                 # save to animation_map.json
-                path = os.path.join(os.path.dirname(
-                    __file__), "animation_map.json")
+                path = ANIM_MAP_FILE
                 try:
                     with open(path, "w") as f:
                         json.dump(animations, f, indent=2)

@@ -34,7 +34,7 @@ Recent updates added a few LED patterns including a falling bricks build-up effe
 
 ### UI Data Files
 
-Parameter presets are stored under `src/led_ui/data/configurations` while animation script files live in `src/led_ui/data/animations`.  Presets now store only values that differ from the defaults in `parameter_map.json`.
+Parameter presets are stored under `src/led_ui/data/configurations` while animation script files live in `src/led_ui/data/animations`.  Presets now store only values that differ from the defaults in `data/parameter_map.json`.
 
 Animation scripts (`*.led`) begin with a `ConfigFile:` line naming the base parameter preset. Parameters listed under the `Parameters:` section override values from that preset and `Animations:` describes the sequence of animations for the strip.  A `Variables:` section may optionally appear before `Parameters:` to define reusable values that can be referenced elsewhere by name.  Variable values can include simple expressions using `+`, `-`, `*` and `/` and may reference previously defined variables.
 
