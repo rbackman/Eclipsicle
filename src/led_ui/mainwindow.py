@@ -37,6 +37,10 @@ class MainWindow(QMainWindow):
         ]
         self.led_3d_widget = LED3DWidget(self.console, square_nodes, 40)
         self.console.add_string_listener(self.led_3d_widget.process_string)
+        self.parameter_menu.parameter_sent.connect(
+            self.led_3d_widget.parameter_changed)
+        self.parameter_menu.animation_sent.connect(
+            self.led_3d_widget.animation_changed)
         self.led_3d_widget.setVisible(False)
 
         central_widget = QWidget()

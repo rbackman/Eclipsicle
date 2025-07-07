@@ -111,18 +111,36 @@ public:
             return 0;
         return nodes[idx - 1].index;
     }
-    Node3D getNode3D(int idx) const
+    Vec3D getNode3D(int ledIndex) const
     {
-        if (idx <= 0 || idx > nodes.size())
-            return Node3D{};
-        return nodes[idx - 1];
+        // find the two nodes that contain the LED index and interpolate between them
+        if (ledIndex < 0 || ledIndex >= numLEDS)
+        {
+            printf("Invalid LED index %d\n", ledIndex);
+            return {0.0f, 0.0f, 0.0f};
+        }
+        for (int i = 0; i < nodes.size() - 1; i++)
+        {
+            if (nodes[i].index <= ledIndex && nodes[i + 1].index >= ledIndex)
+            {
+                float t = (float)(ledIndex - nodes[i].index) / (nodes[i + 1].index - nodes[i].index);
+                Vec3D pos;
+                pos.x = nodes[i].x * (1.0f - t) + nodes[i + 1].x * t;
+                pos.y = nodes[i].y * (1.0f - t) + nodes[i + 1].y * t;
+                pos.z = nodes[i].z * (1.0f - t) + nodes[i + 1].z * t;
+                return pos;
+            }
+        }
+        // if we reach here, the LED index is outside the range of nodes
+
+        return {0.0f, 0.0f, 0.0f};
     }
     const std::vector<Node3D> &getNodes() const
     {
         return nodes;
     }
     // get interpolated world position for a LED index
-    Node3D getLEDPosition(int ledIndex);
+    Vec3D getLEDPosition(int ledIndex);
     int getAnimationCount()
     {
         return animations.size();

@@ -17,21 +17,20 @@ import os
 import time
 
 from serial_console import SerialConsole
-from shared import get_param_name
+from shared import get_param_name, PARAM_MAP_FILE, ANIM_MAP_FILE
 
 #  map from parameter name to full parameter info
 ParameterMap: dict[str, dict] = {}
 ParameterIDMap: dict[int, str] = {}
 ParameterDefaults: dict[str, dict] = {}
 
-PARAM_MAP_FILE = os.path.join(os.path.dirname(__file__), "parameter_map.json")
 CONFIG_DIR = os.path.join("data", "configurations")
 ANIM_DIR = os.path.join("data", "animations")
 
 
 def _load_anim_names() -> set:
     """Return set of animation names from animation_map.json."""
-    path = os.path.join(os.path.dirname(__file__), "animation_map.json")
+    path = ANIM_MAP_FILE
     try:
         with open(path, "r") as f:
             data = json.load(f)
@@ -72,7 +71,7 @@ MENU_TREE = {
                                "PARAM_WIDTH",   "PARAM_TIME_SCALE",
                                "PARAM_HUE_VARIANCE"],
             "Sphere": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_RADIUS", "PARAM_THICKNESS", "PARAM_POS_X", "PARAM_POS_Y", "PARAM_POS_Z"],
-            "Plane":  ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Z", "PARAM_THICKNESS"],
+            "Plane":  ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Y", "PARAM_THICKNESS"],
             "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED", "PARAM_HUE", "PARAM_BRIGHTNESS",]
 
         },
@@ -136,7 +135,7 @@ def loadParameters():
                 if not ParameterDefaults:
                     ParameterDefaults = json.loads(data)
                 ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
-                print("Loaded parameters from file:")
+                print(f"Loaded parameters from file: {ParameterIDMap}")
     except FileNotFoundError:
         print("No parameter map file found, using empty map.")
     except json.JSONDecodeError as e:
@@ -145,7 +144,9 @@ def loadParameters():
 
 
 class ParamPage(QWidget):
-    def __init__(self, params, console:  SerialConsole):
+    parameter_sent = pyqtSignal(str, object)
+
+    def __init__(self, params, console: SerialConsole):
         super().__init__()
         self.console = console
         lay = QVBoxLayout(self)
@@ -245,6 +246,8 @@ class ParamPage(QWidget):
             self.console.send_cmd(cmd)
         else:
             self.console.send_json({"param": pid, "value": val})
+        name = ParameterIDMap.get(pid, f"Unknown({pid})")
+        self.parameter_sent.emit(name, val)
 
 
 # ───────────────────────────── Main widget -------------------------------------------------------------------
@@ -252,6 +255,8 @@ class ParamPage(QWidget):
 
 class AnimationSendWidget(QWidget):
     # a widget that has a button and options to send single animation, overwrite, start led,end led or full strip
+    animation_sent = pyqtSignal(str)
+
     def __init__(self, console):
         super().__init__()
         self.console = console
@@ -315,9 +320,10 @@ class AnimationSendWidget(QWidget):
 
                 self.console.send_cmd(
                     f"setanimation:{animation}:{start_led}:{end_led}")
-
+                self.animation_sent.emit(animation)
             else:
                 self.console.send_cmd(f"setanimation:{animation}")
+                self.animation_sent.emit(animation)
         else:
             if self.partial_animation_toggle.isChecked():
                 start_led = self.startSSpinbox.value()
@@ -325,12 +331,16 @@ class AnimationSendWidget(QWidget):
 
                 self.console.send_cmd(
                     f"addanimation:{animation}:{start_led}:{end_led}")
+                self.animation_sent.emit(animation)
             else:
                 self.console.send_cmd(f"replaceanimation:all:{animation}")
+                self.animation_sent.emit(animation)
 
 
 class ParameterMenuWidget(QWidget):
     profile_changed = pyqtSignal(str)
+    parameter_sent = pyqtSignal(str, object)
+    animation_sent = pyqtSignal(str)
 
     def __init__(self, console: SerialConsole):
         super().__init__()
@@ -359,6 +369,7 @@ class ParameterMenuWidget(QWidget):
         paramHLayout = QHBoxLayout()
         pRoot.addLayout(paramHLayout)
         self.animationSender = AnimationSendWidget(console)
+        self.animationSender.animation_sent.connect(self.animation_sent)
 
         pRoot.addWidget(self.animationSender)
         paramHLayout.addWidget(self.tree, 1)
@@ -530,6 +541,8 @@ class ParameterMenuWidget(QWidget):
                     f"Loading parameters for {name} with map: {param_list}  \n {data}   \n")
                 page = ParamPage(data,
                                  self.console) if data else QWidget()
+                if isinstance(page, ParamPage):
+                    page.parameter_sent.connect(self.parameter_sent)
                 self.cache[name] = page
                 self.pages.addWidget(page)
 

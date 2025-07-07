@@ -3,6 +3,7 @@ from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from PyQt5.QtGui import QColor
+from parameter_menu import ParameterIDMap
 import numpy as np
 
 
@@ -30,6 +31,16 @@ class LED3DWidget(QWidget):
         self.view.opts['distance'] = 4
         self.scatter = gl.GLScatterPlotItem()
         self.view.addItem(self.scatter)
+
+        self.current_shape = None
+        self.shape_item = None
+        self.shape_params = {
+            "pos_x": 0.0,
+            "pos_y": 0.0,
+            "pos_z": 0.0,
+            "radius": 1.0,
+            "thickness": 1.0,
+        }
 
         self.layout.addWidget(self.updateNodesButton)
 
@@ -220,3 +231,81 @@ class LED3DWidget(QWidget):
                 leds.extend(
                     [(qcolor.red(), qcolor.green(), qcolor.blue())] * int(count))
         return leds
+
+    # ------------------------------------------------------------------
+    def animation_changed(self, name: str):
+        name = name.lower()
+        if name == "sphere":
+            self.current_shape = "sphere"
+        elif name == "plane":
+            self.current_shape = "plane"
+        else:
+            self.current_shape = None
+        self._update_shape()
+
+    def parameter_changed(self, pname: str, val):
+
+        print(f"Parameter changed: {pname} = {val}")
+        if pname == "PARAM_POS_X":
+            self.shape_params["pos_x"] = float(val)
+        elif pname == "PARAM_POS_Y":
+            self.shape_params["pos_y"] = float(val)
+        elif pname == "PARAM_POS_Z":
+            self.shape_params["pos_z"] = float(val)
+        elif pname == "PARAM_RADIUS":
+            self.shape_params["radius"] = float(val)
+        elif pname == "PARAM_THICKNESS":
+            self.shape_params["thickness"] = float(val)
+        self._update_shape()
+
+    def _update_shape(self):
+        if self.shape_item:
+            self.view.removeItem(self.shape_item)
+            self.shape_item = None
+
+        if self.current_shape == "sphere":
+            md = gl.MeshData.sphere(rows=16, cols=16)
+            item = gl.GLMeshItem(meshdata=md, smooth=True,
+                                 color=(1, 0, 0, 0.3), drawEdges=False)
+            item.setGLOptions("additive")
+            r = self.shape_params.get("radius", 1.0)
+            item.scale(r, r, r)
+            pos = np.array([
+                self.shape_params.get("pos_x", 0.0),
+                self.shape_params.get("pos_y", 0.0),
+                self.shape_params.get("pos_z", 0.0),
+            ], dtype=float)
+            if self.y_up:
+                pos = pos[[0, 2, 1]]
+            item.translate(pos[0], pos[1], pos[2])
+            self.shape_item = item
+            self.view.addItem(item)
+        elif self.current_shape == "plane":
+            if self.positions.size == 0:
+                size_x = size_y = 1.0
+            else:
+                mins = self.positions.min(axis=0)
+                maxs = self.positions.max(axis=0)
+                size_x = maxs[0] - mins[0]
+                size_y = maxs[1] - mins[1]
+            verts = np.array([
+                [-size_x / 2, -size_y / 2, 0],
+                [size_x / 2, -size_y / 2, 0],
+                [size_x / 2, size_y / 2, 0],
+                [-size_x / 2, size_y / 2, 0],
+            ])
+            faces = np.array([[0, 1, 2], [0, 2, 3]])
+            md = gl.MeshData(vertexes=verts, faces=faces)
+            item = gl.GLMeshItem(meshdata=md, smooth=False,
+                                 color=(0, 0, 1, 0.3), drawEdges=False)
+            item.setGLOptions("additive")
+            pos = np.array([
+                self.shape_params.get("pos_x", 0.0),
+                self.shape_params.get("pos_y", 0.0),
+                self.shape_params.get("pos_z", 0.0),
+            ], dtype=float)
+            if self.y_up:
+                pos = pos[[0, 2, 1]]
+            item.translate(pos[0], pos[1], pos[2])
+            self.shape_item = item
+            self.view.addItem(item)

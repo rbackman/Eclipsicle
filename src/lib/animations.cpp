@@ -30,12 +30,12 @@ void StripAnimation::blendPixel(int index, led color)
 
     stripState->blendPixel(index + start, color);
 }
-Node3D StripAnimation::getLEDPosition(int ledIndex)
+Vec3D StripAnimation::getLEDPosition(int ledIndex)
 {
     if (ledIndex < 0 || ledIndex >= numLEDs())
     {
         Serial.printf("Invalid LED index %d for strip animation\n", ledIndex);
-        return Node3D{};
+        return Vec3D{};
     }
     return stripState->getNode3D(ledIndex + start);
 }
@@ -535,7 +535,8 @@ void SingleColorAnimation::update()
 
 void SphereAnimation::update()
 {
-    int hue = getInt(PARAM_HUE);
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float cx = getFloat(PARAM_POS_X);
     float cy = getFloat(PARAM_POS_Y);
@@ -546,38 +547,37 @@ void SphereAnimation::update()
     int insphereCount = 0;
     for (int i = 0; i < numLEDs(); i++)
     {
-        Node3D pos = getLEDPosition(i);
+        auto pos = getLEDPosition(i);
         float dx = pos.x - cx;
         float dy = pos.y - cy;
         float dz = pos.z - cz;
         float dist = sqrtf(dx * dx + dy * dy + dz * dz);
         float delta = fabs(dist - radius);
-        float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
+        float t = 1.0f - clamp(thick > 0 ? delta / thick : 1.0f, 0.0f, 1.0f);
         if (t <= 0.0f)
             continue;
         insphereCount++;
-        setPixelHSV(i, hue / 360.0f, 1.0f, (brightness / 255.0f) * t);
-    }
-    if (isVerbose())
-    {
-        Serial.printf("Sphere animation: center(%f, %f, %f) radius: %f thickness: %f insphere count: %d\n", cx, cy, cz, radius, thick, insphereCount);
+        float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
+        setPixelHSV(i, hue, 1.0f, brightness / 255.0f);
     }
 }
 
 void PlaneAnimation::update()
 {
-    int hue = getInt(PARAM_HUE);
+    int hueStart = getInt(PARAM_HUE);
+    int hueEnd = getInt(PARAM_HUE_END);
     int brightness = getInt(PARAM_BRIGHTNESS);
-    float planeZ = getFloat(PARAM_POS_Z);
+    float planeY = getFloat(PARAM_POS_Y);
     float thick = getFloat(PARAM_THICKNESS);
 
     for (int i = 0; i < numLEDs(); i++)
     {
-        Node3D pos = getLEDPosition(i);
-        float delta = fabs(pos.z - planeZ);
-        float t = 1.0f - clamp(delta / thick, 0.0f, 1.0f);
+        auto pos = getLEDPosition(i);
+        float delta = fabs(pos.y - planeY);
+        float t = 1.0f - clamp(thick > 0 ? delta / thick : 1.0f, 0.0f, 1.0f);
         if (t <= 0.0f)
             continue;
-        setPixelHSV(i, hue / 360.0f, 1.0f, (brightness / 255.0f) * t);
+        float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
+        setPixelHSV(i, hue, 1.0f, brightness / 255.0f);
     }
 }
