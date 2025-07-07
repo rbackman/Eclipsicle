@@ -63,17 +63,17 @@ void LEDManager::initStrips()
         switch (i)
         {
         case 0:
-            Serial.println("Adding strip 1");
+
             FastLED.addLeds<LED_TYPE, LED_PIN_1, COLOR_ORDER>(
                 strip->leds, strip->getNumLEDS());
             break;
         case 1:
-            Serial.println("Adding strip 2");
+
             FastLED.addLeds<LED_TYPE, LED_PIN_2, COLOR_ORDER>(
                 strip->leds, strip->getNumLEDS());
             break;
         case 2:
-            Serial.println("Adding strip 3");
+
             FastLED.addLeds<LED_TYPE, LED_PIN_3>(
                 strip->leds, strip->getNumLEDS());
             break;

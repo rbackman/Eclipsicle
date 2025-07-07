@@ -63,13 +63,6 @@ StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX,
 
 {
     leds = new CRGB[numLEDS];
-    if (state != LED_STATE_IDLE)
-    {
-        Serial.print("Starting strip ");
-        Serial.print(stripIndex);
-        Serial.print(" with state ");
-        Serial.println(getLedStateName(state));
-    }
 }
 
 void StripState::toggleMode()
@@ -525,10 +518,7 @@ bool StripState::parseAnimationScript(String script)
         }
         if (line.equalsIgnoreCase("Parameters:") || line.equalsIgnoreCase("PARAMETERS:") || line.equalsIgnoreCase("p:"))
         {
-            if (isVerbose())
-            {
-                Serial.printf("Entering parameters section\n");
-            }
+
             inParams = true;
             inAnims = false;
             inVars = false;
@@ -536,10 +526,7 @@ bool StripState::parseAnimationScript(String script)
         }
         if (line.equalsIgnoreCase("Animations:") || line.equalsIgnoreCase("ANIMATIONS:") || line.equalsIgnoreCase("a:"))
         {
-            if (isVerbose())
-            {
-                Serial.printf("Entering animations section\n");
-            }
+
             inAnims = true;
             inParams = false;
             inVars = false;
@@ -749,12 +736,7 @@ bool StripState::parseAnimationScript(String script)
     ledState = LED_STATE_MULTI_ANIMATION;
     animations.clear();
 
-    if (configFile.length() > 0 && isVerbose())
-    {
-        Serial.printf("\nConfigFile\n %s\n", configFile.c_str());
-    }
-
-    for (const auto &a : anims)
+     for (const auto &a : anims)
     {
         addAnimation(a.type, a.start, a.end, a.params);
     }

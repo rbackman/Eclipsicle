@@ -1,7 +1,5 @@
-
 Animations:
-    Particles   width:5   time_scale:20 spawn_rate:30 time_scale:60
-    Slider start:41 end:70  hue:200 hue_variance:40   width:3    
-
-PARAMETERS:
-  brightness: 100
+    Particles width:5 time_scale:20 spawn_rate:30 time_scale:60
+    Slider start:41 end:70 hue:200 hue_variance:40 width:3
+Parameters:
+    brightness:100

@@ -4,9 +4,7 @@ import json
 import os
 
 # Location of the repository root data folder
-DATA_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "data")
-)
+DATA_DIR = "./data"
 
 # JSON files exchanged with the firmware
 PARAM_MAP_FILE = os.path.join(DATA_DIR, "parameter_map.json")
@@ -35,4 +33,3 @@ def save_json(path: str, data: dict) -> None:
             json.dump(data, f, indent=2)
     except Exception:
         pass
-

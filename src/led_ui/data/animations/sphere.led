@@ -1,4 +1,6 @@
 ConfigFile:
 Parameters:
 Animations:
-    Sphere radius:30 thickness:20
+    Sphere radius:65 thickness:8 hue:2 hue_end:255
+    Sphere radius:75 thickness:6 hue:2 hue_end:255
+    Sphere radius:40 thickness:6 hue:255 hue_end:350

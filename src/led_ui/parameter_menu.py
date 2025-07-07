@@ -67,9 +67,9 @@ MENU_TREE = {
                        ],
             "Nebula": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
                        "PARAM_NOISE_SPEED", "PARAM_TIME_SCALE", "PARAM_NOISE_SCALE"],
-            "Falling Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
-                               "PARAM_WIDTH",   "PARAM_TIME_SCALE",
-                               "PARAM_HUE_VARIANCE"],
+            "Bricks": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS",
+                       "PARAM_WIDTH",   "PARAM_TIME_SCALE",
+                       "PARAM_HUE_VARIANCE"],
             "Sphere": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_RADIUS", "PARAM_THICKNESS", "PARAM_POS_X", "PARAM_POS_Y", "PARAM_POS_Z"],
             "Plane":  ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Y", "PARAM_THICKNESS"],
             "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED", "PARAM_HUE", "PARAM_BRIGHTNESS",]
