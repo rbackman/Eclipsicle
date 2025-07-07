@@ -542,67 +542,80 @@ const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_SPHERE, "SPHERE"},
     {ANIMATION_TYPE_PLANE, "PLANE"}};
 
-const LEDRig eclipse = {
-    "Eclipsicle",
-    {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
-    {
-        {0, 164, LED_STATE_SINGLE_ANIMATION, {
-                                                 {ANIMATION_TYPE_RAINBOW, 0, 163},
-                                             },
-         {{32, 0, 0, 0}, {65, 0, 0, 0}, {90, 0, 0, 0}}},
-        {1, 200, LED_STATE_SINGLE_ANIMATION, {
-                                                 {ANIMATION_TYPE_SLIDER, 0, 200},
-                                             },
-         {{32, 0, 0, 0}, {65, 0, 0, 0}, {90, 0, 0, 0}}},
-    },
-
-};
-const LEDRig tesseratic = {
-    "Tesseratica",
-    {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
-    {
-        {0, 122, LED_STATE_MULTI_ANIMATION, {
-                                                {ANIMATION_TYPE_BRICKS, -1, -1, {{PARAM_HUE, 100}}},
-                                            },
-         {{0, 49.4, -54.8, 54.8}, {49, 21, -26.5, 26.5}, {73, -21, -26.5, 26.5}, {94, -49.4, -54.8, 54.8}, {122, 49.4, -54.8, 54.8}}},
-        {1, 122, LED_STATE_MULTI_ANIMATION, {
-                                                {ANIMATION_TYPE_BRICKS, -1, -1, {{PARAM_HUE, 100}}},
-                                            },
-         {{0, 54.785, -54.8, 49.3}, {49, 54.8, -54.8, -49.4}, {73, 26.5, -26.5, -21}, {94, 26.5, -26.5, 21}, {122, 54.785, -54.8, 49.3}}},
-
-        {2, 122, LED_STATE_MULTI_ANIMATION, {
-                                                {ANIMATION_TYPE_BRICKS, -1, -1, {{PARAM_HUE, 100}}},
-                                            },
-         {{0, 49.4, -54.8, -54.8}, {49, -49.4, -54.8, -54.8}, {73, -21, -26.5, -26.5}, {94, 21, -26.5, -26.5}, {122, 49.4, -54.8, -54.8}}},
-
-    },
-
-};
-
-const LEDRig squareLoop = {
-    "SquareLoop",
-    {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF},
-    {
-        {0, 40, LED_STATE_SINGLE_ANIMATION, {
-                                                {ANIMATION_TYPE_RAINBOW, 0, 39},
-                                            },
-         {
-             {0, 0.0f, 0.0f, 0.0f},
-             {10, 1.0f, 0.0f, 0.0f},
-             {20, 1.0f, 1.0f, 0.0f},
-             {30, 0.0f, 1.0f, 0.0f},
-         }},
-    },
-
-};
-const std::vector<LEDRig> slaves = {
-    eclipse,
-    tesseratic,
-    squareLoop,
-
-};
 const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 
+// const LEDRig eclipse = {
+//     "Eclipsicle",
+//     {0x40, 0x91, 0x51, 0xFB, 0xB7, 0x48},
+//     {
+//         {0, 164, LED_STATE_SINGLE_ANIMATION, {
+//                                                  {ANIMATION_TYPE_RAINBOW, 0, 163},
+//                                              },
+//          {{32, 0, 0, 0}, {65, 0, 0, 0}, {90, 0, 0, 0}}},
+//         {1, 200, LED_STATE_SINGLE_ANIMATION, {
+//                                                  {ANIMATION_TYPE_SLIDER, 0, 200},
+//                                              },
+//          {{32, 0, 0, 0}, {65, 0, 0, 0}, {90, 0, 0, 0}}},
+//     },
+
+// };
+// const LEDRig tesseratic = {
+//     "Tesseratica",
+//     {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC},
+//     {
+//         {
+//             0,
+//             122,
+//             LED_STATE_MULTI_ANIMATION,
+//             {{
+//                  ANIMATION_TYPE_PARTICLES,
+//                  -1,
+//                  -1,
+//                  {{PARAM_HUE, 100}, {PARAM_HUE_END, 200}, {PARAM_TIME_SCALE, 50}},
+//              },
+//              {{0, 49.4, -54.8, 54.8}, {49, 21, -26.5, 26.5}, {73, -21, -26.5, 26.5}, {94, -49.4, -54.8, 54.8}, {122, 49.4, -54.8, 54.8}}},
+//         },
+//         {1, 122, LED_STATE_MULTI_ANIMATION, {
+//                                                 {ANIMATION_TYPE_BRICKS, -1, -1, {{PARAM_HUE, 100}}},
+//                                             },
+//          {{0, 54.785, -54.8, 49.3}, {49, 54.8, -54.8, -49.4}, {73, 26.5, -26.5, -21}, {94, 26.5, -26.5, 21}, {122, 54.785, -54.8, 49.3}}},
+
+//         {2, 122, LED_STATE_MULTI_ANIMATION, {
+//                                                 {ANIMATION_TYPE_BRICKS, -1, -1, {{PARAM_HUE, 100}}},
+//                                             },
+//          {{0, 49.4, -54.8, -54.8}, {49, -49.4, -54.8, -54.8}, {73, -21, -26.5, -26.5}, {94, 21, -26.5, -26.5}, {122, 49.4, -54.8, -54.8}}},
+
+//     },
+
+// };
+
+// const LEDRig squareLoop = {
+//     "SquareLoop",
+//     {0xAA, 0xBB, 0xCC, 0xDD, 0xEE, 0xFF},
+//     {
+//         {0, 40, LED_STATE_SINGLE_ANIMATION, {
+//                                                 {ANIMATION_TYPE_RAINBOW, 0, 39},
+//                                             },
+//          {
+//              {0, 0.0f, 0.0f, 0.0f},
+//              {10, 1.0f, 0.0f, 0.0f},
+//              {20, 1.0f, 1.0f, 0.0f},
+//              {30, 0.0f, 1.0f, 0.0f},
+//          }},
+//     },
+
+// };
+
+//   int stripIndex;
+// int numLEDS;
+// LED_STATE state;
+// std::vector<AnimationParams> animations;
+// // nodes along the strip with optional 3D coordinates
+// std::vector<Node3D> nodes = {};
+void makeRig(const std::string &name, const MacAddress &mac);
+void addStripToRig(const std::string &name, int stripIndex, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations = {}, std::vector<Node3D> nodes = {});
+std::vector<LEDRig> getLEDRigs();
+LEDRig *getLEDRig(const std::string &name);
 void colorFromHSV(led &color, float h, float s, float v);
 void setVerbose(bool verb);
 void printBytes(ByteRow data);

@@ -6,6 +6,27 @@
 
 bool _verbose = true;
 String _name = "default";
+
+std::vector<LEDRig> ledRigs = {
+
+};
+
+std::vector<LEDRig> getLEDRigs()
+{
+  return ledRigs;
+}
+LEDRig *getLEDRig(const std::string &name)
+{
+  for (auto &rig : ledRigs)
+  {
+    if (rig.name == name)
+    {
+      return &rig;
+    }
+  }
+  return nullptr;
+}
+
 String getName()
 {
   return _name;
@@ -299,4 +320,32 @@ void sanityCheckParameters()
   {
     Serial.println("All parameters accounted for");
   }
+}
+
+void makeRig(const std::string &name, const MacAddress &mac)
+{
+  LEDRig rig;
+  rig.name = name;
+  rig.mac = mac;
+  ledRigs.push_back(rig);
+}
+
+void addStripToRig(const std::string &name, int stripIndex, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations, std::vector<Node3D> nodes)
+{
+  for (auto &rig : ledRigs)
+  {
+    if (rig.name == name)
+    {
+      LEDParams params;
+      params.stripIndex = stripIndex;
+      params.numLEDS = numLEDS;
+      params.state = state;
+      params.animations = animations;
+      params.nodes = nodes;
+
+      rig.strips.push_back(params);
+      return;
+    }
+  }
+  Serial.printf("Error: Rig %s not found\n", name.c_str());
 }

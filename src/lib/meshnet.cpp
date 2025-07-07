@@ -40,9 +40,10 @@ void MeshnetManager::connectSlaves()
     // Register peer
     esp_now_peer_info_t peerInfo;
     memset(&peerInfo, 0, sizeof(peerInfo));
-    for (int i = 0; i < slaves.size(); i++)
+    auto rigs = getLEDRigs();
+    for (int i = 0; i < rigs.size(); i++)
     {
-        MacAddress mac = slaves[i].mac;
+        MacAddress mac = rigs[i].mac;
         _slaves.push_back(mac);
 
         memcpy(peerInfo.peer_addr, mac.data(), 6);
