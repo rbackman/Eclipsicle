@@ -348,6 +348,7 @@ class ParameterMenuWidget(QWidget):
         paramHLayout = QHBoxLayout()
         pRoot.addLayout(paramHLayout)
         self.animationSender = AnimationSendWidget(console)
+
         pRoot.addWidget(self.animationSender)
         paramHLayout.addWidget(self.tree, 1)
         paramHLayout.addWidget(self.pages, 1)
@@ -364,7 +365,7 @@ class ParameterMenuWidget(QWidget):
         # Animation script tab -----------------------------------------
         self.animation_tab = AnimationTabWidget(ANIM_DIR, console)
         self.tabs.addTab(self.animation_tab, "Animations")
-
+        self.console.add_json_listener(self.animation_tab.json_received)
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
         loadParameters()

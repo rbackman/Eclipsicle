@@ -6,6 +6,7 @@ import os
 import json
 import re
 
+
 class AnimationTabWidget(QWidget):
     """Simple editor for *.led animation scripts."""
 
@@ -184,6 +185,23 @@ class AnimationTabWidget(QWidget):
             return mapping
         except Exception:
             return {}
+        self.console.add_json_listener(self.animation_tab.json_received)
+
+    def json_received(self, data):
+        """Handle incoming JSON data from the console."""
+        if not isinstance(data, dict):
+            return
+        if data.get("type") == "animations":
+            animations = data.get("data", {})
+            if animations:
+                # save to animation_map.json
+                path = os.path.join(os.path.dirname(
+                    __file__), "animation_map.json")
+                try:
+                    with open(path, "w") as f:
+                        json.dump(animations, f, indent=2)
+                except Exception as e:
+                    print(f"Error saving animation map: {e}")
 
     def _eval_value(self, expr: str, variables: dict) -> str:
         """Evaluate an expression using the provided variables."""
@@ -219,7 +237,8 @@ class AnimationTabWidget(QWidget):
                 if ':' in line:
                     name, expr = [p.strip() for p in line.split(':', 1)]
                     try:
-                        variables[name] = float(self._eval_value(expr, variables))
+                        variables[name] = float(
+                            self._eval_value(expr, variables))
                     except Exception:
                         pass
                 continue

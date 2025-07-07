@@ -161,7 +161,7 @@ static std::unique_ptr<StripAnimation> makeAnimation(
 
 String StripState::getAnimationInfoJson()
 {
-    JsonDocument doc(1024);
+    JsonDocument doc;
     JsonObject root = doc.to<JsonObject>();
     root["type"] = "animations";
     JsonObject data = root["data"].to<JsonObject>();
@@ -174,7 +174,10 @@ String StripState::getAnimationInfoJson()
         {
             anim = makeAnimation(this, type, 0, 0, {});
         }
-        catch (...) { continue; }
+        catch (...)
+        {
+            continue;
+        }
         JsonObject obj = data[name].to<JsonObject>();
         obj["id"] = (int)type;
         JsonArray arr = obj["params"].to<JsonArray>();
@@ -612,7 +615,8 @@ bool StripState::parseAnimationScript(String script)
             if (tokens.size() == 0)
                 continue;
             String animName = tokens[0];
-            ANIMATION_TYPE type = getAnimationTypeFromName(animName);
+            //  if animName is an int turn it into an animation type
+            ANIMATION_TYPE type = animName.toInt() ? (ANIMATION_TYPE)animName.toInt() : getAnimationTypeFromName(animName);
             if (type == ANIMATION_TYPE_NONE)
             {
                 Serial.printf("Unknown animation type in script: %s out of: ", animName.c_str());
@@ -718,7 +722,7 @@ bool StripState::parseAnimationScript(String script)
                         }
                         else
                         {
-                            Serial.printf("Invalid boolean value for parameter %s: %s\n", full.c_str(), v.c_str());
+                            Serial.printf("Invalid boolean value for parameter %s: %s\n", k.c_str(), v.c_str());
                             continue;
                         }
                     }
