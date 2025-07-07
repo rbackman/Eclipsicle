@@ -245,6 +245,7 @@ class ParamPage(QWidget):
             self.console.send_cmd(cmd)
         else:
             self.console.send_json({"param": pid, "value": val})
+        self.parameter_sent.emit(pid, val)
 
 
 # ───────────────────────────── Main widget -------------------------------------------------------------------
@@ -252,6 +253,7 @@ class ParamPage(QWidget):
 
 class AnimationSendWidget(QWidget):
     # a widget that has a button and options to send single animation, overwrite, start led,end led or full strip
+    animation_sent = pyqtSignal(str)
     def __init__(self, console):
         super().__init__()
         self.console = console
@@ -315,9 +317,10 @@ class AnimationSendWidget(QWidget):
 
                 self.console.send_cmd(
                     f"setanimation:{animation}:{start_led}:{end_led}")
-
+                self.animation_sent.emit(animation)
             else:
                 self.console.send_cmd(f"setanimation:{animation}")
+                self.animation_sent.emit(animation)
         else:
             if self.partial_animation_toggle.isChecked():
                 start_led = self.startSSpinbox.value()
@@ -325,12 +328,16 @@ class AnimationSendWidget(QWidget):
 
                 self.console.send_cmd(
                     f"addanimation:{animation}:{start_led}:{end_led}")
+                self.animation_sent.emit(animation)
             else:
                 self.console.send_cmd(f"replaceanimation:all:{animation}")
+                self.animation_sent.emit(animation)
 
 
 class ParameterMenuWidget(QWidget):
     profile_changed = pyqtSignal(str)
+    parameter_sent = pyqtSignal(int, object)
+    animation_sent = pyqtSignal(str)
 
     def __init__(self, console: SerialConsole):
         super().__init__()
@@ -359,6 +366,7 @@ class ParameterMenuWidget(QWidget):
         paramHLayout = QHBoxLayout()
         pRoot.addLayout(paramHLayout)
         self.animationSender = AnimationSendWidget(console)
+        self.animationSender.animation_sent.connect(self.animation_sent)
 
         pRoot.addWidget(self.animationSender)
         paramHLayout.addWidget(self.tree, 1)

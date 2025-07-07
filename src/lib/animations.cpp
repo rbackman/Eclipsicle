@@ -520,8 +520,7 @@ void NebulaAnimation::update()
 
 void SingleColorAnimation::update()
 {
-    int hueStart = getInt(PARAM_HUE);
-    int hueEnd = getInt(PARAM_HUE_END);
+    int hue = getInt(PARAM_HUE);
     int brightness = getInt(PARAM_BRIGHTNESS);
     float hueValue = hue / 360.0f;               // convert to 0-1 range
     float brightnessValue = brightness / 255.0f; // convert to 0-1 range
