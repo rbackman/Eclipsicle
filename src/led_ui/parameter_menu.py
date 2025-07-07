@@ -144,7 +144,9 @@ def loadParameters():
 
 
 class ParamPage(QWidget):
-    def __init__(self, params, console:  SerialConsole):
+    parameter_sent = pyqtSignal(int, object)
+
+    def __init__(self, params, console: SerialConsole):
         super().__init__()
         self.console = console
         lay = QVBoxLayout(self)
@@ -537,6 +539,8 @@ class ParameterMenuWidget(QWidget):
                     f"Loading parameters for {name} with map: {param_list}  \n {data}   \n")
                 page = ParamPage(data,
                                  self.console) if data else QWidget()
+                if isinstance(page, ParamPage):
+                    page.parameter_sent.connect(self.parameter_sent)
                 self.cache[name] = page
                 self.pages.addWidget(page)
 
