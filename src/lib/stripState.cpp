@@ -130,6 +130,72 @@ String StripState::getStripStateJson(bool verbose)
     return output;
 }
 
+String StripState::getStripStateCompact()
+{
+    String out = "Parameters:\n";
+    for (const auto &p : getIntParameters())
+    {
+        out += String(p.id) + ":" + String(p.value) + "\n";
+    }
+    for (const auto &p : getFloatParameters())
+    {
+        out += String(p.id) + ":" + String(p.value, 2) + "\n";
+    }
+    for (const auto &p : getBoolParameters())
+    {
+        out += String(p.id) + ":" + String(p.value ? "1" : "0") + "\n";
+    }
+    out += "Animations:\n";
+    for (const auto &anim : animations)
+    {
+        out += anim->describeCompact();
+        out += "\n";
+    }
+    return out;
+}
+
+// Forward declaration for internal helper
+static std::unique_ptr<StripAnimation> makeAnimation(
+    StripState *stripState, ANIMATION_TYPE animType, int start, int end,
+    std::map<ParameterID, float> params);
+
+String StripState::getAnimationInfoJson()
+{
+    JsonDocument doc;
+    JsonObject root = doc.to<JsonObject>();
+    root["type"] = "animations";
+    JsonObject data = root["data"].to<JsonObject>();
+    for (const auto &pair : ANIMATION_TYPE_NAMES)
+    {
+        ANIMATION_TYPE type = pair.first;
+        const String &name = pair.second;
+        std::unique_ptr<StripAnimation> anim;
+        try
+        {
+            anim = makeAnimation(this, type, 0, 0, {});
+        }
+        catch (...)
+        {
+            continue;
+        }
+        JsonObject obj = data[name].to<JsonObject>();
+        obj["id"] = (int)type;
+        JsonArray arr = obj["params"].to<JsonArray>();
+        if (anim)
+        {
+            for (const auto &p : anim->getIntParameters())
+                arr.add(p.id);
+            for (const auto &p : anim->getFloatParameters())
+                arr.add(p.id);
+            for (const auto &p : anim->getBoolParameters())
+                arr.add(p.id);
+        }
+    }
+    String out;
+    serializeJson(doc, out);
+    return out;
+}
+
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
 {
     switch (animType)
@@ -509,20 +575,37 @@ bool StripState::parseAnimationScript(String script)
             {
                 val = String(variables[val]);
             }
-            key.toUpperCase();
-            String full = "PARAM_" + key;
-            ParameterID pid = getParameterID(full.c_str());
+            ParameterID pid = PARAM_UNKNOWN;
+            bool numeric = true;
+            for (int i = 0; i < key.length(); ++i)
+            {
+                if (!isDigit(key[i]))
+                {
+                    numeric = false;
+                    break;
+                }
+            }
+            if (numeric)
+            {
+                pid = (ParameterID)key.toInt();
+            }
+            else
+            {
+                key.toUpperCase();
+                String full = "PARAM_" + key;
+                pid = getParameterID(full.c_str());
+            }
             if (pid != PARAM_UNKNOWN)
             {
                 paramOverrides[pid] = val.toFloat();
                 if (isVerbose())
                 {
-                    Serial.printf("Parameter override: %s = %s\n", full.c_str(), val.c_str());
+                    Serial.printf("Parameter override: %d = %s\n", pid, val.c_str());
                 }
             }
             else
             {
-                Serial.printf("Unknown parameter in script: %s\n", full.c_str());
+                Serial.printf("Unknown parameter in script: %s\n", key.c_str());
             }
             continue;
         }
@@ -532,7 +615,8 @@ bool StripState::parseAnimationScript(String script)
             if (tokens.size() == 0)
                 continue;
             String animName = tokens[0];
-            ANIMATION_TYPE type = getAnimationTypeFromName(animName);
+            //  if animName is an int turn it into an animation type
+            ANIMATION_TYPE type = animName.toInt() ? (ANIMATION_TYPE)animName.toInt() : getAnimationTypeFromName(animName);
             if (type == ANIMATION_TYPE_NONE)
             {
                 Serial.printf("Unknown animation type in script: %s out of: ", animName.c_str());
@@ -606,9 +690,26 @@ bool StripState::parseAnimationScript(String script)
                 }
                 else
                 {
-                    k.toUpperCase();
-                    String full = "PARAM_" + k;
-                    ParameterID pid = getParameterID(full.c_str());
+                    ParameterID pid = PARAM_UNKNOWN;
+                    bool numeric = true;
+                    for (int cidx = 0; cidx < k.length(); ++cidx)
+                    {
+                        if (!isDigit(k[cidx]))
+                        {
+                            numeric = false;
+                            break;
+                        }
+                    }
+                    if (numeric)
+                    {
+                        pid = (ParameterID)k.toInt();
+                    }
+                    else
+                    {
+                        k.toUpperCase();
+                        String full = "PARAM_" + k;
+                        pid = getParameterID(full.c_str());
+                    }
                     if (isBoolParameter(pid))
                     {
                         if (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("1"))
@@ -621,7 +722,7 @@ bool StripState::parseAnimationScript(String script)
                         }
                         else
                         {
-                            Serial.printf("Invalid boolean value for parameter %s: %s\n", full.c_str(), v.c_str());
+                            Serial.printf("Invalid boolean value for parameter %s: %s\n", k.c_str(), v.c_str());
                             continue;
                         }
                     }
@@ -633,7 +734,7 @@ bool StripState::parseAnimationScript(String script)
                     }
                     else
                     {
-                        Serial.printf("Unknown parameter in script: %s\n", full.c_str());
+                        Serial.printf("Unknown parameter in script: %s\n", k.c_str());
                     }
                     if (pid != PARAM_UNKNOWN)
                     {

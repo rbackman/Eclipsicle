@@ -345,4 +345,23 @@ String LEDManager::getStripStateJson(bool verbose)
     return stripStates[currentStrip - 1]->getStripStateJson(verbose);
 }
 
+String LEDManager::getStripStateCompact(bool verbose)
+{
+    int currentStrip = getInt(PARAM_CURRENT_STRIP);
+    if (currentStrip == 0)
+    {
+        return stripStates[0]->getStripStateCompact();
+    }
+    return stripStates[currentStrip - 1]->getStripStateCompact();
+}
+
+String LEDManager::getAnimationInfoJson()
+{
+    if (stripStates.empty())
+    {
+        return "{}";
+    }
+    return stripStates[0]->getAnimationInfoJson();
+}
+
 #endif

@@ -74,16 +74,23 @@ class MainWindow(QMainWindow):
         file_menu.addAction(load_action)
 
         reset_action = QAction('Reset Defaults', self)
-        reset_action.triggered.connect(lambda: self.console.send_cmd('resetDefaults'))
+        reset_action.triggered.connect(
+            lambda: self.console.send_cmd('resetDefaults'))
         file_menu.addAction(reset_action)
 
         confirm_action = QAction('Confirm Parameters', self)
         confirm_action.triggered.connect(
             lambda: self.console.send_cmd('confirmParameters'))
+
+        confirm_animation_action = QAction('Confirm Animation', self)
+        confirm_animation_action.triggered.connect(
+            lambda: self.console.send_cmd('confirmAnimations'))
+        file_menu.addAction(confirm_animation_action)
         file_menu.addAction(confirm_action)
 
         state_action = QAction('Get Strip State', self)
-        state_action.triggered.connect(lambda: self.console.send_cmd('getStripState'))
+        state_action.triggered.connect(
+            lambda: self.console.send_cmd('getStripState'))
         file_menu.addAction(state_action)
 
         view_menu = menu_bar.addMenu('View')
@@ -131,7 +138,6 @@ class MainWindow(QMainWindow):
             lambda state: self.sim_action.setChecked(state == Qt.Checked))
         self.led_3d_widget.simulate_checkbox.stateChanged.connect(
             lambda state: self.sim3d_action.setChecked(state == Qt.Checked))
-
 
     def update_brightness(self, label, value):
         label.setText(f'Brightness: {value}')

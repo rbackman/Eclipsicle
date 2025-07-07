@@ -68,6 +68,7 @@ public:
     void blendPixel(int index, led color);
     void setPixelHSV(int index, float hue, float saturation, float value);
     String describe();
+    String describeCompact();
 };
 
 #define NUM_PARTICLES 20

@@ -109,7 +109,8 @@ class SerialConsole(QWidget):
 
                             try:
                                 data = json.loads(msg)
-
+                                if self.verbose_checkbox.isChecked():
+                                    self.log("Received JSON: " + msg)
                                 self.json_signal.emit(data)
 
                             except json.JSONDecodeError as e:
