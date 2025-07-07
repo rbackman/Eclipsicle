@@ -8,6 +8,7 @@
 #include "parameterManager.h"
 #include "animations.h"
 #include <memory>
+#include <map>
 
 #include "animations.h"
 class StripState : public ParameterManager
@@ -29,6 +30,12 @@ private:
 
     std::vector<std::unique_ptr<StripAnimation>> animations;
     LED_STATE ledState = LED_STATE_IDLE;
+
+    // Dynamic parameter expressions per animation
+    std::vector<std::map<ParameterID, String>> dynamicParamExprs;
+    std::map<String, float> scriptVariables;
+    unsigned long timelineStart = 0;
+    float loopLength = 1000.0f; // milliseconds
 
 public:
     bool isActive = true;
