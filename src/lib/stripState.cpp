@@ -154,9 +154,14 @@ String StripState::getStripStateCompact()
     return out;
 }
 
+// Forward declaration for internal helper
+static std::unique_ptr<StripAnimation> makeAnimation(
+    StripState *stripState, ANIMATION_TYPE animType, int start, int end,
+    std::map<ParameterID, float> params);
+
 String StripState::getAnimationInfoJson()
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc(1024);
     JsonObject root = doc.to<JsonObject>();
     root["type"] = "animations";
     JsonObject data = root["data"].to<JsonObject>();
