@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 180,
+    "value": 60,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 347,
+    "value": 120,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -80,7 +80,7 @@
   "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 18,
+    "value": 5,
     "name": "Width",
     "min": 1,
     "max": 60
@@ -104,7 +104,7 @@
   "PARAM_SPAWN_RATE": {
     "id": 15,
     "type": "int",
-    "value": 35,
+    "value": 31,
     "name": "Spawn",
     "min": 1,
     "max": 40
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 42,
+    "value": 255,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -120,7 +120,7 @@
   "PARAM_FADE": {
     "id": 4,
     "type": "int",
-    "value": 223,
+    "value": 219,
     "name": "Fade",
     "min": 0,
     "max": 255
@@ -184,7 +184,7 @@
   "PARAM_OFFSET": {
     "id": 13,
     "type": "int",
-    "value": 60,
+    "value": 0,
     "name": "Offset",
     "min": 0,
     "max": 255
@@ -288,7 +288,7 @@
   "PARAM_SCROLL_SPEED": {
     "id": 18,
     "type": "float",
-    "value": 100.0,
+    "value": 1,
     "name": "Speed",
     "min": 0,
     "max": 100
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 200.0,
+    "value": 1,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -304,7 +304,7 @@
   "PARAM_REPEAT": {
     "id": 12,
     "type": "float",
-    "value": 4.587,
+    "value": 1,
     "name": "Repeat",
     "min": 1,
     "max": 10
@@ -312,7 +312,7 @@
   "PARAM_VELOCITY": {
     "id": 7,
     "type": "float",
-    "value": 80.392,
+    "value": 20,
     "name": "Vel",
     "min": -100,
     "max": 100
@@ -320,7 +320,7 @@
   "PARAM_ACCELERATION": {
     "id": 9,
     "type": "float",
-    "value": 13.359,
+    "value": 0,
     "name": "Accel",
     "min": -10,
     "max": 100
@@ -358,7 +358,7 @@
   "PARAM_HUE_VARIANCE": {
     "id": 47,
     "type": "int",
-    "value": 129,
+    "value": 0,
     "name": "HueVar",
     "min": 0,
     "max": 180

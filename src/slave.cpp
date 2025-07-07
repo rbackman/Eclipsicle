@@ -2,16 +2,16 @@
 
 #ifdef USE_LEDS
 
-#include "ledManager.h"
+#include "lib/ledManager.h"
 
 #endif
 
-#include "meshnet.h"
+#include "lib/meshnet.h"
 
-#include "sensors.h"
-#include "serial.h"
-#include "shared.h"
-#include "config.h"
+#include "lib/sensors.h"
+#include "lib/serial.h"
+#include "lib/shared.h"
+#include "lib/config.h"
 #ifdef USE_MOTOR
 #include "motors.h"
 #endif
