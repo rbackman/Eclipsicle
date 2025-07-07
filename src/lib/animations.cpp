@@ -106,11 +106,15 @@ void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart
 
         if (lower >= 0 && lower < numLEDs())
         {
-            setPixelHSV(lower, hue, 1.0f, value * (1.0f - frac));
+            led temp;
+            colorFromHSV(temp, hue, 1.0f, value * (1.0f - frac));
+            stripState->blendPixel(lower + start, temp);
         }
         if (upper >= 0 && upper < numLEDs())
         {
-            setPixelHSV(upper, hue, 1.0f, value * frac);
+            led temp;
+            colorFromHSV(temp, hue, 1.0f, value * frac);
+            stripState->blendPixel(upper + start, temp);
         }
     }
 }
