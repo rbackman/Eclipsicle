@@ -230,8 +230,12 @@ class AnimationTabWidget(QWidget):
             lower = line.lower()
             if lower in ("animations:", "parameters:", "variables:"):
                 section = lower[:-1]
-                if section != "variables":
-                    lines.append(section.capitalize() + ":")
+                if section == "animations":
+                    lines.append("a:")
+                elif section == "parameters":
+                    lines.append("p:")
+                else:
+                    lines.append("v:")
                 continue
             if section == "variables":
                 if ':' in line:
