@@ -71,7 +71,7 @@ MENU_TREE = {
                                "PARAM_WIDTH",   "PARAM_TIME_SCALE",
                                "PARAM_HUE_VARIANCE"],
             "Sphere": ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_RADIUS", "PARAM_THICKNESS", "PARAM_POS_X", "PARAM_POS_Y", "PARAM_POS_Z"],
-            "Plane":  ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Z", "PARAM_THICKNESS"],
+            "Plane":  ["PARAM_HUE", "PARAM_HUE_END", "PARAM_BRIGHTNESS", "PARAM_POS_Y", "PARAM_THICKNESS"],
             "Point Control": ["PARAM_CURRENT_STRIP", "PARAM_CURRENT_LED", "PARAM_HUE", "PARAM_BRIGHTNESS",]
 
         },
@@ -135,7 +135,7 @@ def loadParameters():
                 if not ParameterDefaults:
                     ParameterDefaults = json.loads(data)
                 ParameterIDMap = {v["id"]: k for k, v in ParameterMap.items()}
-                print("Loaded parameters from file:")
+                print(f"Loaded parameters from file: {ParameterIDMap}")
     except FileNotFoundError:
         print("No parameter map file found, using empty map.")
     except json.JSONDecodeError as e:
@@ -144,7 +144,7 @@ def loadParameters():
 
 
 class ParamPage(QWidget):
-    parameter_sent = pyqtSignal(int, object)
+    parameter_sent = pyqtSignal(str, object)
 
     def __init__(self, params, console: SerialConsole):
         super().__init__()
@@ -246,7 +246,8 @@ class ParamPage(QWidget):
             self.console.send_cmd(cmd)
         else:
             self.console.send_json({"param": pid, "value": val})
-        self.parameter_sent.emit(pid, val)
+        name = ParameterIDMap.get(pid, f"Unknown({pid})")
+        self.parameter_sent.emit(name, val)
 
 
 # ───────────────────────────── Main widget -------------------------------------------------------------------
@@ -255,6 +256,7 @@ class ParamPage(QWidget):
 class AnimationSendWidget(QWidget):
     # a widget that has a button and options to send single animation, overwrite, start led,end led or full strip
     animation_sent = pyqtSignal(str)
+
     def __init__(self, console):
         super().__init__()
         self.console = console
@@ -337,7 +339,7 @@ class AnimationSendWidget(QWidget):
 
 class ParameterMenuWidget(QWidget):
     profile_changed = pyqtSignal(str)
-    parameter_sent = pyqtSignal(int, object)
+    parameter_sent = pyqtSignal(str, object)
     animation_sent = pyqtSignal(str)
 
     def __init__(self, console: SerialConsole):

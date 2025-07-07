@@ -501,6 +501,12 @@ struct Node3D
     float y = 0.0f;
     float z = 0.0f;
 };
+struct Vec3D
+{
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+};
 struct LEDParams
 {
 

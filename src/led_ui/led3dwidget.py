@@ -243,8 +243,9 @@ class LED3DWidget(QWidget):
             self.current_shape = None
         self._update_shape()
 
-    def parameter_changed(self, pid: int, val):
-        pname = ParameterIDMap.get(pid)
+    def parameter_changed(self, pname: str, val):
+
+        print(f"Parameter changed: {pname} = {val}")
         if pname == "PARAM_POS_X":
             self.shape_params["pos_x"] = float(val)
         elif pname == "PARAM_POS_Y":
@@ -308,4 +309,3 @@ class LED3DWidget(QWidget):
             item.translate(pos[0], pos[1], pos[2])
             self.shape_item = item
             self.view.addItem(item)
-

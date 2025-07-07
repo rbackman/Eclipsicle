@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 60,
+    "value": 55,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 120,
+    "value": 268,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 255,
+    "value": 216,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -374,7 +374,7 @@
   "PARAM_POS_Y": {
     "id": 49,
     "type": "float",
-    "value": 0,
+    "value": 0.0,
     "name": "PosY",
     "min": -100,
     "max": 100
@@ -382,7 +382,7 @@
   "PARAM_POS_Z": {
     "id": 50,
     "type": "float",
-    "value": 0.826,
+    "value": 2.4,
     "name": "PosZ",
     "min": -100,
     "max": 100
@@ -390,7 +390,7 @@
   "PARAM_RADIUS": {
     "id": 51,
     "type": "float",
-    "value": 9.302,
+    "value": 65.116,
     "name": "Radius",
     "min": 0,
     "max": 200
@@ -398,7 +398,7 @@
   "PARAM_THICKNESS": {
     "id": 52,
     "type": "float",
-    "value": 1.908,
+    "value": 5.185,
     "name": "Thick",
     "min": 0,
     "max": 50
