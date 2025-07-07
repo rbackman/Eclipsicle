@@ -355,4 +355,13 @@ String LEDManager::getStripStateCompact(bool verbose)
     return stripStates[currentStrip - 1]->getStripStateCompact();
 }
 
+String LEDManager::getAnimationInfoJson()
+{
+    if (stripStates.empty())
+    {
+        return "{}";
+    }
+    return stripStates[0]->getAnimationInfoJson();
+}
+
 #endif

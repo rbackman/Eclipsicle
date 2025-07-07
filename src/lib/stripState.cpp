@@ -154,6 +154,40 @@ String StripState::getStripStateCompact()
     return out;
 }
 
+String StripState::getAnimationInfoJson()
+{
+    DynamicJsonDocument doc(1024);
+    JsonObject root = doc.to<JsonObject>();
+    root["type"] = "animations";
+    JsonObject data = root["data"].to<JsonObject>();
+    for (const auto &pair : ANIMATION_TYPE_NAMES)
+    {
+        ANIMATION_TYPE type = pair.first;
+        const String &name = pair.second;
+        std::unique_ptr<StripAnimation> anim;
+        try
+        {
+            anim = makeAnimation(this, type, 0, 0, {});
+        }
+        catch (...) { continue; }
+        JsonObject obj = data[name].to<JsonObject>();
+        obj["id"] = (int)type;
+        JsonArray arr = obj["params"].to<JsonArray>();
+        if (anim)
+        {
+            for (const auto &p : anim->getIntParameters())
+                arr.add(p.id);
+            for (const auto &p : anim->getFloatParameters())
+                arr.add(p.id);
+            for (const auto &p : anim->getBoolParameters())
+                arr.add(p.id);
+        }
+    }
+    String out;
+    serializeJson(doc, out);
+    return out;
+}
+
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
 {
     switch (animType)

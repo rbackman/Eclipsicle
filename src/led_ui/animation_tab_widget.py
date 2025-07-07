@@ -168,13 +168,43 @@ class AnimationTabWidget(QWidget):
         except Exception:
             return {}
 
+    def _load_anim_map(self):
+        """Return mapping of animation names to IDs."""
+        path = os.path.join(os.path.dirname(__file__), "animation_map.json")
+        try:
+            with open(path, "r") as f:
+                data = json.load(f)
+            mapping = {}
+            for key, info in data.items():
+                aid = info.get("id")
+                name = info.get("name", "")
+                mapping[key.lower()] = aid
+                if name:
+                    mapping[name.lower()] = aid
+            return mapping
+        except Exception:
+            return {}
+
+    def _eval_value(self, expr: str, variables: dict) -> str:
+        """Evaluate an expression using the provided variables."""
+        expr = expr.strip()
+        if expr in variables:
+            return str(variables[expr])
+        try:
+            val = eval(expr, {"__builtins__": None}, variables)
+            return str(val)
+        except Exception:
+            return expr
+
     def _compress_script(self, text: str) -> str:
-        """Replace parameter names with numeric IDs for compact transfer."""
-        mapping = self._load_param_map()
-        if not mapping:
+        """Replace names with numeric IDs and resolve variables."""
+        param_map = self._load_param_map()
+        anim_map = self._load_anim_map()
+        if not param_map:
             return text
         lines = []
         section = None
+        variables = {}
         for raw in text.splitlines():
             line = raw.strip()
             if not line:
@@ -182,30 +212,46 @@ class AnimationTabWidget(QWidget):
             lower = line.lower()
             if lower in ("animations:", "parameters:", "variables:"):
                 section = lower[:-1]
-                lines.append(section.capitalize() + ":")
+                if section != "variables":
+                    lines.append(section.capitalize() + ":")
+                continue
+            if section == "variables":
+                if ':' in line:
+                    name, expr = [p.strip() for p in line.split(':', 1)]
+                    try:
+                        variables[name] = float(self._eval_value(expr, variables))
+                    except Exception:
+                        pass
                 continue
             if section == "parameters":
                 if ':' in line:
                     k, v = [p.strip() for p in line.split(':', 1)]
-                    pid = mapping.get(k.lower())
+                    v = self._eval_value(v, variables)
+                    pid = param_map.get(k.lower())
                     if pid is not None:
                         lines.append(f"{pid}:{v}")
                         continue
                 lines.append(line)
             elif section == "animations":
-                tokens = []
-                for t in line.split():
+                tokens = line.split()
+                if not tokens:
+                    continue
+                name = tokens[0]
+                aid = anim_map.get(name.lower())
+                out = [str(aid) if aid is not None else name]
+                for t in tokens[1:]:
                     if ':' in t:
                         k, v = t.split(':', 1)
                         kl = k.lower()
-                        pid = mapping.get(kl)
+                        v = self._eval_value(v, variables)
+                        pid = param_map.get(kl)
                         if pid is not None and kl not in ("start", "end"):
-                            tokens.append(f"{pid}:{v}")
+                            out.append(f"{pid}:{v}")
                         else:
-                            tokens.append(f"{k}:{v}")
+                            out.append(f"{k}:{v}")
                     else:
-                        tokens.append(t)
-                lines.append(' '.join(tokens))
+                        out.append(t)
+                lines.append(' '.join(out))
             else:
                 lines.append(line)
         return '\n'.join(lines)

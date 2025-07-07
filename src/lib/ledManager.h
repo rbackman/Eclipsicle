@@ -30,6 +30,7 @@ public:
     String getStripState(bool verbose = false);
     String getStripStateJson(bool verbose = false);
     String getStripStateCompact(bool verbose = false);
+    String getAnimationInfoJson();
     int getCurrentStrip();
     std::vector<StripState*> &getStrips() { return stripStates; }
     bool respondToParameterMessage(parameter_message parameter);

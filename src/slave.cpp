@@ -365,6 +365,12 @@ bool processCmd(String command)
     Serial.println(state);
     return true;
   }
+  else if (command == "confirmAnimations")
+  {
+    String info = ledManager->getAnimationInfoJson();
+    Serial.println(info + ";");
+    return true;
+  }
 #ifdef USE_LEDS
   else if (ledManager->handleLEDCommand(command))
   {

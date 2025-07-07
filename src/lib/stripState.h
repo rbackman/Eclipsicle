@@ -103,6 +103,7 @@ public:
     String getStripState(bool verbose = false);
     String getStripStateJson(bool verbose = false);
     String getStripStateCompact();
+    String getAnimationInfoJson();
     int getMidLed() const { return numLEDS / 2; }
     int getNode(int idx) const
     {
