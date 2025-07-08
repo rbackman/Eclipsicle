@@ -106,3 +106,45 @@ your PATH. On Windows you can install the
 [MSYS2 toolchain](https://www.msys2.org/) or the Visual Studio Build Tools
 to provide one.
 
+## Windows build tools
+
+For a quick setup on Windows you can install `g++` and `make` using
+[Chocolatey](https://chocolatey.org/):
+
+```powershell
+choco install mingw make
+```
+
+You may also install GoogleTest if it isn't already available:
+
+```powershell
+choco install googletest
+```
+
+After installation make sure `g++` and `make` are on your `PATH`.
+
+## Running unit tests
+
+The repository contains a small suite of host-side tests under the
+`tests/` folder. Build them with `make`:
+
+```bash
+cd tests
+make
+```
+
+This will produce executables such as `strip_state_test`.  Run them
+directly from the command line:
+
+```bash
+./strip_state_test
+```
+
+The `tools/` folder contains additional simulation helpers that can be
+built in a similar way:
+
+```bash
+cd tools
+make
+```
+
