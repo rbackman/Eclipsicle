@@ -555,7 +555,7 @@ bool StripState::parseAnimationScript(std::string script)
             bool numeric = true;
             for (int i = 0; i < key.length(); ++i)
             {
-                if (!isDigit(key[i]))
+                if (!std::isdigit(static_cast<unsigned char>(key[i])))
                 {
                     numeric = false;
                     break;
@@ -670,7 +670,7 @@ bool StripState::parseAnimationScript(std::string script)
                     bool numeric = true;
                     for (int cidx = 0; cidx < k.length(); ++cidx)
                     {
-                        if (!isDigit(k[cidx]))
+                        if (!std::isdigit(static_cast<unsigned char>(k[cidx])))
                         {
                             numeric = false;
                             break;
