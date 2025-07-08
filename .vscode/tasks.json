@@ -1,0 +1,25 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build tests",
+      "type": "shell",
+      "command": "make",
+      "options": {
+        "cwd": "${workspaceFolder}/tests"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build tools",
+      "type": "shell",
+      "command": "make",
+      "options": {
+        "cwd": "${workspaceFolder}/tools"
+      },
+      "group": "build",
+      "problemMatcher": []
+    }
+  ]
+}
