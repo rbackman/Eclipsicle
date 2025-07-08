@@ -3,14 +3,14 @@
 
 #include "stripState.h"
 #include "animations.h"
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 #include <stdexcept>
 #include <cmath>
 #include <cctype>
 #include <sstream>
 #include "log.h"
 #include "string_utils.h"
-using String = std::string;
+
 int val = 0;
 int minr = 0;
 int maxr = 0;
@@ -28,15 +28,6 @@ ANIMATION_TYPE getAnimationTypeFromName(const std::string &name)
     return ANIMATION_TYPE_NONE;
 }
 
-std::vector<std::string> getAnimationNames()
-{
-    std::vector<std::string> names;
-    for (const auto &pair : ANIMATION_TYPE_NAMES)
-    {
-        names.push_back(pair.second);
-    }
-    return names;
-}
 std::string rleCompresssCRGB(const CRGB *leds, int numLEDS)
 {
     std::string result;
@@ -73,7 +64,7 @@ void StripState::toggleMode()
 {
     ledState = (LED_STATE)(((int)ledState + 1) % LED_STATE_COUNT);
     LOG_PRINTLN("LED State: ");
-    LOG_PRINTLN(getLedStateName(ledState));
+    LOG_PRINTLN(getLedStateName(ledState).c_str());
     this->clearPixels();
 }
 
@@ -324,7 +315,7 @@ enum MatchType
     MATCH_TYPE_CONTAINS,
     MATCH_TYPE_EQUALS
 };
-bool listContainsString(const std::vector<String> &list, const String &str, MatchType matchType = MATCH_TYPE_EQUALS)
+bool listContainsString(const std::vector<std::string> &list, const std::string &str, MatchType matchType = MATCH_TYPE_EQUALS)
 {
     for (const auto &item : list)
     {
@@ -332,7 +323,7 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
         {
             return true;
         }
-        else if (matchType == MATCH_TYPE_ENDS_WITH && item.endsWith(str))
+        else if (matchType == MATCH_TYPE_ENDS_WITH && endsWith(item, str))
         {
             return true;
         }
@@ -348,7 +339,7 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
     return false;
 }
 
-static void skipSpaces(const String &expr, int &pos)
+static void skipSpaces(const std::string &expr, int &pos)
 {
     while (pos < expr.length() && isspace(static_cast<unsigned char>(expr[pos])))
     {
@@ -356,11 +347,11 @@ static void skipSpaces(const String &expr, int &pos)
     }
 }
 
-static float parseExpression(const String &expr, int &pos, const std::map<String, float> &vars);
-static float parseTerm(const String &expr, int &pos, const std::map<String, float> &vars);
-static float parseFactor(const String &expr, int &pos, const std::map<String, float> &vars);
+static float parseExpression(const std::string &expr, int &pos, const std::map<std::string, float> &vars);
+static float parseTerm(const std::string &expr, int &pos, const std::map<std::string, float> &vars);
+static float parseFactor(const std::string &expr, int &pos, const std::map<std::string, float> &vars);
 
-static float parseFactor(const String &expr, int &pos, const std::map<String, float> &vars)
+static float parseFactor(const std::string &expr, int &pos, const std::map<std::string, float> &vars)
 {
     skipSpaces(expr, pos);
     bool neg = false;
@@ -387,7 +378,7 @@ static float parseFactor(const String &expr, int &pos, const std::map<String, fl
     {
         pos++;
     }
-    String token = substring(expr, start, pos);
+    std::string token = substring(expr, start, pos);
     float val = 0.0f;
     if (token.length() == 0)
     {
@@ -412,7 +403,7 @@ static float parseFactor(const String &expr, int &pos, const std::map<String, fl
     return val;
 }
 
-static float parseTerm(const String &expr, int &pos, const std::map<String, float> &vars)
+static float parseTerm(const std::string &expr, int &pos, const std::map<std::string, float> &vars)
 {
     float val = parseFactor(expr, pos, vars);
     while (true)
@@ -439,7 +430,7 @@ static float parseTerm(const String &expr, int &pos, const std::map<String, floa
     return val;
 }
 
-static float parseExpression(const String &expr, int &pos, const std::map<String, float> &vars)
+static float parseExpression(const std::string &expr, int &pos, const std::map<std::string, float> &vars)
 {
     float val = parseTerm(expr, pos, vars);
     while (true)
@@ -466,7 +457,7 @@ static float parseExpression(const String &expr, int &pos, const std::map<String
     return val;
 }
 
-static float evaluateExpression(const String &expr, const std::map<String, float> &vars)
+static float evaluateExpression(const std::string &expr, const std::map<std::string, float> &vars)
 {
     int pos = 0;
     return parseExpression(expr, pos, vars);
@@ -474,14 +465,15 @@ static float evaluateExpression(const String &expr, const std::map<String, float
 
 bool StripState::parseAnimationScript(std::string script)
 {
-    script.replace('|', '\n');
-    std::vector<String> lines = splitString(script, '\n');
+
+    replace(script, "|", "\n");
+    std::vector<std::string> lines = splitString(script, '\n');
     bool inParams = false;
     bool inAnims = false;
     bool inVars = false;
-    String configFile;
+    std::string configFile;
     std::map<ParameterID, float> paramOverrides;
-    std::map<String, float> variables;
+    std::map<std::string, float> variables;
     struct AnimLine
     {
         ANIMATION_TYPE type;
@@ -498,7 +490,7 @@ bool StripState::parseAnimationScript(std::string script)
             continue;
         if (startsWith(line, "ConfigFile:"))
         {
-            configFile = substring(line, String("ConfigFile:").length());
+            configFile = substring(line, 11);
             trim(configFile);
             continue;
         }
@@ -534,8 +526,8 @@ bool StripState::parseAnimationScript(std::string script)
             int colon = indexOf(line, ':');
             if (colon == -1)
                 continue;
-            String key = substring(line, 0, colon);
-            String val = substring(line, colon + 1);
+            std::string key = substring(line, 0, colon);
+            std::string val = substring(line, colon + 1);
             trim(key);
             trim(val);
             float v = evaluateExpression(val, variables);
@@ -551,13 +543,13 @@ bool StripState::parseAnimationScript(std::string script)
             int colon = indexOf(line, ':');
             if (colon == -1)
                 continue;
-            String key = substring(line, 0, colon);
-            String val = substring(line, colon + 1);
+            std::string key = substring(line, 0, colon);
+            std::string val = substring(line, colon + 1);
             trim(key);
             trim(val);
             if (variables.find(val) != variables.end())
             {
-                val = String(variables[val]);
+                val = std::to_string(variables[val]);
             }
             ParameterID pid = PARAM_UNKNOWN;
             bool numeric = true;
@@ -576,7 +568,7 @@ bool StripState::parseAnimationScript(std::string script)
             else
             {
                 toUpperCase(key);
-                String full = "PARAM_" + key;
+                std::string full = "PARAM_" + key;
                 pid = getParameterID(full.c_str());
             }
             if (pid != PARAM_UNKNOWN)
@@ -598,7 +590,7 @@ bool StripState::parseAnimationScript(std::string script)
             auto tokens = splitString(line, ' ');
             if (tokens.size() == 0)
                 continue;
-            String animName = tokens[0];
+            std::string animName = tokens[0];
             //  if animName is an int turn it into an animation type
             ANIMATION_TYPE type = toInt(animName) ? (ANIMATION_TYPE)toInt(animName) : getAnimationTypeFromName(animName);
             if (type == ANIMATION_TYPE_NONE)
@@ -620,17 +612,17 @@ bool StripState::parseAnimationScript(std::string script)
             std::map<ParameterID, float> params;
             for (int i = 1; i < tokens.size(); ++i)
             {
-                String t = tokens[i];
+                std::string t = tokens[i];
                 int c = indexOf(t, ':');
                 if (c == -1)
                     continue;
-                String k = substring(t, 0, c);
-                String v = substring(t, c + 1);
+                std::string k = substring(t, 0, c);
+                std::string v = substring(t, c + 1);
                 trim(k);
                 trim(v);
                 if (variables.find(v) != variables.end())
                 {
-                    v = String(variables[v]);
+                    v = std::to_string(variables[v]);
                 }
                 if (equalsIgnoreCase(k, "start"))
                 {
@@ -691,7 +683,7 @@ bool StripState::parseAnimationScript(std::string script)
                     else
                     {
                         toUpperCase(k);
-                        String full = "PARAM_" + k;
+                        std::string full = "PARAM_" + k;
                         pid = getParameterID(full.c_str());
                     }
                     if (isBoolParameter(pid))
@@ -733,7 +725,7 @@ bool StripState::parseAnimationScript(std::string script)
     ledState = LED_STATE_MULTI_ANIMATION;
     animations.clear();
 
-     for (const auto &a : anims)
+    for (const auto &a : anims)
     {
         addAnimation(a.type, a.start, a.end, a.params);
     }
@@ -763,18 +755,18 @@ bool StripState::respondToText(std::string command)
     bool verbose = isVerbose();
     if (startsWith(command, "script:"))
     {
-        String script = substring(command, String("script:").length());
+        std::string script = substring(command, 7);
         return parseAnimationScript(script);
     }
     if (startsWith(command, "get_nodes"))
     {
-        String nodeString = "nodes:";
-        nodeString += String(stripIndex) + ":" + String(numLEDS) + ":" + String(nodes.size()) + ":";
+        std::string nodeString = "nodes:";
+        nodeString += std::to_string(stripIndex) + ":" + std::to_string(numLEDS) + ":" + std::to_string(nodes.size()) + ":";
         for (const auto &node : nodes)
         {
-            nodeString += String(node.index) + "," + String(node.x) + "," + String(node.y) + "," + String(node.z) + ":";
+            nodeString += std::to_string(node.index) + "," + std::to_string(node.x) + "," + std::to_string(node.y) + "," + std::to_string(node.z) + ":";
         }
-        LOG_PRINTLN(nodeString);
+        LOG_PRINTLN(nodeString.c_str());
         return true;
     }
     if (startsWith(command, "simulate:"))
@@ -915,8 +907,8 @@ bool StripState::respondToText(std::string command)
         int end = getNumLEDS() - 1;
         if (animparts.size() == 4)
         {
-            start = animparts[2].toInt();
-            end = animparts[3].toInt();
+            start = toInt(animparts[2]);
+            end = toInt(animparts[3]);
         }
         addAnimation(animType, start, end);
         return true;

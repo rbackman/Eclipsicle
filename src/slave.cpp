@@ -13,6 +13,7 @@
 #include "lib/shared.h"
 #include "lib/config.h"
 #include "lib/profiler.h"
+#include "lib/string_utils.h"
 #ifdef USE_MOTOR
 #include "motors.h"
 #endif
@@ -284,8 +285,8 @@ bool processCmd(String command)
       return false;
     }
     auto parts = splitString(std::string(command.c_str()), ':');
-    int paramID = parts[1].toInt();
-    String value = parts[2];
+    int paramID = toInt(parts[1]);
+    std::string value = parts[2];
     ParameterID pid = (ParameterID)paramID;
 
     parameter_message parameter;
@@ -294,11 +295,11 @@ bool processCmd(String command)
 
     if (isIntParameter(pid))
     {
-      parameter.value = value.toInt();
+      parameter.value = toInt(value);
     }
     else if (isFloatParameter(pid))
     {
-      parameter.floatValue = value.toFloat();
+      parameter.floatValue = toFloat(value);
     }
     else if (isBoolParameter(pid))
     {

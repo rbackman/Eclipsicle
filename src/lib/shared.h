@@ -481,7 +481,7 @@ enum ANIMATION_TYPE
 };
 
 std::string getAnimationName(ANIMATION_TYPE type);
-
+std::vector<std::string> getAnimationNames();
 struct AnimationParams
 {
     ANIMATION_TYPE type;

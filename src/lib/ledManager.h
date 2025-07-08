@@ -33,7 +33,7 @@ public:
     std::string getStripStateCompact(bool verbose = false);
     std::string getAnimationInfoJson();
     int getCurrentStrip();
-    std::vector<StripState*> &getStrips() { return stripStates; }
+    std::vector<StripState *> &getStrips() { return stripStates; }
     bool respondToParameterMessage(parameter_message parameter);
 };
 

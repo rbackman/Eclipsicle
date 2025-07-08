@@ -86,7 +86,12 @@
         "numbers": "cpp",
         "semaphore": "cpp",
         "span": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "forward_list": "cpp",
+        "ranges": "cpp",
+        "valarray": "cpp"
     },
     "cmake.sourceDirectory": "C:/Users/rback/Code/roborepo/apps/ledSpinner"
 }
