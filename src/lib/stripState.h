@@ -8,6 +8,7 @@
 #include "parameterManager.h"
 #include "animations.h"
 #include <memory>
+#include <string>
 
 #include "animations.h"
 class StripState : public ParameterManager
@@ -88,8 +89,8 @@ public:
 
     void setAll(CRGB color);
     void setAll(led color);
-    bool respondToText(String command);
-    bool parseAnimationScript(String script);
+    bool respondToText(std::string command);
+    bool parseAnimationScript(std::string script);
 
     void clearPixels();
     void clearPixel(int index);
@@ -100,10 +101,10 @@ public:
     void toggleMode();
 
     void update();
-    String getStripState(bool verbose = false);
-    String getStripStateJson(bool verbose = false);
-    String getStripStateCompact();
-    String getAnimationInfoJson();
+    std::string getStripState(bool verbose = false);
+    std::string getStripStateJson(bool verbose = false);
+    std::string getStripStateCompact();
+    std::string getAnimationInfoJson();
     int getMidLed() const { return numLEDS / 2; }
     int getNode(int idx) const
     {

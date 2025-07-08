@@ -2,6 +2,7 @@
 #pragma once
 #include "shared.h"
 #include <FastLED.h>
+#include <string>
 
 // Hardware configuration for FastLED.  These defaults are
 // shared between the simulator and the LED manager so the
@@ -16,4 +17,4 @@
 
 ByteRow base64Decode(uint8_t *input, int len);
 void decodeRLE(ByteRow encodedData, LedRow &dest);
-String getLedStateName(LED_STATE state);
+std::string getLedStateName(LED_STATE state);

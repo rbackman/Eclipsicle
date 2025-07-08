@@ -13,6 +13,7 @@
 #include "lib/shared.h"
 #include "lib/config.h"
 #include "lib/profiler.h"
+#include "lib/string_utils.h"
 #ifdef USE_MOTOR
 #include "motors.h"
 #endif
@@ -283,9 +284,9 @@ bool processCmd(String command)
       Serial.println("Invalid command format. Expected 'p:PARAM_ID:VALUE'");
       return false;
     }
-    auto parts = splitString(command, ':');
-    int paramID = parts[1].toInt();
-    String value = parts[2];
+    auto parts = splitString(std::string(command.c_str()), ':');
+    int paramID = toInt(parts[1]);
+    std::string value = parts[2];
     ParameterID pid = (ParameterID)paramID;
 
     parameter_message parameter;
@@ -294,11 +295,11 @@ bool processCmd(String command)
 
     if (isIntParameter(pid))
     {
-      parameter.value = value.toInt();
+      parameter.value = toInt(value);
     }
     else if (isFloatParameter(pid))
     {
-      parameter.floatValue = value.toFloat();
+      parameter.floatValue = toFloat(value);
     }
     else if (isBoolParameter(pid))
     {
@@ -355,21 +356,22 @@ bool processCmd(String command)
   }
   else if (command == "getStripState")
   {
-    String state = ledManager->getStripStateJson(true);
-    Serial.println(state + ";");
+    std::string state = ledManager->getStripStateJson(true);
+    Serial.println(String(state.c_str()) + ";");
     return true;
   }
   else if (command == "getStripStateCompact")
   {
-    String state = ledManager->getStripStateCompact(true);
-    state.replace('\n', '|');
-    Serial.println(state);
+    std::string state = ledManager->getStripStateCompact(true);
+    String out = String(state.c_str());
+    out.replace('\n', '|');
+    Serial.println(out);
     return true;
   }
   else if (command == "confirmAnimations")
   {
-    String info = ledManager->getAnimationInfoJson();
-    Serial.println(info + ";");
+    std::string info = ledManager->getAnimationInfoJson();
+    Serial.println(String(info.c_str()) + ";");
     return true;
   }
 #ifdef USE_LEDS
@@ -410,7 +412,10 @@ bool processCmd(String command)
     display.print(g.gyro.z, 1);
     display.println("");
   }
-  display.print(ledManager->getStripState());
+  {
+    std::string state = ledManager->getStripState();
+    display.print(String(state.c_str()));
+  }
 
   display.display();
 #endif

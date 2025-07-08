@@ -2,6 +2,7 @@
 #pragma once
 #include "shared.h"
 #include "parameterManager.h"
+#include <string>
 
 class StripState;
 struct Particle
@@ -67,8 +68,8 @@ public:
     void setPixel(int index, led color);
     void blendPixel(int index, led color);
     void setPixelHSV(int index, float hue, float saturation, float value);
-    String describe();
-    String describeCompact();
+    std::string describe();
+    std::string describeCompact();
 };
 
 #define NUM_PARTICLES 20

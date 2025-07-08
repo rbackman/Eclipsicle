@@ -5,9 +5,17 @@
 #include <FastLED.h>
 #include <algorithm>
 #include <cmath>
+#include <sstream>
+#include <cstdlib>
+#include "log.h"
 
 led animationColor;
 int animCount = 0;
+
+static inline int randomInt(int minVal, int maxVal)
+{
+    return minVal + std::rand() % (maxVal - minVal);
+}
 
 float clamp(float value, float min, float max)
 {
@@ -34,7 +42,7 @@ Vec3D StripAnimation::getLEDPosition(int ledIndex)
 {
     if (ledIndex < 0 || ledIndex >= numLEDs())
     {
-        Serial.printf("Invalid LED index %d for strip animation\n", ledIndex);
+        LOG_PRINTF("Invalid LED index %d for strip animation\n", ledIndex);
         return Vec3D{};
     }
     return stripState->getNode3D(ledIndex + start);
@@ -46,45 +54,43 @@ void StripAnimation::setPixelHSV(int index, float hue, float saturation, float v
     stripState->blendPixel(index, animationColor);
 }
 
-String StripAnimation::describe()
+std::string StripAnimation::describe()
 {
-    String desc = getAnimationName(animationType).c_str();
-    desc += " start:" + String(start);
-    desc += " end:" + String(end);
+    std::ostringstream desc;
+    desc << getAnimationName(animationType) << " start:" << start << " end:" << end;
 
     for (const auto &p : getIntParameters())
     {
-        desc += " " + String(getParameterName(p.id).c_str()) + ":" + String(p.value);
+        desc << " " << getParameterName(p.id) << ":" << p.value;
     }
     for (const auto &p : getFloatParameters())
     {
-        desc += " " + String(getParameterName(p.id).c_str()) + ":" + String(p.value, 2);
+        desc << " " << getParameterName(p.id) << ":" << p.value;
     }
     for (const auto &p : getBoolParameters())
     {
-        desc += " " + String(getParameterName(p.id).c_str()) + ":" + String(p.value ? "1" : "0");
+        desc << " " << getParameterName(p.id) << ":" << (p.value ? "1" : "0");
     }
-    return desc;
+    return desc.str();
 }
 
-String StripAnimation::describeCompact()
+std::string StripAnimation::describeCompact()
 {
-    String desc = getAnimationName(animationType).c_str();
-    desc += " start:" + String(start);
-    desc += " end:" + String(end);
+    std::ostringstream desc;
+    desc << getAnimationName(animationType) << " start:" << start << " end:" << end;
     for (const auto &p : getIntParameters())
     {
-        desc += " " + String(p.id) + ":" + String(p.value);
+        desc << " " << p.id << ":" << p.value;
     }
     for (const auto &p : getFloatParameters())
     {
-        desc += " " + String(p.id) + ":" + String(p.value, 2);
+        desc << " " << p.id << ":" << p.value;
     }
     for (const auto &p : getBoolParameters())
     {
-        desc += " " + String(p.id) + ":" + String(p.value ? "1" : "0");
+        desc << " " << p.id << ":" << (p.value ? "1" : "0");
     }
-    return desc;
+    return desc.str();
 }
 
 void ParticleAnimation::updateRandomParticles()
@@ -94,17 +100,17 @@ void ParticleAnimation::updateRandomParticles()
     float endHue = getFloat(PARAM_HUE_END);
     float velocity = getFloat(PARAM_VELOCITY);
 
-    if (random(0, 100) > 90)
+    if (randomInt(0, 100) > 90)
     {
-        float vel = random(10, 50) / 100.0;
+        float vel = randomInt(10, 50) / 100.0;
         if (abs(vel) < 0.5)
         {
-            vel = random(1, 2);
+            vel = randomInt(1, 2);
         }
-        // random(0, 360), random(0, 255)
-        int shue = startHue + random(-60, 60);
-        int ehue = startHue + random(-60, 60);
-        int size = random(2, 10);
+        // randomInt(0, 360), randomInt(0, 255)
+        int shue = startHue + randomInt(-60, 60);
+        int ehue = startHue + randomInt(-60, 60);
+        int size = randomInt(2, 10);
         spawnParticle(0, vel, shue, ehue, 200, size, 60);
     }
     updateParticles();
@@ -166,7 +172,7 @@ void ParticleAnimation::updateParticles()
     if (animCount++ > 1000)
     {
         if (isVerbose())
-            Serial.printf("Particle animation time scale: %f cycle: %d hueStart: %d hueEnd: %d brightness: %d fade: %d width: %d life: %d randomDrift: %d acceleration: %f maxSpeed: %f\n", timeScale, cycle, hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed);
+            LOG_PRINTF("Particle animation time scale: %f cycle: %d hueStart: %d hueEnd: %d brightness: %d fade: %d width: %d life: %d randomDrift: %d acceleration: %f maxSpeed: %f\n", timeScale, cycle, hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed);
         animCount = 0;
     }
     for (int i = 0; i < NUM_PARTICLES; i++)
@@ -216,7 +222,7 @@ void ParticleAnimation::updateParticles()
 
             // if (particle->randomDrift > 0)
             // {
-            //     if (random(0, 100) < particle->randomDrift)
+            //     if (randomInt(0, 100) < particle->randomDrift)
             //     {
             //         particle->acceleration = -particle->acceleration;
             //     }
@@ -259,7 +265,7 @@ void ParticleAnimation::spawnParticle()
 
     const int ledCount = numLEDs();
 
-    if (random(0, 100) < 50)
+    if (randomInt(0, 100) < 50)
     {
         int pos = ledCount + width;
         float vel = -velocity;
@@ -340,7 +346,7 @@ void ParticleAnimation::update()
     }
     if (timeScale != 0)
     {
-        int ranVal = random(0, 1000);
+        int ranVal = randomInt(0, 1000);
         if (ranVal < spawnRate)
         {
 
@@ -361,7 +367,7 @@ void RandomAnimation::update()
 
     if (animCount++ > 100)
     {
-        Serial.printf("Random animation scroll speed: %f random off: %d brightness: %d\n", scrollSpeed, randomOff, brightness);
+        LOG_PRINTF("Random animation scroll speed: %f random off: %d brightness: %d\n", scrollSpeed, randomOff, brightness);
         animCount = 0;
     }
 
@@ -372,7 +378,7 @@ void RandomAnimation::update()
     for (int i = 0; i < count; i++)
     {
         int val = i + scrollPos;
-        if (random(0, 100) > randomOff)
+        if (randomInt(0, 100) > randomOff)
         {
             float hue = fmodf(float(val) * invCount * 360.0f, 360.0f);
             setPixelHSV(i, hue / 360.0f, 1.0f, bright);
