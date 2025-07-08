@@ -7,9 +7,6 @@
 #include <array>
 #include <string>
 
-#include <Arduino.h>
-// #include <cstdint>
-
 #define PARAMETER_LIST             \
     X(PARAM_HUE)                   \
     X(PARAM_HUE_END)               \
@@ -366,7 +363,7 @@ const char *getMenuName(MenuID type, int MaxSize = 6);
 
 const MenuID getParentMenu(MenuID type);
 
-std::vector<String> splitString(const String &path, char delimiter);
+std::vector<std::string> splitString(const std::string &path, char delimiter);
 
 // Maximum sizes
 #define MAX_TEXT_SIZE 144
@@ -421,7 +418,7 @@ struct SensorState
     bool initialized = false;
     bool changed = false;
     int lastValues[5] = {0, 0, 0, 0, 0};
-    int lastButtonState = HIGH;
+    int lastButtonState = 1;
     unsigned long lastDebounceTime = 0;
     int tolerance = 1;
     SensorState(SensorType t, int p, SensorID n) : type(t), pin(p), sensorID(n) {}
@@ -527,13 +524,13 @@ struct LEDRig
 };
 
 // map to state names
-const std::map<LED_STATE, String> LED_STATE_NAMES = {
+const std::map<LED_STATE, std::string> LED_STATE_NAMES = {
     {LED_STATE_IDLE, "IDLE"},
     {LED_STATE_POINT_CONTROL, "POINTCONTROL"},
     {LED_STATE_SINGLE_ANIMATION, "SINGLEANIMATION"},
     {LED_STATE_MULTI_ANIMATION, "MULTIANIMATION"}};
 
-const std::map<ANIMATION_TYPE, String> ANIMATION_TYPE_NAMES = {
+const std::map<ANIMATION_TYPE, std::string> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_NONE, "NONE"},
     {ANIMATION_TYPE_PARTICLES, "PARTICLES"},
     {ANIMATION_TYPE_RAINBOW, "RAINBOW"},

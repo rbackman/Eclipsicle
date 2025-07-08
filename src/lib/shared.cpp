@@ -1,11 +1,9 @@
 #include "shared.h"
-#ifdef ARDUINO
-#include <WiFi.h>
-#endif
+
 #include <cmath>
 
 bool _verbose = false;
-String _name = "default";
+std::string _name = "default";
 
 std::vector<LEDRig> ledRigs = {
 
@@ -27,7 +25,7 @@ LEDRig *getLEDRig(const std::string &name)
   return nullptr;
 }
 
-String getName()
+std::string getName()
 {
   return _name;
 }
@@ -79,14 +77,14 @@ std::vector<MenuID> getChildrenOfMenu(MenuID type)
 }
 std::string getMenuPath(MenuID type, MenuID root)
 {
-  String path = getMenuName(type);
+  std::string path = getMenuName(type);
   MenuID parent = getParentMenu(type);
   while (parent != MENU_ROOT && parent != root)
   {
-    path = String(getMenuName(parent)) + "/" + String(path.c_str());
+    path = std::string(getMenuName(parent)) + "/" + path;
     parent = getParentMenu(parent);
   }
-  return path.c_str();
+  return path;
 }
 const MenuID getParentMenu(MenuID type)
 {
@@ -96,16 +94,6 @@ const MenuID getParentMenu(MenuID type)
     return it->second.second;
   }
   return MENU_IDLE;
-}
-
-void printBytes(ByteRow data)
-{
-  Serial.println("bytes -->");
-  for (int i = 0; i < data.size(); ++i)
-  {
-    Serial.printf("%d ", data[i]);
-  }
-  Serial.println("<-- as bytes");
 }
 
 void setVerbose(bool verb)
@@ -191,18 +179,30 @@ std::string getParameterName(ParameterID type)
   return name;
 }
 
-std::vector<String> splitString(const String &path, char delimiter)
+std::vector<std::string> splitString(const std::string &path, char delimiter)
 {
-  std::vector<String> result;
+  std::vector<std::string> result;
   size_t start = 0;
-  size_t end = path.indexOf(delimiter);
-  while (end != -1)
+  size_t end = path.find(delimiter);
+  while (end != std::string::npos)
   {
-    result.push_back(path.substring(start, end));
+    if (start < end)
+    {
+      result.push_back(path.substr(start, end - start));
+    }
     start = end + 1;
-    end = path.indexOf(delimiter, start);
+    end = path.find(delimiter, start);
   }
-  result.push_back(path.substring(start));
+  if (start < path.length())
+  {
+    result.push_back(path.substr(start));
+  }
+  {
+    result.push_back(path.substr(start, end));
+    start = end + 1;
+    end = path.find(delimiter, start);
+  }
+  result.push_back(path.substr(start));
   return result;
 }
 std::vector<std::string> getAnimationNames()
@@ -313,12 +313,12 @@ void sanityCheckParameters()
     if (!found)
     {
       missingParams++;
-      Serial.printf("Parameter %s not found in default parameters\n", names[i].c_str());
+      printf("Missing parameter ID %d (%s)\n", i, names[i].c_str());
     }
   }
   if (missingParams == 0)
   {
-    Serial.println("All parameters accounted for");
+    printf("All parameters accounted for\n");
   }
 }
 
@@ -347,5 +347,4 @@ void addStripToRig(const std::string &name, int stripIndex, int numLEDS, LED_STA
       return;
     }
   }
-  Serial.printf("Error: Rig %s not found\n", name.c_str());
 }
