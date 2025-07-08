@@ -104,7 +104,7 @@
   "PARAM_SPAWN_RATE": {
     "id": 15,
     "type": "int",
-    "value": 4,
+    "value": 2,
     "name": "Spawn",
     "min": 1,
     "max": 40
@@ -128,7 +128,7 @@
   "PARAM_LIFE": {
     "id": 16,
     "type": "int",
-    "value": -1,
+    "value": 20,
     "name": "Life",
     "min": -1,
     "max": 100
@@ -184,7 +184,7 @@
   "PARAM_OFFSET": {
     "id": 13,
     "type": "int",
-    "value": 0,
+    "value": 52,
     "name": "Offset",
     "min": 0,
     "max": 255
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 34.109,
+    "value": 92.424,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -312,7 +312,7 @@
   "PARAM_VELOCITY": {
     "id": 7,
     "type": "float",
-    "value": 20,
+    "value": 3.226,
     "name": "Vel",
     "min": -100,
     "max": 100
@@ -320,7 +320,7 @@
   "PARAM_ACCELERATION": {
     "id": 9,
     "type": "float",
-    "value": 0,
+    "value": -0.012,
     "name": "Accel",
     "min": -10,
     "max": 100
@@ -344,7 +344,7 @@
   "PARAM_NOISE_SPEED": {
     "id": 44,
     "type": "float",
-    "value": 0.1,
+    "value": 0.536,
     "name": "NSpd",
     "min": 0,
     "max": 5

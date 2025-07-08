@@ -1,4 +1,4 @@
 ConfigFile:
 Parameters:
 Animations:
-    Particles
+    Particles spawn:60 time_scale:50 width:20 hue_end:350 hue:1

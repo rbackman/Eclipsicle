@@ -57,7 +57,7 @@ class LED3DWidget(QWidget):
     def _sim_state_changed(self, state):
         enabled = state == Qt.Checked
         if enabled:
-            self.console.send_cmd("simulate:1")
+            self.console.send_cmd("simulate:5")
         else:
             self.console.send_cmd("simulate:-1")
         self.setVisible(enabled)

@@ -9,6 +9,8 @@ import json
 import typing
 
 
+DEFAULT_BAUD = 921600
+
 class SerialConsole(QWidget):
     append_signal = pyqtSignal(str)
     string_signal = pyqtSignal(str)
@@ -19,11 +21,12 @@ class SerialConsole(QWidget):
     stringListeners: list[typing.Callable] = []
     jsonListeners: list[typing.Callable] = []
 
-    def __init__(self, port, baud=115200, timeout=0.1):
+    def __init__(self, port, baud=DEFAULT_BAUD, timeout=0.1):
         super().__init__()
 
         self.ser = None
         self.running = False  # Start off
+        self.baud = baud
         self.last_error = ""
         self.string_signal.connect(self.broadcast_string)
         self.json_signal.connect(self.broadcast_json)
@@ -223,7 +226,7 @@ class SerialConsole(QWidget):
         if self.ser and self.ser.is_open:
             self.ser.close()
         try:
-            self.ser = serial.Serial(port, 115200, timeout=0.1)
+            self.ser = serial.Serial(port, self.baud, timeout=0.1)
             self.log(f"Connected to {port}")
         except serial.SerialException as e:
             self.show_error(f"Could not open serial port {port}:\n{e}")
