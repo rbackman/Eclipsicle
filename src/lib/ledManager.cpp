@@ -3,6 +3,7 @@
 #include "stripState.h"
 #include "ledManager.h"
 #include "leds.h"
+#include <string>
 
 LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
@@ -185,7 +186,7 @@ bool LEDManager::handleLEDCommand(String command)
             // if (currentStrip == 0 || currentStrip == i + 1)
             // {
 
-            if (stripStates[i]->respondToText(command))
+            if (stripStates[i]->respondToText(std::string(command.c_str())))
             {
 
                 res = true;
@@ -326,7 +327,7 @@ void LEDManager::toggleMode()
         stripStates[currentStrip - 1]->toggleMode();
     }
 }
-String LEDManager::getStripState(bool verbose)
+std::string LEDManager::getStripState(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
@@ -336,7 +337,7 @@ String LEDManager::getStripState(bool verbose)
     return stripStates[currentStrip - 1]->getStripState(verbose);
 }
 
-String LEDManager::getStripStateJson(bool verbose)
+std::string LEDManager::getStripStateJson(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
@@ -346,7 +347,7 @@ String LEDManager::getStripStateJson(bool verbose)
     return stripStates[currentStrip - 1]->getStripStateJson(verbose);
 }
 
-String LEDManager::getStripStateCompact(bool verbose)
+std::string LEDManager::getStripStateCompact(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
@@ -356,7 +357,7 @@ String LEDManager::getStripStateCompact(bool verbose)
     return stripStates[currentStrip - 1]->getStripStateCompact();
 }
 
-String LEDManager::getAnimationInfoJson()
+std::string LEDManager::getAnimationInfoJson()
 {
     if (stripStates.empty())
     {

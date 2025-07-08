@@ -5,6 +5,7 @@
 #define FASTLED_ESP32_DMA
 #include "leds.h"
 #include "sensors.h"
+#include <string>
 
 // #define LED_PIN_1 2
 // #define LED_PIN_2 4
@@ -41,7 +42,7 @@ ByteRow base64Decode(uint8_t *input, int len)
     return ret;
 }
 
-String getLedStateName(LED_STATE state)
+std::string getLedStateName(LED_STATE state)
 {
     return LED_STATE_NAMES.at(state);
 }

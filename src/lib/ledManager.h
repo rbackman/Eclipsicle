@@ -1,6 +1,7 @@
 #pragma once
 #ifdef USE_LEDS
 #include "stripState.h"
+#include <string>
 
 class LEDManager : public ParameterManager
 {
@@ -27,10 +28,10 @@ public:
     bool handleLEDCommand(String command);
     void setLED(int ledIndex, led color);
     void toggleMode();
-    String getStripState(bool verbose = false);
-    String getStripStateJson(bool verbose = false);
-    String getStripStateCompact(bool verbose = false);
-    String getAnimationInfoJson();
+    std::string getStripState(bool verbose = false);
+    std::string getStripStateJson(bool verbose = false);
+    std::string getStripStateCompact(bool verbose = false);
+    std::string getAnimationInfoJson();
     int getCurrentStrip();
     std::vector<StripState*> &getStrips() { return stripStates; }
     bool respondToParameterMessage(parameter_message parameter);
