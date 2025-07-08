@@ -112,30 +112,33 @@ void ParticleAnimation::updateRandomParticles()
 void ParticleAnimation::fadeParticleTail(float position, int width, int hueStart, int hueEnd, int brightness, float fadeSpeed, int direction)
 {
     // Smoothly draw a fading trail behind the particle.
+    float invWidth = 1.0f / std::max(width - 1, 1);
+    float brightScale = brightness / 255.0f;
+    const int ledCount = numLEDs();
     for (int i = 0; i < width; i++)
     {
         float fadePos = position - i * direction;
 
-        float t = static_cast<float>(i) / std::max(width - 1, 1);
+        float t = static_cast<float>(i) * invWidth;
         float fade = 1.0f - t;        // start bright at the head
         fade *= fade;                 // quadratic falloff
         fade = powf(fade, fadeSpeed); // user controlled exponent
 
         float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
-        float value = (brightness / 255.0f) * clamp(fade, 0.0f, 1.0f);
+        float value = brightScale * clamp(fade, 0.0f, 1.0f);
 
         // Fractional pixel rendering for smoother output.
         int lower = floor(fadePos);
         int upper = lower + 1;
         float frac = fadePos - lower;
 
-        if (lower >= 0 && lower < numLEDs())
+        if (lower >= 0 && lower < ledCount)
         {
             led temp;
             colorFromHSV(temp, hue, 1.0f, value * (1.0f - frac));
             blendPixel(lower, temp);
         }
-        if (upper >= 0 && upper < numLEDs())
+        if (upper >= 0 && upper < ledCount)
         {
             led temp;
             colorFromHSV(temp, hue, 1.0f, value * frac);
@@ -148,6 +151,7 @@ void ParticleAnimation::updateParticles()
 
     float timeScale = getFloat(PARAM_TIME_SCALE);
     bool cycle = getBool(PARAM_CYCLE);
+    const int ledCount = numLEDs();
 
     int hueStart = getInt(PARAM_HUE);
     int hueEnd = getInt(PARAM_HUE_END);
@@ -221,11 +225,11 @@ void ParticleAnimation::updateParticles()
             if (particle->position < -width)
             {
                 if (cycle)
-                    particle->position = numLEDs() + width;
+                    particle->position = ledCount + width;
                 else
                     particle->active = false;
             }
-            else if (particle->position > numLEDs() + width)
+            else if (particle->position > ledCount + width)
             {
                 if (cycle)
                     particle->position = -width;
@@ -253,9 +257,11 @@ void ParticleAnimation::spawnParticle()
     int brightness = getInt(PARAM_BRIGHTNESS);
     int life = getInt(PARAM_LIFE);
 
+    const int ledCount = numLEDs();
+
     if (random(0, 100) < 50)
     {
-        int pos = numLEDs() + width;
+        int pos = ledCount + width;
         float vel = -velocity;
         // Serial.printf("Spawning particle at end with position %d velocity %f\n", pos, vel);
         spawnParticle(pos, vel, hueStart, hueEnd, brightness, width, life);
@@ -307,14 +313,16 @@ void RainbowAnimation::update()
     float offset = getInt(PARAM_OFFSET);
     int brightness = getInt(PARAM_BRIGHTNESS);
 
-    scrollPos += scrollSpeed * timescale / 100.0;
+    scrollPos += scrollSpeed * timescale / 100.0f;
 
-    for (int i = 0; i < numLEDs(); i++)
+    const int count = numLEDs();
+    const float invCount = 1.0f / count;
+    const float bright = brightness / 255.0f;
+
+    for (int i = 0; i < count; i++)
     {
-        int val = i + scrollPos;
-        float hue = fmod(offset + (float(val) / float(numLEDs())) * repeat * 360.0, 360.0);
-
-        setPixelHSV(i, hue / 360.0, 1.0, brightness / 255.0);
+        float hue = fmodf(offset + (i + scrollPos) * invCount * repeat * 360.0f, 360.0f);
+        setPixelHSV(i, hue / 360.0f, 1.0f, bright);
     }
 }
 void ParticleAnimation::update()
@@ -356,14 +364,18 @@ void RandomAnimation::update()
         Serial.printf("Random animation scroll speed: %f random off: %d brightness: %d\n", scrollSpeed, randomOff, brightness);
         animCount = 0;
     }
-    for (int i = 0; i < numLEDs(); i++)
+
+    const int count = numLEDs();
+    const float invCount = 1.0f / count;
+    const float bright = brightness / 255.0f;
+
+    for (int i = 0; i < count; i++)
     {
         int val = i + scrollPos;
         if (random(0, 100) > randomOff)
         {
-
-            float hue = fmod(float(val) / float(numLEDs()) * 360.0, 360.0);
-            setPixelHSV(i, hue / 360.0, 1.0, brightness / 255.0);
+            float hue = fmodf(float(val) * invCount * 360.0f, 360.0f);
+            setPixelHSV(i, hue / 360.0f, 1.0f, bright);
         }
     }
 }
@@ -371,28 +383,31 @@ void RandomAnimation::update()
 void SliderAnimation::update()
 {
     //  slider animation is just a gradient that positioned in the middle of the strip with a width and hue and repeat factor
-    int position = numLEDs() / 2 + getInt(PARAM_POSITION);
-    int width = getInt(PARAM_WIDTH) * numLEDs();
+    const int count = numLEDs();
+    int position = count / 2 + getInt(PARAM_POSITION);
+    int width = getInt(PARAM_WIDTH) * count;
     float repeat = getFloat(PARAM_REPEAT);
     int brightness = getInt(PARAM_BRIGHTNESS);
     int hue = getInt(PARAM_HUE);
 
-    for (int i = 0; i < numLEDs(); i++)
+    const float bright = brightness / 255.0f;
+    int half = width / 2;
+    for (int i = 0; i < count; i++)
     {
         int val = i - position;
         if (val < 0)
             val = -val;
 
-        if (val > width / 2)
+        if (val > half)
         {
             setPixel(i, {0, 0, 0}); // turn off pixel
         }
         else
         {
-            float t = float(val) / float(width / 2);
-            float hueValue = fmod(hue + t * repeat * 360.0, 360.0);
+            float t = half > 0 ? float(val) / float(half) : 0.0f;
+            float hueValue = fmodf(hue + t * repeat * 360.0f, 360.0f);
 
-            setPixelHSV(i, hueValue / 360.0, 1.0, brightness / 255.0);
+            setPixelHSV(i, hueValue / 360.0f, 1.0f, bright);
         }
     }
 }
@@ -407,12 +422,14 @@ void DoubleRainbowAnimation::update()
 
     scrollPos += scrollSpeed * timescale;
 
-    for (int i = 0; i < numLEDs(); i++)
-    {
-        int val = i + scrollPos;
-        float hue = fmod(offset + (float(val) / float(numLEDs())) * repeat * 360.0, 360.0);
+    const int count = numLEDs();
+    const float invCount = 1.0f / count;
+    const float bright = brightness / 255.0f;
 
-        setPixelHSV(i, hue / 360.0, 1.0, brightness / 255.0);
+    for (int i = 0; i < count; i++)
+    {
+        float hue = fmodf(offset + (i + scrollPos) * invCount * repeat * 360.0f, 360.0f);
+        setPixelHSV(i, hue / 360.0f, 1.0f, bright);
     }
 }
 void FallingBricksAnimation::update()
@@ -426,13 +443,15 @@ void FallingBricksAnimation::update()
     float timeScale = getFloat(PARAM_TIME_SCALE);
     bool reverse = getBool(PARAM_REVERSE);
 
+    const int count = numLEDs();
+    const float bright = brightness / 255.0f;
     auto mapIdx = [&](int idx)
-    { return reverse ? numLEDs() - 1 - idx : idx; };
+    { return reverse ? count - 1 - idx : idx; };
 
-    int maxBricks = std::max(1, numLEDs() / width);
+    int maxBricks = std::max(1, count / width);
 
     // Spawn a new brick when the current one is inactive
-    if (brick.pos < -width && stackHeight < numLEDs())
+    if (brick.pos < -width && stackHeight < count)
     {
         brick.width = width;
         int brickIndex = stackHeight / width;
@@ -440,17 +459,17 @@ void FallingBricksAnimation::update()
         float baseHue = interpolate(hueStart, hueEnd, t);
         float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
         brick.hue = fmod(baseHue + n + 360.0f, 360.0f);
-        brick.pos = reverse ? -width : numLEDs() - 1 + width;
+        brick.pos = reverse ? -width : count - 1 + width;
     }
 
     // Move the falling brick
-    if ((reverse && brick.pos < numLEDs()) || (!reverse && brick.pos >= 0))
+    if ((reverse && brick.pos < count) || (!reverse && brick.pos >= 0))
     {
         brick.pos += (reverse ? 1 : -1) * speed * timeScale / 100.0f;
 
         // Determine when it lands
         bool landed = reverse
-                          ? brick.pos + (width - 1) >= numLEDs() - 1 - stackHeight
+                          ? brick.pos + (width - 1) >= count - 1 - stackHeight
                           : brick.pos - (width - 1) <= stackHeight;
 
         if (landed)
@@ -460,13 +479,13 @@ void FallingBricksAnimation::update()
             // threshold so a new one will spawn on the next frame.
             brick.pos = -width - 1;
 
-            if (stackHeight >= numLEDs())
+            if (stackHeight >= count)
                 stackHeight = 0;
         }
     }
 
     // Draw stacked bricks
-    for (int i = 0; i < stackHeight && i < numLEDs(); i++)
+    for (int i = 0; i < stackHeight && i < count; i++)
     {
         int brickIndex = i / width;
         float t = float(brickIndex) / float(maxBricks - 1);
@@ -474,21 +493,21 @@ void FallingBricksAnimation::update()
         float n = ((inoise8(brickIndex * 50) / 255.0f) * 2.0f - 1.0f) * hueVar;
         float brickHue = fmod(baseHue + n + 360.0f, 360.0f);
 
-        setPixelHSV(mapIdx(i), brickHue / 360.0f, 1.0f, brightness / 255.0f);
+        setPixelHSV(mapIdx(i), brickHue / 360.0f, 1.0f, bright);
     }
 
     // Draw falling brick
-    if (brick.pos >= 0 && brick.pos < numLEDs())
+    if (brick.pos >= 0 && brick.pos < count)
     {
         for (int i = 0; i < width; i++)
         {
             int idx = reverse ? (int)brick.pos + i : (int)brick.pos - i;
-            if (idx >= 0 && idx < numLEDs())
+            if (idx >= 0 && idx < count)
             {
                 // colorFromHSV(animationColor, brick.hue / 360.0f, 1.0f,
                 //              brightness / 255.0f);
                 // setPixel(idx, animationColor);
-                setPixelHSV(mapIdx(idx), brick.hue / 360.0f, 1.0f, brightness / 255.0f);
+                setPixelHSV(mapIdx(idx), brick.hue / 360.0f, 1.0f, bright);
             }
         }
     }
@@ -505,15 +524,17 @@ void NebulaAnimation::update()
 
     noiseOffset += speed * timeScale / 100.0f;
 
-    for (int i = 0; i < numLEDs(); i++)
+    const int count = numLEDs();
+    const float invCount = 1.0f / count;
+    const float brightScale = brightness / 255.0f;
+
+    for (int i = 0; i < count; i++)
     {
-        float t = float(i) / float(numLEDs());
+        float t = float(i) * invCount;
         float baseHue = interpolate(hueStart, hueEnd, t);
         uint8_t noiseVal = inoise8(i * scale * 20, int(noiseOffset * 100));
-        float hue = fmod(baseHue + (noiseVal / 255.0f) * 60.0f, 360.0f);
-        float bright = brightness / 255.0f * pow(noiseVal / 255.0f, 3.0f);
-        // colorFromHSV(animationColor, hue / 360.0f, 1.0f, bright);
-        // setPixel(i, animationColor);
+        float hue = fmodf(baseHue + (noiseVal / 255.0f) * 60.0f, 360.0f);
+        float bright = brightScale * powf(noiseVal / 255.0f, 3.0f);
         setPixelHSV(i, hue / 360.0f, 1.0f, bright);
     }
 }
@@ -526,9 +547,9 @@ void SingleColorAnimation::update()
     float brightnessValue = brightness / 255.0f; // convert to 0-1 range
     colorFromHSV(animationColor, hueValue, 1.0f, brightnessValue);
 
-    for (int i = 0; i < numLEDs(); i++)
+    const int count = numLEDs();
+    for (int i = 0; i < count; i++)
     {
-
         setPixel(i, animationColor);
     }
 }
@@ -545,7 +566,10 @@ void SphereAnimation::update()
     float thick = getFloat(PARAM_THICKNESS);
 
     int insphereCount = 0;
-    for (int i = 0; i < numLEDs(); i++)
+    const int count = numLEDs();
+    const float bright = brightness / 255.0f;
+
+    for (int i = 0; i < count; i++)
     {
         auto pos = getLEDPosition(i);
         float dx = pos.x - cx;
@@ -558,7 +582,7 @@ void SphereAnimation::update()
             continue;
         insphereCount++;
         float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
-        setPixelHSV(i, hue, 1.0f, brightness / 255.0f);
+        setPixelHSV(i, hue, 1.0f, bright);
     }
 }
 
@@ -570,7 +594,10 @@ void PlaneAnimation::update()
     float planeY = getFloat(PARAM_POS_Y);
     float thick = getFloat(PARAM_THICKNESS);
 
-    for (int i = 0; i < numLEDs(); i++)
+    const int count = numLEDs();
+    const float bright = brightness / 255.0f;
+
+    for (int i = 0; i < count; i++)
     {
         auto pos = getLEDPosition(i);
         float delta = fabs(pos.y - planeY);
@@ -578,6 +605,6 @@ void PlaneAnimation::update()
         if (t <= 0.0f)
             continue;
         float hue = interpolate(hueStart, hueEnd, t) / 360.0f;
-        setPixelHSV(i, hue, 1.0f, brightness / 255.0f);
+        setPixelHSV(i, hue, 1.0f, bright);
     }
 }
