@@ -33,7 +33,7 @@ SerialManager::SerialManager(int size, String name)
     }
 
     memset(buffer, 0, bufferSize);
-    Serial.begin(115200);
+    Serial.begin(921600);
     WiFi.mode(WIFI_STA);
     WiFi.begin(); // Only if needed, even if you're not connecting
     delay(100);   // let the MAC populate

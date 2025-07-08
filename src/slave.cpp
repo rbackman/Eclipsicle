@@ -12,6 +12,7 @@
 #include "lib/serial.h"
 #include "lib/shared.h"
 #include "lib/config.h"
+#include "lib/profiler.h"
 #ifdef USE_MOTOR
 #include "motors.h"
 #endif
@@ -419,6 +420,9 @@ bool processCmd(String command)
 
 void loop()
 {
+#ifdef ENABLE_PROFILER
+  unsigned long loopStart = micros();
+#endif
   serialManager->updateSerial();
   if (serialManager->stringAvailable())
   {
@@ -458,9 +462,19 @@ void loop()
     }
   }
 #ifdef USE_LEDS
+#ifdef ENABLE_PROFILER
+  unsigned long ledStart = micros();
+#endif
   ledManager->update();
+#ifdef ENABLE_PROFILER
+  profilerAddLed(micros() - ledStart);
+#endif
 #endif
 
-  delay(20);
+#ifdef ENABLE_PROFILER
+  profilerAddLoop(micros() - loopStart);
+  profilerMaybePrint();
+#endif
+  delay(5);
 };
 #endif
