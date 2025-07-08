@@ -3,20 +3,24 @@
 
 #include "stripState.h"
 #include "animations.h"
-#include <ArduinoJson.h>
+#include <nlohmann/json.hpp>
 #include <stdexcept>
 #include <cmath>
-#include <ctype.h>
+#include <cctype>
+#include <sstream>
+#include "log.h"
+#include "string_utils.h"
+using String = std::string;
 int val = 0;
 int minr = 0;
 int maxr = 0;
 led tempColor;
 
-ANIMATION_TYPE getAnimationTypeFromName(const String &name)
+ANIMATION_TYPE getAnimationTypeFromName(const std::string &name)
 {
     for (const auto &pair : ANIMATION_TYPE_NAMES)
     {
-        if (pair.second.equalsIgnoreCase(name))
+        if (equalsIgnoreCase(pair.second, name))
         {
             return pair.first;
         }
@@ -24,18 +28,18 @@ ANIMATION_TYPE getAnimationTypeFromName(const String &name)
     return ANIMATION_TYPE_NONE;
 }
 
-std::vector<String> getAnimationNames()
+std::vector<std::string> getAnimationNames()
 {
-    std::vector<String> names;
+    std::vector<std::string> names;
     for (const auto &pair : ANIMATION_TYPE_NAMES)
     {
         names.push_back(pair.second);
     }
     return names;
 }
-String rleCompresssCRGB(const CRGB *leds, int numLEDS)
+std::string rleCompresssCRGB(const CRGB *leds, int numLEDS)
 {
-    String result;
+    std::string result;
     int count = 1;
 
     for (int i = 0; i < numLEDS; i++)
@@ -49,7 +53,7 @@ String rleCompresssCRGB(const CRGB *leds, int numLEDS)
             // Compress by hue/value; saturation is assumed full.
             CHSV hsv = rgb2hsv_approximate(leds[i]);
 
-            result += String(hsv.hue) + "," + String(hsv.val) + ":" + String(count) + ";";
+            result += std::to_string(hsv.hue) + "," + std::to_string(hsv.val) + ":" + std::to_string(count) + ";";
             count = 1;
         }
     }
@@ -58,7 +62,7 @@ String rleCompresssCRGB(const CRGB *leds, int numLEDS)
 
 StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX,
                        std::vector<Node3D> nodes)
-    : ParameterManager(("Strip" + String(STRIP_INDEX + 1)).c_str(), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED, PARAM_BRIGHTNESS}),
+    : ParameterManager("Strip" + std::to_string(STRIP_INDEX + 1), {PARAM_CURRENT_STRIP, PARAM_SEQUENCE, PARAM_INVERT, PARAM_HUE, PARAM_CURRENT_LED, PARAM_BRIGHTNESS}),
       ledState(state), numLEDS(numLEDS), stripIndex(STRIP_INDEX), nodes(nodes)
 
 {
@@ -68,18 +72,18 @@ StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX,
 void StripState::toggleMode()
 {
     ledState = (LED_STATE)(((int)ledState + 1) % LED_STATE_COUNT);
-    Serial.println("LED State: ");
-    Serial.println(getLedStateName(ledState));
+    LOG_PRINTLN("LED State: ");
+    LOG_PRINTLN(getLedStateName(ledState));
     this->clearPixels();
 }
 
-String StripState::getStripState(bool verbose)
+std::string StripState::getStripState(bool verbose)
 {
     if (!verbose)
     {
         return getLedStateName(ledState);
     }
-    String result = "strip" + String(stripIndex + 1) + " state:" + getLedStateName(ledState);
+    std::string result = "strip" + std::to_string(stripIndex + 1) + " state:" + getLedStateName(ledState);
     for (const auto &anim : animations)
     {
         result += " " + anim->describe();
@@ -88,55 +92,48 @@ String StripState::getStripState(bool verbose)
     return result;
 }
 
-String StripState::getStripStateJson(bool verbose)
+std::string StripState::getStripStateJson(bool verbose)
 {
-    JsonDocument doc;
+    nlohmann::json doc;
     doc["type"] = "stripState";
     doc["strip"] = stripIndex + 1;
     doc["state"] = getLedStateName(ledState);
     if (verbose)
     {
-        JsonArray arr = doc["animations"].to<JsonArray>();
         for (const auto &anim : animations)
         {
-            JsonObject a = arr.add<JsonObject>();
-            a["type"] = getAnimationName(anim->getAnimationType()).c_str();
+            nlohmann::json a;
+            a["type"] = getAnimationName(anim->getAnimationType());
             a["start"] = anim->getstart();
             a["end"] = anim->getend();
-            JsonObject params = a["params"].to<JsonObject>();
+            nlohmann::json params;
             for (const auto &p : anim->getIntParameters())
-            {
-                params[getParameterName(p.id).c_str()] = p.value;
-            }
+                params[getParameterName(p.id)] = p.value;
             for (const auto &p : anim->getFloatParameters())
-            {
-                params[getParameterName(p.id).c_str()] = p.value;
-            }
+                params[getParameterName(p.id)] = p.value;
             for (const auto &p : anim->getBoolParameters())
-            {
-                params[getParameterName(p.id).c_str()] = p.value;
-            }
+                params[getParameterName(p.id)] = p.value;
+            a["params"] = params;
+            doc["animations"].push_back(a);
         }
     }
-    String output;
-    serializeJson(doc, output);
-    return output;
+    return doc.dump();
 }
 
-String StripState::getStripStateCompact()
+std::string StripState::getStripStateCompact()
 {
-    String out = "Parameters:\n";
+    std::string out = "Parameters:\n";
     for (const auto &p : getIntParameters())
     {
-        out += String(p.id) + ":" + String(p.value) + "\n";
+        out += std::to_string(p.id) + ":" + std::to_string(p.value) + "\n";
     }
     for (const auto &p : getFloatParameters())
     {
-        out += String(p.id) + ":" + String(p.value, 2) + "\n";
+        out += std::to_string(p.id) + ":" + std::to_string(p.value) + "\n";
     }
     for (const auto &p : getBoolParameters())
     {
-        out += String(p.id) + ":" + String(p.value ? "1" : "0") + "\n";
+        out += std::to_string(p.id) + ":" + (p.value ? "1" : "0") + "\n";
     }
     out += "Animations:\n";
     for (const auto &anim : animations)
@@ -152,16 +149,15 @@ static std::unique_ptr<StripAnimation> makeAnimation(
     StripState *stripState, ANIMATION_TYPE animType, int start, int end,
     std::map<ParameterID, float> params);
 
-String StripState::getAnimationInfoJson()
+std::string StripState::getAnimationInfoJson()
 {
-    JsonDocument doc;
-    JsonObject root = doc.to<JsonObject>();
-    root["type"] = "animations";
-    JsonObject data = root["data"].to<JsonObject>();
+    nlohmann::json doc;
+    doc["type"] = "animations";
+    nlohmann::json data;
     for (const auto &pair : ANIMATION_TYPE_NAMES)
     {
         ANIMATION_TYPE type = pair.first;
-        const String &name = pair.second;
+        const std::string &name = pair.second;
         std::unique_ptr<StripAnimation> anim;
         try
         {
@@ -171,22 +167,23 @@ String StripState::getAnimationInfoJson()
         {
             continue;
         }
-        JsonObject obj = data[name].to<JsonObject>();
+        nlohmann::json obj;
         obj["id"] = (int)type;
-        JsonArray arr = obj["params"].to<JsonArray>();
+        nlohmann::json arr = nlohmann::json::array();
         if (anim)
         {
             for (const auto &p : anim->getIntParameters())
-                arr.add(p.id);
+                arr.push_back(p.id);
             for (const auto &p : anim->getFloatParameters())
-                arr.add(p.id);
+                arr.push_back(p.id);
             for (const auto &p : anim->getBoolParameters())
-                arr.add(p.id);
+                arr.push_back(p.id);
         }
+        obj["params"] = arr;
+        data[name] = obj;
     }
-    String out;
-    serializeJson(doc, out);
-    return out;
+    doc["data"] = data;
+    return doc.dump();
 }
 
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
@@ -235,7 +232,7 @@ void StripState::addAnimation(ANIMATION_TYPE anim, int start, int end, std::map<
     auto animation = makeAnimation(this, anim, start, end, params);
     if (animation == nullptr)
     {
-        Serial.println("Failed to create animation");
+        LOG_PRINTLN("Failed to create animation");
         return;
     }
 
@@ -302,7 +299,7 @@ void StripState::update()
         }
         else
         {
-            // Serial.printf("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
+            // LOG_PRINTF("Point control LED %d out of range for strip %d\n", pointPosition, stripIndex);
         }
     }
     break;
@@ -314,8 +311,8 @@ void StripState::update()
     {
         if (counter % simulateCount == 0)
         {
-            String compressed = rleCompresssCRGB(leds, numLEDS);
-            Serial.printf("\nsim:%d:%s\n", stripIndex, compressed.c_str());
+            std::string compressed = rleCompresssCRGB(leds, numLEDS);
+            LOG_PRINTF("\nsim:%d:%s\n", stripIndex, compressed.c_str());
         }
     }
 }
@@ -331,7 +328,7 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
 {
     for (const auto &item : list)
     {
-        if (matchType == MATCH_TYPE_STARTS_WITH && item.startsWith(str))
+        if (matchType == MATCH_TYPE_STARTS_WITH && startsWith(item, str))
         {
             return true;
         }
@@ -339,11 +336,11 @@ bool listContainsString(const std::vector<String> &list, const String &str, Matc
         {
             return true;
         }
-        else if (matchType == MATCH_TYPE_CONTAINS && item.indexOf(str) != -1)
+        else if (matchType == MATCH_TYPE_CONTAINS && indexOf(item, str) != -1)
         {
             return true;
         }
-        else if (matchType == MATCH_TYPE_EQUALS && item.equals(str))
+        else if (matchType == MATCH_TYPE_EQUALS && item == str)
         {
             return true;
         }
@@ -390,7 +387,7 @@ static float parseFactor(const String &expr, int &pos, const std::map<String, fl
     {
         pos++;
     }
-    String token = expr.substring(start, pos);
+    String token = substring(expr, start, pos);
     float val = 0.0f;
     if (token.length() == 0)
     {
@@ -398,7 +395,7 @@ static float parseFactor(const String &expr, int &pos, const std::map<String, fl
     }
     if ((token[0] >= '0' && token[0] <= '9') || token[0] == '.' || (token[0] == '-' && token.length() > 1))
     {
-        val = token.toFloat();
+        val = toFloat(token);
     }
     else
     {
@@ -475,7 +472,7 @@ static float evaluateExpression(const String &expr, const std::map<String, float
     return parseExpression(expr, pos, vars);
 }
 
-bool StripState::parseAnimationScript(String script)
+bool StripState::parseAnimationScript(std::string script)
 {
     script.replace('|', '\n');
     std::vector<String> lines = splitString(script, '\n');
@@ -496,27 +493,27 @@ bool StripState::parseAnimationScript(String script)
 
     for (auto &line : lines)
     {
-        line.trim();
-        if (line.length() == 0 || line.startsWith("#"))
+        trim(line);
+        if (line.length() == 0 || startsWith(line, "#"))
             continue;
-        if (line.startsWith("ConfigFile:"))
+        if (startsWith(line, "ConfigFile:"))
         {
-            configFile = line.substring(String("ConfigFile:").length());
-            configFile.trim();
+            configFile = substring(line, String("ConfigFile:").length());
+            trim(configFile);
             continue;
         }
-        if (line.equalsIgnoreCase("Variables:") || line.equalsIgnoreCase("VARIABLES:") || line.equalsIgnoreCase("v:"))
+        if (equalsIgnoreCase(line, "Variables:") || equalsIgnoreCase(line, "VARIABLES:") || equalsIgnoreCase(line, "v:"))
         {
             if (isVerbose())
             {
-                Serial.printf("Entering variables section\n");
+                LOG_PRINTF("Entering variables section\n");
             }
             inVars = true;
             inParams = false;
             inAnims = false;
             continue;
         }
-        if (line.equalsIgnoreCase("Parameters:") || line.equalsIgnoreCase("PARAMETERS:") || line.equalsIgnoreCase("p:"))
+        if (equalsIgnoreCase(line, "Parameters:") || equalsIgnoreCase(line, "PARAMETERS:") || equalsIgnoreCase(line, "p:"))
         {
 
             inParams = true;
@@ -524,7 +521,7 @@ bool StripState::parseAnimationScript(String script)
             inVars = false;
             continue;
         }
-        if (line.equalsIgnoreCase("Animations:") || line.equalsIgnoreCase("ANIMATIONS:") || line.equalsIgnoreCase("a:"))
+        if (equalsIgnoreCase(line, "Animations:") || equalsIgnoreCase(line, "ANIMATIONS:") || equalsIgnoreCase(line, "a:"))
         {
 
             inAnims = true;
@@ -534,30 +531,30 @@ bool StripState::parseAnimationScript(String script)
         }
         if (inVars)
         {
-            int colon = line.indexOf(':');
+            int colon = indexOf(line, ':');
             if (colon == -1)
                 continue;
-            String key = line.substring(0, colon);
-            String val = line.substring(colon + 1);
-            key.trim();
-            val.trim();
+            String key = substring(line, 0, colon);
+            String val = substring(line, colon + 1);
+            trim(key);
+            trim(val);
             float v = evaluateExpression(val, variables);
             variables[key] = v;
             if (isVerbose())
             {
-                Serial.printf("Variable %s = %f\n", key.c_str(), v);
+                LOG_PRINTF("Variable %s = %f\n", key.c_str(), v);
             }
             continue;
         }
         if (inParams)
         {
-            int colon = line.indexOf(':');
+            int colon = indexOf(line, ':');
             if (colon == -1)
                 continue;
-            String key = line.substring(0, colon);
-            String val = line.substring(colon + 1);
-            key.trim();
-            val.trim();
+            String key = substring(line, 0, colon);
+            String val = substring(line, colon + 1);
+            trim(key);
+            trim(val);
             if (variables.find(val) != variables.end())
             {
                 val = String(variables[val]);
@@ -574,25 +571,25 @@ bool StripState::parseAnimationScript(String script)
             }
             if (numeric)
             {
-                pid = (ParameterID)key.toInt();
+                pid = (ParameterID)toInt(key);
             }
             else
             {
-                key.toUpperCase();
+                toUpperCase(key);
                 String full = "PARAM_" + key;
                 pid = getParameterID(full.c_str());
             }
             if (pid != PARAM_UNKNOWN)
             {
-                paramOverrides[pid] = val.toFloat();
+                paramOverrides[pid] = toFloat(val);
                 if (isVerbose())
                 {
-                    Serial.printf("Parameter override: %d = %s\n", pid, val.c_str());
+                    LOG_PRINTF("Parameter override: %d = %s\n", pid, val.c_str());
                 }
             }
             else
             {
-                Serial.printf("Unknown parameter in script: %s\n", key.c_str());
+                LOG_PRINTF("Unknown parameter in script: %s\n", key.c_str());
             }
             continue;
         }
@@ -603,20 +600,20 @@ bool StripState::parseAnimationScript(String script)
                 continue;
             String animName = tokens[0];
             //  if animName is an int turn it into an animation type
-            ANIMATION_TYPE type = animName.toInt() ? (ANIMATION_TYPE)animName.toInt() : getAnimationTypeFromName(animName);
+            ANIMATION_TYPE type = toInt(animName) ? (ANIMATION_TYPE)toInt(animName) : getAnimationTypeFromName(animName);
             if (type == ANIMATION_TYPE_NONE)
             {
-                Serial.printf("Unknown animation type in script: %s out of: ", animName.c_str());
+                LOG_PRINTF("Unknown animation type in script: %s out of: ", animName.c_str());
                 for (const auto &name : getAnimationNames())
                 {
-                    Serial.printf(" %s ", name.c_str());
+                    LOG_PRINTF(" %s ", name.c_str());
                 }
-                Serial.print(" \n");
+                LOG_PRINT(" \n");
                 continue;
             }
             if (isVerbose())
             {
-                Serial.printf(" animation type:%s \n", animName.c_str());
+                LOG_PRINTF(" animation type:%s \n", animName.c_str());
             }
             int start = 0;
             int end = getNumLEDS() - 1;
@@ -624,55 +621,55 @@ bool StripState::parseAnimationScript(String script)
             for (int i = 1; i < tokens.size(); ++i)
             {
                 String t = tokens[i];
-                int c = t.indexOf(':');
+                int c = indexOf(t, ':');
                 if (c == -1)
                     continue;
-                String k = t.substring(0, c);
-                String v = t.substring(c + 1);
-                k.trim();
-                v.trim();
+                String k = substring(t, 0, c);
+                String v = substring(t, c + 1);
+                trim(k);
+                trim(v);
                 if (variables.find(v) != variables.end())
                 {
                     v = String(variables[v]);
                 }
-                if (k.equalsIgnoreCase("start"))
+                if (equalsIgnoreCase(k, "start"))
                 {
-                    if (v.equalsIgnoreCase("mid"))
+                    if (equalsIgnoreCase(v, "mid"))
                     {
                         start = getMidLed();
                     }
-                    else if (v.startsWith("n"))
+                    else if (startsWith(v, "n"))
                     {
-                        int idx = v.substring(1).toInt();
+                        int idx = toInt(substring(v, 1));
                         start = getNode(idx);
                     }
                     else
                     {
-                        start = v.toInt();
+                        start = toInt(v);
                     }
                     if (isVerbose())
                     {
-                        Serial.printf("\tstart = %d\n", start);
+                        LOG_PRINTF("\tstart = %d\n", start);
                     }
                 }
-                else if (k.equalsIgnoreCase("end"))
+                else if (equalsIgnoreCase(k, "end"))
                 {
-                    if (v.equalsIgnoreCase("mid"))
+                    if (equalsIgnoreCase(v, "mid"))
                     {
                         end = getMidLed();
                     }
-                    else if (v.startsWith("n"))
+                    else if (startsWith(v, "n"))
                     {
-                        int idx = v.substring(1).toInt();
+                        int idx = toInt(substring(v, 1));
                         end = getNode(idx);
                     }
                     else
                     {
-                        end = v.toInt();
+                        end = toInt(v);
                     }
                     if (isVerbose())
                     {
-                        Serial.printf("\tend = %d\n", end);
+                        LOG_PRINTF("\tend = %d\n", end);
                     }
                 }
                 else
@@ -689,27 +686,27 @@ bool StripState::parseAnimationScript(String script)
                     }
                     if (numeric)
                     {
-                        pid = (ParameterID)k.toInt();
+                        pid = (ParameterID)toInt(k);
                     }
                     else
                     {
-                        k.toUpperCase();
+                        toUpperCase(k);
                         String full = "PARAM_" + k;
                         pid = getParameterID(full.c_str());
                     }
                     if (isBoolParameter(pid))
                     {
-                        if (v.equalsIgnoreCase("true") || v.equalsIgnoreCase("1"))
+                        if (equalsIgnoreCase(v, "true") || equalsIgnoreCase(v, "1"))
                         {
                             v = "1";
                         }
-                        else if (v.equalsIgnoreCase("false") || v.equalsIgnoreCase("0"))
+                        else if (equalsIgnoreCase(v, "false") || equalsIgnoreCase(v, "0"))
                         {
                             v = "0";
                         }
                         else
                         {
-                            Serial.printf("Invalid boolean value for parameter %s: %s\n", k.c_str(), v.c_str());
+                            LOG_PRINTF("Invalid boolean value for parameter %s: %s\n", k.c_str(), v.c_str());
                             continue;
                         }
                     }
@@ -721,11 +718,11 @@ bool StripState::parseAnimationScript(String script)
                     }
                     else
                     {
-                        Serial.printf("Unknown parameter in script: %s\n", k.c_str());
+                        LOG_PRINTF("Unknown parameter in script: %s\n", k.c_str());
                     }
                     if (pid != PARAM_UNKNOWN)
                     {
-                        params[pid] = v.toFloat();
+                        params[pid] = toFloat(v);
                     }
                 }
             }
@@ -746,7 +743,7 @@ void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<P
 {
     if (index < 0 || index >= animations.size())
     {
-        Serial.printf("Invalid animation index %d\n", index);
+        LOG_PRINTF("Invalid animation index %d\n", index);
         return;
     }
     int start = animations[index]->getstart();
@@ -760,16 +757,16 @@ void StripState::setAll(led tcol)
         setPixel(i, tcol);
     }
 }
-bool StripState::respondToText(String command)
+bool StripState::respondToText(std::string command)
 {
 
     bool verbose = isVerbose();
-    if (command.startsWith("script:"))
+    if (startsWith(command, "script:"))
     {
-        String script = command.substring(String("script:").length());
+        String script = substring(command, String("script:").length());
         return parseAnimationScript(script);
     }
-    if (command.startsWith("get_nodes"))
+    if (startsWith(command, "get_nodes"))
     {
         String nodeString = "nodes:";
         nodeString += String(stripIndex) + ":" + String(numLEDS) + ":" + String(nodes.size()) + ":";
@@ -777,56 +774,56 @@ bool StripState::respondToText(String command)
         {
             nodeString += String(node.index) + "," + String(node.x) + "," + String(node.y) + "," + String(node.z) + ":";
         }
-        Serial.println(nodeString);
+        LOG_PRINTLN(nodeString);
         return true;
     }
-    if (command.startsWith("simulate:"))
+    if (startsWith(command, "simulate:"))
     {
         auto simParts = splitString(command, ':');
         if (simParts.size() != 2)
         {
-            Serial.printf("Invalid simulate command %s\n", command.c_str());
+            LOG_PRINTF("Invalid simulate command %s\n", command.c_str());
             return false;
         }
-        int simulate = simParts[1].toInt();
+        int simulate = toInt(simParts[1]);
         setSimulate(simulate);
         if (isVerbose())
         {
-            Serial.printf("Set simulate to %d\n", simulate);
+            LOG_PRINTF("Set simulate to %d\n", simulate);
         }
         return true;
     }
-    if (command.startsWith("setanimation:"))
+    if (startsWith(command, "setanimation:"))
     {
         ledState = LED_STATE_SINGLE_ANIMATION;
         auto animparts = splitString(command, ':');
         auto animName = animparts[1];
-        animName.trim();
+        trim(animName);
 
         if (animName == "POINT_CONTROL")
         {
             ledState = LED_STATE_POINT_CONTROL;
             if (isVerbose())
             {
-                Serial.println("Set LED state to POINT_CONTROL");
+                LOG_PRINTLN("Set LED state to POINT_CONTROL");
             }
             return true;
         }
         ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
         if (animType == ANIMATION_TYPE_NONE)
         {
-            Serial.printf("Unknown animation type %s\n", animName.c_str());
+            LOG_PRINTF("Unknown animation type %s\n", animName.c_str());
             return false;
         }
 
         if (animparts.size() == 4)
         {
-            int start = animparts[2].toInt();
-            int end = animparts[3].toInt();
+            int start = toInt(animparts[2]);
+            int end = toInt(animparts[3]);
             setAnimation(animType, start, end);
             if (isVerbose())
             {
-                Serial.printf("Set animation %s from %d to %d \n", getAnimationName(animType).c_str(), start, end);
+                LOG_PRINTF("Set animation %s from %d to %d \n", getAnimationName(animType).c_str(), start, end);
             }
         }
         else if (animparts.size() == 2)
@@ -835,31 +832,31 @@ bool StripState::respondToText(String command)
             setAnimation(animType, 0, getNumLEDS() - 1);
             if (isVerbose())
             {
-                Serial.printf("Set animation %s\n", getAnimationName(animType).c_str());
+                LOG_PRINTF("Set animation %s\n", getAnimationName(animType).c_str());
             }
         }
 
         return true;
     }
 
-    if (command.startsWith("replaceanimation:"))
+    if (startsWith(command, "replaceanimation:"))
     {
 
         auto animparts = splitString(command, ':');
         if (animparts.size() < 3)
         {
-            Serial.printf("Invalid replaceanimation command %s\n", command.c_str());
+            LOG_PRINTF("Invalid replaceanimation command %s\n", command.c_str());
             return false;
         }
         auto animName = animparts[2];
-        animName.trim();
+        trim(animName);
         ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
         auto whichPart = animparts[1];
-        whichPart.trim();
-        if (whichPart.equalsIgnoreCase("all"))
+        trim(whichPart);
+        if (equalsIgnoreCase(whichPart, "all"))
         {
             if (isVerbose())
-                Serial.printf("Replacing all %d animations with %s\n", animations.size(), animName.c_str());
+                LOG_PRINTF("Replacing all %d animations with %s\n", animations.size(), animName.c_str());
 
             for (int i = 0; i < animations.size(); i++)
             {
@@ -870,7 +867,7 @@ bool StripState::respondToText(String command)
                 for (int i = 0; i < animations.size(); i++)
                 {
                     auto &anim = animations[i];
-                    Serial.printf("Replaced animation at index %d with %s %d %d\n", i, getAnimationName(anim->getAnimationType()).c_str(), anim->getstart(), anim->getend());
+                    LOG_PRINTF("Replaced animation at index %d with %s %d %d\n", i, getAnimationName(anim->getAnimationType()).c_str(), anim->getstart(), anim->getend());
                 }
             }
             return true;
@@ -878,40 +875,40 @@ bool StripState::respondToText(String command)
         else
         {
 
-            int index = whichPart.toInt();
+            int index = toInt(whichPart);
             if (index < 0 || index >= animations.size())
             {
-                Serial.printf("Invalid animation index %d\n", index);
+                LOG_PRINTF("Invalid animation index %d\n", index);
                 return false;
             }
             if (animType == ANIMATION_TYPE_NONE)
             {
-                Serial.printf("Unknown animation type %s\n", animName.c_str());
+                LOG_PRINTF("Unknown animation type %s\n", animName.c_str());
                 return false;
             }
             replaceAnimation(index, animType);
             if (isVerbose())
             {
-                Serial.printf("Replaced animation at index %d with %s\n", index, getAnimationName(animType).c_str());
+                LOG_PRINTF("Replaced animation at index %d with %s\n", index, getAnimationName(animType).c_str());
             }
             return true;
         }
     }
-    if (command.startsWith("addanimation:"))
+    if (startsWith(command, "addanimation:"))
     {
         ledState = LED_STATE_MULTI_ANIMATION;
         auto animparts = splitString(command, ':');
         if (animparts.size() < 2)
         {
-            Serial.printf("Invalid addanimation command %s\n", command.c_str());
+            LOG_PRINTF("Invalid addanimation command %s\n", command.c_str());
             return false;
         }
         auto animName = animparts[1];
-        animName.trim();
+        trim(animName);
         ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
         if (animType == ANIMATION_TYPE_NONE)
         {
-            Serial.printf("Unknown animation type %s\n", animName.c_str());
+            LOG_PRINTF("Unknown animation type %s\n", animName.c_str());
             return false;
         }
         int start = 0;
@@ -942,7 +939,7 @@ void StripState::setPixel(int index, led color)
     int ledIndex = (index % numLEDS + numLEDS) % numLEDS;
     if (ledIndex < 0 || ledIndex >= numLEDS)
     {
-        Serial.printf("Invalid LED index %d\n", ledIndex);
+        LOG_PRINTF("Invalid LED index %d\n", ledIndex);
         return;
     }
     leds[ledIndex] = CRGB(color.r, color.g, color.b);
@@ -953,7 +950,7 @@ void StripState::blendPixel(int index, led color)
     int ledIndex = (index % numLEDS + numLEDS) % numLEDS;
     if (ledIndex < 0 || ledIndex >= numLEDS)
     {
-        Serial.printf("Invalid LED index %d\n", ledIndex);
+        LOG_PRINTF("Invalid LED index %d\n", ledIndex);
         return;
     }
     int r = leds[ledIndex].r + color.r;
