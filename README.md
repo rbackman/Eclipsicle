@@ -115,11 +115,18 @@ For a quick setup on Windows you can install `g++` and `make` using
 choco install mingw make
 ```
 
-You may also install GoogleTest if it isn't already available:
+If GoogleTest headers are not found you can build it from source:
 
 ```powershell
-choco install googletest
+git clone https://github.com/google/googletest.git
+cd googletest
+cmake -S . -B build
+cmake --build build --config Release
+cmake --install build
 ```
+
+Add the install location to your `INCLUDE` and `LIB` paths so that
+`g++` can locate the headers and libraries when building the tests.
 
 After installation make sure `g++` and `make` are on your `PATH`.
 
