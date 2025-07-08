@@ -6,6 +6,7 @@
 #include <map>
 #include <array>
 #include <string>
+#include <cstdint>
 
 #define PARAMETER_LIST             \
     X(PARAM_HUE)                   \

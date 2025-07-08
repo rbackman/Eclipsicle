@@ -3,6 +3,7 @@
 #include "shared.h"
 #include "stripState.h"
 #include <FastLED.h>
+#include "Arduino.h"
 #include <algorithm>
 #include <cmath>
 #include <sstream>
