@@ -31,8 +31,9 @@ class LEDSimWidget(QWidget):
 
         self.brightness_boost = 1.5  # amplify simulated brightness
 
-        self.leds = []
-        self.led_count = 0
+        # map of strip index -> list of (hue,value)
+        self.strips = {}
+        self.base_height = 64
         self.simCountSpinbox = QSpinBox()
         self.simCountSpinbox.setRange(-1, 10000)
         self.simCountSpinbox.setValue(1)
@@ -47,7 +48,9 @@ class LEDSimWidget(QWidget):
         self.view.setRenderHint(QPainter.Antialiasing)
         self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setMaximumHeight(64)
+        # initial height for a single strip
+        self.setMaximumHeight(self.base_height)
+        self.view.setFixedHeight(self.base_height)
         # checkbox isn't added to layout so users toggle via menu
         self.layout.addWidget(self.simCountSpinbox)
         self.layout.addWidget(self.view)
@@ -66,18 +69,20 @@ class LEDSimWidget(QWidget):
         if string.startswith("sim:"):
             # message may be sim:data or sim:stripIndex:data
             data = string.split("sim:", 1)[1].strip()
+            strip_index = 0
             if ':' in data and data.split(':', 1)[0].isdigit():
-                _, data = data.split(':', 1)
-            self.update_leds(data)
+                prefix, data = data.split(':', 1)
+                strip_index = int(prefix)
+            self.update_leds(data, strip_index)
             return True
         if string.startswith("state:"):
             print(string)
             return True
         return False
 
-    def update_leds(self, compressed_data):
-        self.leds = self.parse_rle(compressed_data)
-        self.led_count = len(self.leds)
+    def update_leds(self, compressed_data, strip_index=0):
+        leds = self.parse_rle(compressed_data)
+        self.strips[strip_index] = leds
         self.draw_leds()
 
     def parse_rle(self, data):
@@ -98,25 +103,29 @@ class LEDSimWidget(QWidget):
 
     def draw_leds(self):
         self.scene.clear()
-        if self.led_count == 0:
+        if not self.strips:
             return
 
-        # Get available view width and height
+        num_strips = len(self.strips)
+        total_height = self.base_height * num_strips
+        self.setMaximumHeight(total_height)
+        self.view.setFixedHeight(total_height)
+
         view_size: QSize = self.view.viewport().size()
         width = view_size.width()
-        height = view_size.height()
+        row_height = self.base_height
 
-        led_width = width / max(1, self.led_count)
+        for row, strip_index in enumerate(sorted(self.strips.keys())):
+            leds = self.strips[strip_index]
+            led_width = width / max(1, len(leds))
+            for i, (hue, value) in enumerate(leds):
+                display_value = min(255, int(value * self.brightness_boost))
+                color = QColor.fromHsv(hue, 255, display_value)
+                rect = QRectF(i * led_width, row * row_height, led_width, row_height)
+                item = LedRectItem(rect, color, value)
+                self.scene.addItem(item)
 
-        for i, (hue, value) in enumerate(self.leds):
-            display_value = min(255, int(value * self.brightness_boost))
-            color = QColor.fromHsv(hue, 255, display_value)
-            rect = QRectF(i * led_width, 0, led_width, height)
-            item = LedRectItem(rect, color, value)
-            self.scene.addItem(item)
-
-        # Resize scene to fit content
-        self.scene.setSceneRect(0, 0, width, height)
+        self.scene.setSceneRect(0, 0, width, total_height)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
