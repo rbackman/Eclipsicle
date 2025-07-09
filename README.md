@@ -14,6 +14,17 @@ pio run -e master
 
 The `platformio.ini` file lists additional environments such as `slave_with_motor` or `master_with_audio` which enable optional features like audio playback or motor control. The file lists multiple "env" sections for different boards and options.
 
+If the firmware image exceeds the default 1.3 MB limit you can enlarge the
+application partition by disabling OTA support. Add the following line to the
+desired environment in `platformio.ini`:
+
+```ini
+board_build.partitions = no_ota.csv
+```
+
+This uses PlatformIO's `no_ota` partition table which allocates about 1.9 MB for
+the firmware, often solving size errors from `checkprogsize`.
+
 ## Source overview
 
 * `src/` – firmware sources
