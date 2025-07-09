@@ -4,7 +4,7 @@
 #include "ledManager.h"
 #include "leds.h"
 #include <string>
-
+#include "shared_esp.h"
 LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
 

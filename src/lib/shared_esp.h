@@ -1,4 +1,5 @@
 
+#pragma once
 #include "shared.h"
 #include <Arduino.h>
 void printBytes(ByteRow data)

@@ -621,7 +621,6 @@ std::vector<LEDRig> getLEDRigs();
 LEDRig *getLEDRig(const std::string &name);
 void colorFromHSV(led &color, float h, float s, float v);
 void setVerbose(bool verb);
-void printBytes(ByteRow data);
 
 int lerp(int min, int max, int minIn, int maxIn, int value);
 int interpolate(int from, int to, float t);
