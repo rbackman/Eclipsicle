@@ -325,6 +325,10 @@ static float parseFactor(const std::string &expr, int &pos, const std::map<std::
         {
             val = it->second;
         }
+        else
+        {
+            LOG_PRINTF("Unknown variable or constant: %s\n", token.c_str());
+                }
     }
     if (neg)
     {

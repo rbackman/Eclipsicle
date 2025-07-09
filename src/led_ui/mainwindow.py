@@ -27,6 +27,7 @@ class MainWindow(QMainWindow):
 
         self.console.add_json_listener(self.parameter_menu.json_received)
         self.led_sim_widget = LEDSimWidget(self.console)
+        self.led_sim_widget.setVisible(False)
         self.console.add_string_listener(self.led_sim_widget.process_string)
 
         square_nodes = [
@@ -139,10 +140,6 @@ class MainWindow(QMainWindow):
             lambda state: self.verbose_action.setChecked(bool(state)))
         self.console.echo_checkbox.stateChanged.connect(
             lambda state: self.echo_action.setChecked(bool(state)))
-        self.led_sim_widget.simulate_checkbox.stateChanged.connect(
-            lambda state: self.sim_action.setChecked(state == Qt.Checked))
-        self.led_3d_widget.simulate_checkbox.stateChanged.connect(
-            lambda state: self.sim3d_action.setChecked(state == Qt.Checked))
 
     def update_brightness(self, label, value):
         label.setText(f'Brightness: {value}')
@@ -174,22 +171,30 @@ class MainWindow(QMainWindow):
             enabled = self.sender().isChecked()
         else:
             enabled = not self.led_sim_widget.simulate_checkbox.isChecked()
-        self.led_sim_widget.simulate_checkbox.setChecked(enabled)
+        if enabled:
+            self.console.send_cmd(
+                f"simulate:1"
+            )
+        else:
+            self.console.send_cmd("simulate:-1")
         self.led_sim_widget.setVisible(enabled)
-        if hasattr(self, 'sim_action'):
-            self.sim_action.setChecked(enabled)
 
     def toggle_3d(self):
         if isinstance(self.sender(), QAction):
             enabled = self.sender().isChecked()
         else:
             enabled = not self.led_3d_widget.simulate_checkbox.isChecked()
-        self.led_3d_widget.simulate_checkbox.setChecked(enabled)
+
         self.led_3d_widget.setVisible(enabled)
+        if enabled:
+            self.console.send_cmd(
+                f"simulate:1"
+            )
+        else:
+            self.console.send_cmd("simulate:-1")
+
         if enabled and self.splitter.sizes()[1] == 0:
             self.splitter.setSizes([200, max(100, self.width() - 200)])
-        if hasattr(self, 'sim3d_action'):
-            self.sim3d_action.setChecked(enabled)
 
     def send_parameter(self, param, value, boolValue=False):
         data = {
