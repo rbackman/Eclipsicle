@@ -1,0 +1,4 @@
+ConfigFile:
+Parameters:
+Animations:
+    Sphere radius:30+10*sin(t*pi) thickness:8 hue:2 hue_end:255
