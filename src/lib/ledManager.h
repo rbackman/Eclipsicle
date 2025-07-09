@@ -29,7 +29,7 @@ public:
     void setLED(int ledIndex, led color);
     void toggleMode();
     std::string getStripState(bool verbose = false);
-    std::string getStripStateJson(bool verbose = false);
+    std::string getStripsStateJson(bool verbose = false);
     std::string getStripStateCompact(bool verbose = false);
     std::string getAnimationInfoJson();
     int getCurrentStrip();

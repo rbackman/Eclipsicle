@@ -1,6 +1,7 @@
 // parameterManager.cpp
 #include "parameterManager.h"
 #include "shared.h"
+#include "Arduino.h"
 #include <algorithm>
 
 ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> filterParams, std::map<ParameterID, float> paramOverrides) : name(name)

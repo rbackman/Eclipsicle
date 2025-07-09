@@ -178,7 +178,6 @@ std::string getParameterName(ParameterID type)
   name.erase(0, 6);
   return name;
 }
-
 std::vector<std::string> splitString(const std::string &path, char delimiter)
 {
   std::vector<std::string> result;
@@ -186,25 +185,14 @@ std::vector<std::string> splitString(const std::string &path, char delimiter)
   size_t end = path.find(delimiter);
   while (end != std::string::npos)
   {
-    if (start < end)
-    {
-      result.push_back(path.substr(start, end - start));
-    }
+    result.push_back(path.substr(start, end - start));
     start = end + 1;
     end = path.find(delimiter, start);
   }
-  if (start < path.length())
-  {
-    result.push_back(path.substr(start));
-  }
-  {
-    result.push_back(path.substr(start, end));
-    start = end + 1;
-    end = path.find(delimiter, start);
-  }
-  result.push_back(path.substr(start));
+  result.push_back(path.substr(start)); // push the last segment
   return result;
 }
+
 std::vector<std::string> getAnimationNames()
 {
   std::vector<std::string> names = {

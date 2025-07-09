@@ -11,6 +11,10 @@
 #include <string>
 
 #include "animations.h"
+
+// Forward declaration for internal helper
+std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params);
+
 class StripState : public ParameterManager
 {
 
@@ -104,7 +108,7 @@ public:
     std::string getStripState(bool verbose = false);
     std::string getStripStateJson(bool verbose = false);
     std::string getStripStateCompact();
-    std::string getAnimationInfoJson();
+
     int getMidLed() const { return numLEDS / 2; }
     int getNode(int idx) const
     {
@@ -151,6 +155,10 @@ public:
         return animations;
     }
     bool respondToParameterMessage(parameter_message parameter);
+    LED_STATE getLedState() const
+    {
+        return ledState;
+    }
 };
 
 #endif

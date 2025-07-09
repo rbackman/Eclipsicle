@@ -337,14 +337,14 @@ std::string LEDManager::getStripState(bool verbose)
     return stripStates[currentStrip - 1]->getStripState(verbose);
 }
 
-std::string LEDManager::getStripStateJson(bool verbose)
+std::string LEDManager::getStripsStateJson(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
     if (currentStrip == 0)
     {
-        return stripStates[0]->getStripStateJson(verbose);
+        return getStripStateJson(stripStates[0], verbose);
     }
-    return stripStates[currentStrip - 1]->getStripStateJson(verbose);
+    return getStripStateJson(stripStates[currentStrip - 1], verbose);
 }
 
 std::string LEDManager::getStripStateCompact(bool verbose)
@@ -363,7 +363,9 @@ std::string LEDManager::getAnimationInfoJson()
     {
         return "{}";
     }
-    return stripStates[0]->getAnimationInfoJson();
+    auto stripState = stripStates[0];
+
+    return getAnimationInfoJsonForStrip(stripState);
 }
 
 #endif

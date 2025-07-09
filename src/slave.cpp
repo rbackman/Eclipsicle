@@ -356,7 +356,7 @@ bool processCmd(String command)
   }
   else if (command == "getStripState")
   {
-    std::string state = ledManager->getStripStateJson(true);
+    std::string state = ledManager->getStripsStateJson(true);
     Serial.println(String(state.c_str()) + ";");
     return true;
   }
