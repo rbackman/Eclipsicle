@@ -3,7 +3,7 @@
 
 #include "stripState.h"
 #include "animations.h"
-#include "nlohmann/json.hpp"
+
 #include <stdexcept>
 #include <cmath>
 #include <cctype>
@@ -83,37 +83,9 @@ std::string StripState::getStripState(bool verbose)
     return result;
 }
 
-std::string StripState::getStripStateJson(bool verbose)
-{
-    nlohmann::json doc;
-    doc["type"] = "stripState";
-    doc["strip"] = stripIndex + 1;
-    doc["state"] = getLedStateName(ledState);
-    if (verbose)
-    {
-        for (const auto &anim : animations)
-        {
-            nlohmann::json a;
-            a["type"] = getAnimationName(anim->getAnimationType());
-            a["start"] = anim->getstart();
-            a["end"] = anim->getend();
-            nlohmann::json params;
-            for (const auto &p : anim->getIntParameters())
-                params[getParameterName(p.id)] = p.value;
-            for (const auto &p : anim->getFloatParameters())
-                params[getParameterName(p.id)] = p.value;
-            for (const auto &p : anim->getBoolParameters())
-                params[getParameterName(p.id)] = p.value;
-            a["params"] = params;
-            doc["animations"].push_back(a);
-        }
-    }
-    return doc.dump();
-}
-
 std::string StripState::getStripStateCompact()
 {
-    std::string out = "Parameters:\n";
+    std::string out = "p:\n";
     for (const auto &p : getIntParameters())
     {
         out += std::to_string(p.id) + ":" + std::to_string(p.value) + "\n";
@@ -126,55 +98,13 @@ std::string StripState::getStripStateCompact()
     {
         out += std::to_string(p.id) + ":" + (p.value ? "1" : "0") + "\n";
     }
-    out += "Animations:\n";
+    out += "a:\n";
     for (const auto &anim : animations)
     {
         out += anim->describeCompact();
         out += "\n";
     }
     return out;
-}
-
-// Forward declaration for internal helper
-static std::unique_ptr<StripAnimation> makeAnimation(
-    StripState *stripState, ANIMATION_TYPE animType, int start, int end,
-    std::map<ParameterID, float> params);
-
-std::string StripState::getAnimationInfoJson()
-{
-    nlohmann::json doc;
-    doc["type"] = "animations";
-    nlohmann::json data;
-    for (const auto &pair : ANIMATION_TYPE_NAMES)
-    {
-        ANIMATION_TYPE type = pair.first;
-        const std::string &name = pair.second;
-        std::unique_ptr<StripAnimation> anim;
-        try
-        {
-            anim = makeAnimation(this, type, 0, 0, {});
-        }
-        catch (...)
-        {
-            continue;
-        }
-        nlohmann::json obj;
-        obj["id"] = (int)type;
-        nlohmann::json arr = nlohmann::json::array();
-        if (anim)
-        {
-            for (const auto &p : anim->getIntParameters())
-                arr.push_back(p.id);
-            for (const auto &p : anim->getFloatParameters())
-                arr.push_back(p.id);
-            for (const auto &p : anim->getBoolParameters())
-                arr.push_back(p.id);
-        }
-        obj["params"] = arr;
-        data[name] = obj;
-    }
-    doc["data"] = data;
-    return doc.dump();
 }
 
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
@@ -505,7 +435,7 @@ bool StripState::parseAnimationScript(std::string script)
             inAnims = false;
             continue;
         }
-        if (equalsIgnoreCase(line, "Parameters:") || equalsIgnoreCase(line, "PARAMETERS:") || equalsIgnoreCase(line, "p:"))
+        if (equalsIgnoreCase(line, "p:") || equalsIgnoreCase(line, "PARAMETERS:") || equalsIgnoreCase(line, "p:"))
         {
 
             inParams = true;
@@ -513,7 +443,7 @@ bool StripState::parseAnimationScript(std::string script)
             inVars = false;
             continue;
         }
-        if (equalsIgnoreCase(line, "Animations:") || equalsIgnoreCase(line, "ANIMATIONS:") || equalsIgnoreCase(line, "a:"))
+        if (equalsIgnoreCase(line, "a:") || equalsIgnoreCase(line, "ANIMATIONS:") || equalsIgnoreCase(line, "a:"))
         {
 
             inAnims = true;
@@ -774,7 +704,8 @@ bool StripState::respondToText(std::string command)
         auto simParts = splitString(command, ':');
         if (simParts.size() != 2)
         {
-            LOG_PRINTF("Invalid simulate command %s\n", command.c_str());
+            LOG_PRINTF("Invalid simulate command %s %d \n", command.c_str(), simParts.size());
+
             return false;
         }
         int simulate = toInt(simParts[1]);
