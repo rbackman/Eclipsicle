@@ -33,16 +33,9 @@ class LEDSimWidget(QWidget):
 
         # map of strip index -> list of (hue,value)
         self.strips = {}
-        self.base_height = 64
-        self.simCountSpinbox = QSpinBox()
-        self.simCountSpinbox.setRange(-1, 10000)
-        self.simCountSpinbox.setValue(1)
+        self.base_height = 24
 
-        # hidden checkbox used for menu-driven simulation toggle
-        self.simulate_checkbox = QCheckBox('Simulate')
-        self.simulate_checkbox.setChecked(False)
-        self.simulate_checkbox.stateChanged.connect(self._sim_state_changed)
-        self.simulate_checkbox.setVisible(False)
+        # self.simulate_checkbox.setVisible(False)
         self.scene = QGraphicsScene(self)
         self.view = QGraphicsView(self.scene)
         self.view.setRenderHint(QPainter.Antialiasing)
@@ -51,19 +44,8 @@ class LEDSimWidget(QWidget):
         # initial height for a single strip
         self.setMaximumHeight(self.base_height)
         self.view.setFixedHeight(self.base_height)
-        # checkbox isn't added to layout so users toggle via menu
-        self.layout.addWidget(self.simCountSpinbox)
-        self.layout.addWidget(self.view)
-        self._sim_state_changed(self.simulate_checkbox.checkState())
 
-    def _sim_state_changed(self, state):
-        enabled = state == Qt.Checked
-        if enabled:
-            self.console.send_cmd(
-                f"simulate:{self.simCountSpinbox.value()}")
-        else:
-            self.console.send_cmd("simulate:-1")
-        self.setVisible(enabled)
+        self.layout.addWidget(self.view)
 
     def process_string(self, string):
         if string.startswith("sim:"):
@@ -108,12 +90,13 @@ class LEDSimWidget(QWidget):
 
         num_strips = len(self.strips)
         total_height = self.base_height * num_strips
+        padding = 1
         self.setMaximumHeight(total_height)
         self.view.setFixedHeight(total_height)
 
         view_size: QSize = self.view.viewport().size()
         width = view_size.width()
-        row_height = self.base_height
+        row_height = self.base_height - 2 * padding
 
         for row, strip_index in enumerate(sorted(self.strips.keys())):
             leds = self.strips[strip_index]
@@ -121,7 +104,11 @@ class LEDSimWidget(QWidget):
             for i, (hue, value) in enumerate(leds):
                 display_value = min(255, int(value * self.brightness_boost))
                 color = QColor.fromHsv(hue, 255, display_value)
-                rect = QRectF(i * led_width, row * row_height, led_width, row_height)
+
+                # rect = QRectF(i * led_width, row * row_height,
+                #               led_width, row_height)
+                rect = QRectF(i * led_width+1, row * row_height + padding,
+                              led_width, row_height - 2 * padding)
                 item = LedRectItem(rect, color, value)
                 self.scene.addItem(item)
 

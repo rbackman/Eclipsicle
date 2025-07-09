@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 146,
+    "value": 25,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 286,
+    "value": 154,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -366,7 +366,7 @@
   "PARAM_POS_X": {
     "id": 48,
     "type": "float",
-    "value": -2.4,
+    "value": 18.4,
     "name": "PosX",
     "min": -100,
     "max": 100
@@ -374,7 +374,7 @@
   "PARAM_POS_Y": {
     "id": 49,
     "type": "float",
-    "value": -42.149,
+    "value": -2.4,
     "name": "PosY",
     "min": -100,
     "max": 100
