@@ -6,6 +6,7 @@ from PyQt5.QtGui import QColor
 from parameter_menu import ParameterIDMap
 import numpy as np
 import trimesh
+from OpenGL import GL
 
 
 class LED3DWidget(QWidget):
@@ -37,7 +38,7 @@ class LED3DWidget(QWidget):
         self.view.opts['distance'] = 4
         self.scatter = gl.GLScatterPlotItem()
         # keep LEDs visible even when a model overlaps
-        self.scatter.setGLOptions({'depthTest': False})
+        self.scatter.setGLOptions({GL.GL_DEPTH_TEST: False})
         self.view.addItem(self.scatter)
 
         self.current_shape = None
