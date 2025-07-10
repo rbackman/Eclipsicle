@@ -84,6 +84,9 @@ conda env create -f src/led_ui/environment.yml
 conda activate led-ui
 ```
 
+The environment specification pins `numpy<2` and includes SciPy so that
+the `trimesh` package can load meshes without binary compatibility errors.
+
 Then build the executable from `offline_main.py` using the helper script.
 This step also compiles the small C++ simulators used for unit tests so
 they can run without a `make` installation:
