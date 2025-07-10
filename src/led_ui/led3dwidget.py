@@ -38,7 +38,12 @@ class LED3DWidget(QWidget):
         self.view.opts['distance'] = 4
         self.scatter = gl.GLScatterPlotItem()
         # keep LEDs visible even when a model overlaps
-        self.scatter.setGLOptions({GL.GL_DEPTH_TEST: False})
+        try:
+            # modern pyqtgraph expects raw GL constants
+            self.scatter.setGLOptions({GL.GL_DEPTH_TEST: False})
+        except Exception:
+            # fallback for older pyqtgraph versions that used string options
+            self.scatter.setGLOptions({'depthTest': False})
         self.view.addItem(self.scatter)
 
         self.current_shape = None
