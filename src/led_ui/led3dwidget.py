@@ -1,10 +1,21 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QCheckBox,
+    QFileDialog,
+    QComboBox,
+    QDoubleSpinBox,
+    QLabel,
+    QHBoxLayout,
+)
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from PyQt5.QtGui import QColor
 from parameter_menu import ParameterIDMap
 import numpy as np
+import trimesh
+from OpenGL import GL
 
 
 class LED3DWidget(QWidget):
@@ -26,11 +37,38 @@ class LED3DWidget(QWidget):
         self.simulate_checkbox.stateChanged.connect(self._sim_state_changed)
         self.updateNodesButton = pg.QtWidgets.QPushButton('Update Nodes')
         self.updateNodesButton.clicked.connect(self.request_nodes)
+        self.loadModelButton = pg.QtWidgets.QPushButton('Load Model')
+        self.loadModelButton.clicked.connect(self._open_model_dialog)
+        self.modelVisible = QCheckBox('Show Model')
+        self.modelVisible.setChecked(True)
+        self.modelVisible.stateChanged.connect(self._toggle_model_visibility)
+        self.groundCheckBox = QCheckBox('Show Ground')
+        self.groundCheckBox.setChecked(False)
+        self.groundCheckBox.stateChanged.connect(self._update_ground_plane)
+        # LED appearance controls
+        self.shapeCombo = QComboBox()
+        self.shapeCombo.addItems(['Billboard', 'Sphere', 'Cube'])
+        self.shapeCombo.currentIndexChanged.connect(self._update_led_display)
+        self.radiusSpin = QDoubleSpinBox()
+        self.radiusSpin.setRange(0.01, 0.5)
+        self.radiusSpin.setSingleStep(0.01)
+        self.radiusSpin.setValue(0.05)
+        self.radiusSpin.valueChanged.connect(self._update_led_display)
+        ctrl_layout = QHBoxLayout()
+        ctrl_layout.addWidget(QLabel('LED Shape'))
+        ctrl_layout.addWidget(self.shapeCombo)
+        ctrl_layout.addWidget(QLabel('Radius'))
+        ctrl_layout.addWidget(self.radiusSpin)
         self.view = gl.GLViewWidget()
         self.layout.addWidget(self.view)
         self.view.opts['distance'] = 4
         self.scatter = gl.GLScatterPlotItem()
+        # keep LEDs visible even when a model overlaps
+        # use the string option for broad compatibility
+        self.scatter.setGLOptions({'depthTest': False})
         self.view.addItem(self.scatter)
+        self.led_items = []
+        self.current_mesh_shape = None
 
         self.current_shape = None
         self.shape_item = None
@@ -41,12 +79,20 @@ class LED3DWidget(QWidget):
             "radius": 1.0,
             "thickness": 1.0,
         }
+        self.model_item = None
+        self.model_bounds = None
+        self.ground_item = None
 
         self.layout.addWidget(self.updateNodesButton)
+        self.layout.addWidget(self.loadModelButton)
+        self.layout.addWidget(self.modelVisible)
+        self.layout.addWidget(self.groundCheckBox)
+        self.layout.addLayout(ctrl_layout)
 
         self._rebuild_positions()
-        self._update_scatter()
+        self._update_led_display()
         self._update_camera()
+        self._update_ground_plane()
         self._sim_state_changed(self.simulate_checkbox.checkState())
         self.load_nodes("led_nodes.txt")
 
@@ -101,6 +147,8 @@ class LED3DWidget(QWidget):
             self.positions = np.zeros((0, 3))
 
         self._update_camera()
+        self._update_ground_plane()
+        self._update_led_display()
 
     def _update_camera(self):
         """Zoom and center the view so all points are visible."""
@@ -108,6 +156,8 @@ class LED3DWidget(QWidget):
             return
         mins = self.positions.min(axis=0)
         maxs = self.positions.max(axis=0)
+        self.bb_min = mins
+        self.bb_max = maxs
         center = (mins + maxs) / 2.0
         span = np.linalg.norm(maxs - mins)
         try:
@@ -118,7 +168,9 @@ class LED3DWidget(QWidget):
             self.view.opts['center'] = center
         self.view.opts['distance'] = max(span * 1.2, 1.0)
 
-    def _update_scatter(self):
+    def _update_led_display(self):
+        """Update LED geometry based on current shape and colors."""
+        # compute color array
         color_arrays = []
         for strip_index in sorted(self.strips.keys()):
             strip = self.strips[strip_index]
@@ -132,10 +184,55 @@ class LED3DWidget(QWidget):
                 display.append(disp.getRgbF())
             color_arrays.append(np.array(display, dtype=float))
         if color_arrays:
-            colors = np.concatenate(color_arrays, axis=0)
+            self.colors = np.concatenate(color_arrays, axis=0)
         else:
-            colors = np.zeros((0, 4))
-        self.scatter.setData(pos=self.positions, size=5, color=colors)
+            self.colors = np.zeros((0, 4))
+
+        shape = self.shapeCombo.currentText().lower() if hasattr(self, 'shapeCombo') else 'billboard'
+        radius = self.radiusSpin.value() if hasattr(self, 'radiusSpin') else 0.05
+
+        # avoid huge memory use if there are thousands of LEDs
+        max_mesh = 500
+        if shape != 'billboard' and len(self.positions) > max_mesh:
+            print(f"Too many LEDs for {shape} mode; falling back to billboards")
+            shape = 'billboard'
+
+        if shape == 'billboard':
+            for item in self.led_items:
+                self.view.removeItem(item)
+            self.led_items = []
+            self.current_mesh_shape = None
+            self.scatter.setData(pos=self.positions, size=radius * 20, color=self.colors)
+            self.scatter.setVisible(True)
+            return
+
+        self.scatter.setVisible(False)
+
+        if shape == 'sphere':
+            base = gl.MeshData.sphere(rows=8, cols=16)
+            smooth = True
+        else:  # cube
+            base = gl.MeshData.cube()
+            smooth = False
+
+        needed = len(self.positions)
+        if self.current_mesh_shape != shape or len(self.led_items) != needed:
+            for item in self.led_items:
+                self.view.removeItem(item)
+            self.led_items = []
+            self.current_mesh_shape = shape
+            for _ in range(needed):
+                item = gl.GLMeshItem(meshdata=base, smooth=smooth, shader='shaded')
+                # disable depth testing so LEDs always appear on top
+                item.setGLOptions({'depthTest': False})
+                self.view.addItem(item)
+                self.led_items.append(item)
+
+        for item, pos, color in zip(self.led_items, self.positions, self.colors):
+            item.resetTransform()
+            item.setColor(color)
+            item.scale(radius, radius, radius)
+            item.translate(pos[0], pos[1], pos[2])
 
     def save_nodes(self):
         """Save the current nodes to a file."""
@@ -157,7 +254,7 @@ class LED3DWidget(QWidget):
                     if self.process_string(line.strip()):
                         continue
             self._rebuild_positions()
-            self._update_scatter()
+            self._update_led_display()
             self._update_camera()
             print(f"Loaded nodes from {filename}")
         except Exception as e:
@@ -179,7 +276,7 @@ class LED3DWidget(QWidget):
             strip["led_colors"] = colors
             strip["led_count"] = len(colors)
             self._rebuild_positions()
-            self._update_scatter()
+            self._update_led_display()
             self._update_camera()
             return True
         if string.startswith("nodes:"):
@@ -212,7 +309,7 @@ class LED3DWidget(QWidget):
                 elif len(strip["led_colors"]) > led_count:
                     strip["led_colors"] = strip["led_colors"][:led_count]
                 self._rebuild_positions()
-                self._update_scatter()
+                self._update_led_display()
                 self._update_camera()
                 self.save_nodes()
                 return True
@@ -309,3 +406,84 @@ class LED3DWidget(QWidget):
             item.translate(pos[0], pos[1], pos[2])
             self.shape_item = item
             self.view.addItem(item)
+
+    # ------------------------------------------------------------------
+    def _open_model_dialog(self):
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "Open 3D Model", "", "3D Models (*.stl *.obj)")
+        if filename:
+            self.load_model(filename)
+
+    def load_model(self, filename: str):
+        """Load a mesh from file and display it."""
+        try:
+            mesh = trimesh.load(filename, force='mesh')
+        except Exception as exc:
+            print(f"Failed to load model {filename}: {exc}")
+            return
+
+        verts = np.array(mesh.vertices, dtype=float)
+        faces = np.array(mesh.faces, dtype=int)
+        colors = None
+        if mesh.visual.kind == 'vertex' and hasattr(mesh.visual, 'vertex_colors'):
+            vc = np.array(mesh.visual.vertex_colors, dtype=float) / 255.0
+            if vc.shape[1] >= 3:
+                colors = vc[:, :4] if vc.shape[1] >= 4 else vc[:, :3]
+
+        md = gl.MeshData(vertexes=verts, faces=faces,
+                         vertexColors=colors)
+        # store model bounds for ground plane placement
+        self.model_bounds = (verts.min(axis=0), verts.max(axis=0))
+
+        if self.model_item:
+            self.view.removeItem(self.model_item)
+            self.model_item = None
+
+        item = gl.GLMeshItem(
+            meshdata=md,
+            smooth=False,
+            drawFaces=True,
+            drawEdges=False,
+            shader="shaded",
+        )
+        item.setGLOptions("opaque")
+        self.model_item = item
+        self.view.addItem(item)
+        self._toggle_model_visibility()
+        self._update_camera()
+        self._update_ground_plane()
+
+    def _toggle_model_visibility(self, *args):
+        if self.model_item:
+            self.model_item.setVisible(self.modelVisible.isChecked())
+
+    def _update_ground_plane(self, *args):
+        """Show or hide a ground grid aligned with the lowest object."""
+        if self.ground_item:
+            self.view.removeItem(self.ground_item)
+            self.ground_item = None
+
+        if not getattr(self, 'groundCheckBox', None) or not self.groundCheckBox.isChecked():
+            return
+
+        bottom = 0.0
+        span_x = span_y = 1.0
+        if self.positions.size != 0:
+            mins = self.bb_min if self.bb_min is not None else self.positions.min(axis=0)
+            maxs = self.bb_max if self.bb_max is not None else self.positions.max(axis=0)
+            bottom = mins[2]
+            span_x = max(span_x, maxs[0] - mins[0])
+            span_y = max(span_y, maxs[1] - mins[1])
+        if self.model_bounds:
+            mb_min, mb_max = self.model_bounds
+            bottom = min(bottom, mb_min[2])
+            span_x = max(span_x, mb_max[0] - mb_min[0])
+            span_y = max(span_y, mb_max[1] - mb_min[1])
+
+        size = max(span_x, span_y)
+        grid = gl.GLGridItem()
+        grid.setSize(size, size)
+        grid.setSpacing(size / 10, size / 10)
+        grid.translate(0, 0, bottom)
+        self.ground_item = grid
+        self.view.addItem(grid)

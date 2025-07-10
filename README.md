@@ -39,6 +39,16 @@ There are two major components:
 1. Firmware written in C++ for the ESP32 (master and slave roles).
 2. A PyQt desktop interface in `src/led_ui` that communicates with the device.
 
+   The LED simulator includes a 3D view which can now load external `.stl` or
+   `.obj` models for visualization.  Use the **Load Model** button in the
+   interface to import a mesh and inspect how your animations map onto a real
+   object.  Loaded meshes use sharp per-face lighting via a "shaded" shader so
+   geometric forms appear crisp.  The LEDs can be displayed as billboards,
+   spheres or cubes with a configurable radius.  LEDs are always drawn on top of
+   the model and a **Show Ground** checkbox toggles a ground grid aligned with
+   the bottom of the loaded mesh.  A **Show Model** toggle lets you hide the
+   imported mesh to view only the LED positions.
+
 The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types. Parameters are exchanged over serial/Mesh using the IDs from this header so that the C++ firmware and Python UI stay in sync.
 
 Recent updates added a few LED patterns including a falling bricks build-up effect and a "nebula" gradient that uses noise for subtle color variation. The bricks animation now supports a direction toggle and per-brick hue variance with a gradient towards `HueEnd`, while the nebula effect fades in using a noise-driven brightness.
@@ -78,6 +88,9 @@ dependencies including the `pyinstaller` package:
 conda env create -f src/led_ui/environment.yml
 conda activate led-ui
 ```
+
+The environment specification pins `numpy<2` and includes SciPy so that
+the `trimesh` package can load meshes without binary compatibility errors.
 
 Then build the executable from `offline_main.py` using the helper script.
 This step also compiles the small C++ simulators used for unit tests so

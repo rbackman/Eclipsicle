@@ -4,6 +4,8 @@ channels:
   - defaults
 dependencies:
   - python=3.10
+  - numpy<2
+  - scipy
   - pyqt=5
   - pyserial
   - pip
@@ -14,3 +16,4 @@ dependencies:
       - pyqtgraph
       - PyOpenGL
       - pyinstaller
+      - trimesh
