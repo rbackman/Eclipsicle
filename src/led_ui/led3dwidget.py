@@ -345,8 +345,13 @@ class LED3DWidget(QWidget):
             self.view.removeItem(self.model_item)
             self.model_item = None
 
-        item = gl.GLMeshItem(meshdata=md, smooth=True,
-                             drawFaces=True, drawEdges=False)
+        item = gl.GLMeshItem(
+            meshdata=md,
+            smooth=True,
+            drawFaces=True,
+            drawEdges=False,
+            shader="shaded",
+        )
         item.setGLOptions("opaque")
         self.model_item = item
         self.view.addItem(item)
