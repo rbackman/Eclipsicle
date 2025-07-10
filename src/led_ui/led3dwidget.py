@@ -29,10 +29,15 @@ class LED3DWidget(QWidget):
         self.updateNodesButton.clicked.connect(self.request_nodes)
         self.loadModelButton = pg.QtWidgets.QPushButton('Load Model')
         self.loadModelButton.clicked.connect(self._open_model_dialog)
+        self.groundCheckBox = QCheckBox('Show Ground')
+        self.groundCheckBox.setChecked(False)
+        self.groundCheckBox.stateChanged.connect(self._update_ground_plane)
         self.view = gl.GLViewWidget()
         self.layout.addWidget(self.view)
         self.view.opts['distance'] = 4
         self.scatter = gl.GLScatterPlotItem()
+        # keep LEDs visible even when a model overlaps
+        self.scatter.setGLOptions({'depthTest': False})
         self.view.addItem(self.scatter)
 
         self.current_shape = None
@@ -45,13 +50,17 @@ class LED3DWidget(QWidget):
             "thickness": 1.0,
         }
         self.model_item = None
+        self.model_bounds = None
+        self.ground_item = None
 
         self.layout.addWidget(self.updateNodesButton)
         self.layout.addWidget(self.loadModelButton)
+        self.layout.addWidget(self.groundCheckBox)
 
         self._rebuild_positions()
         self._update_scatter()
         self._update_camera()
+        self._update_ground_plane()
         self._sim_state_changed(self.simulate_checkbox.checkState())
         self.load_nodes("led_nodes.txt")
 
@@ -106,6 +115,7 @@ class LED3DWidget(QWidget):
             self.positions = np.zeros((0, 3))
 
         self._update_camera()
+        self._update_ground_plane()
 
     def _update_camera(self):
         """Zoom and center the view so all points are visible."""
@@ -113,6 +123,8 @@ class LED3DWidget(QWidget):
             return
         mins = self.positions.min(axis=0)
         maxs = self.positions.max(axis=0)
+        self.bb_min = mins
+        self.bb_max = maxs
         center = (mins + maxs) / 2.0
         span = np.linalg.norm(maxs - mins)
         try:
@@ -340,6 +352,8 @@ class LED3DWidget(QWidget):
 
         md = gl.MeshData(vertexes=verts, faces=faces,
                          vertexColors=colors)
+        # store model bounds for ground plane placement
+        self.model_bounds = (verts.min(axis=0), verts.max(axis=0))
 
         if self.model_item:
             self.view.removeItem(self.model_item)
@@ -347,7 +361,7 @@ class LED3DWidget(QWidget):
 
         item = gl.GLMeshItem(
             meshdata=md,
-            smooth=True,
+            smooth=False,
             drawFaces=True,
             drawEdges=False,
             shader="shaded",
@@ -356,3 +370,35 @@ class LED3DWidget(QWidget):
         self.model_item = item
         self.view.addItem(item)
         self._update_camera()
+        self._update_ground_plane()
+
+    def _update_ground_plane(self, *args):
+        """Show or hide a ground grid aligned with the lowest object."""
+        if self.ground_item:
+            self.view.removeItem(self.ground_item)
+            self.ground_item = None
+
+        if not getattr(self, 'groundCheckBox', None) or not self.groundCheckBox.isChecked():
+            return
+
+        bottom = 0.0
+        span_x = span_y = 1.0
+        if self.positions.size != 0:
+            mins = self.bb_min if self.bb_min is not None else self.positions.min(axis=0)
+            maxs = self.bb_max if self.bb_max is not None else self.positions.max(axis=0)
+            bottom = mins[2]
+            span_x = max(span_x, maxs[0] - mins[0])
+            span_y = max(span_y, maxs[1] - mins[1])
+        if self.model_bounds:
+            mb_min, mb_max = self.model_bounds
+            bottom = min(bottom, mb_min[2])
+            span_x = max(span_x, mb_max[0] - mb_min[0])
+            span_y = max(span_y, mb_max[1] - mb_min[1])
+
+        size = max(span_x, span_y)
+        grid = gl.GLGridItem()
+        grid.setSize(size, size)
+        grid.setSpacing(size / 10, size / 10)
+        grid.translate(0, 0, bottom)
+        self.ground_item = grid
+        self.view.addItem(grid)
