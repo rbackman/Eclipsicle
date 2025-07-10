@@ -1,10 +1,11 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QFileDialog
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 from PyQt5.QtGui import QColor
 from parameter_menu import ParameterIDMap
 import numpy as np
+import trimesh
 
 
 class LED3DWidget(QWidget):
@@ -26,6 +27,8 @@ class LED3DWidget(QWidget):
         self.simulate_checkbox.stateChanged.connect(self._sim_state_changed)
         self.updateNodesButton = pg.QtWidgets.QPushButton('Update Nodes')
         self.updateNodesButton.clicked.connect(self.request_nodes)
+        self.loadModelButton = pg.QtWidgets.QPushButton('Load Model')
+        self.loadModelButton.clicked.connect(self._open_model_dialog)
         self.view = gl.GLViewWidget()
         self.layout.addWidget(self.view)
         self.view.opts['distance'] = 4
@@ -41,8 +44,10 @@ class LED3DWidget(QWidget):
             "radius": 1.0,
             "thickness": 1.0,
         }
+        self.model_item = None
 
         self.layout.addWidget(self.updateNodesButton)
+        self.layout.addWidget(self.loadModelButton)
 
         self._rebuild_positions()
         self._update_scatter()
@@ -309,3 +314,40 @@ class LED3DWidget(QWidget):
             item.translate(pos[0], pos[1], pos[2])
             self.shape_item = item
             self.view.addItem(item)
+
+    # ------------------------------------------------------------------
+    def _open_model_dialog(self):
+        filename, _ = QFileDialog.getOpenFileName(
+            self, "Open 3D Model", "", "3D Models (*.stl *.obj)")
+        if filename:
+            self.load_model(filename)
+
+    def load_model(self, filename: str):
+        """Load a mesh from file and display it."""
+        try:
+            mesh = trimesh.load(filename, force='mesh')
+        except Exception as exc:
+            print(f"Failed to load model {filename}: {exc}")
+            return
+
+        verts = np.array(mesh.vertices, dtype=float)
+        faces = np.array(mesh.faces, dtype=int)
+        colors = None
+        if mesh.visual.kind == 'vertex' and hasattr(mesh.visual, 'vertex_colors'):
+            vc = np.array(mesh.visual.vertex_colors, dtype=float) / 255.0
+            if vc.shape[1] >= 3:
+                colors = vc[:, :4] if vc.shape[1] >= 4 else vc[:, :3]
+
+        md = gl.MeshData(vertexes=verts, faces=faces,
+                         vertexColors=colors)
+
+        if self.model_item:
+            self.view.removeItem(self.model_item)
+            self.model_item = None
+
+        item = gl.GLMeshItem(meshdata=md, smooth=True,
+                             drawFaces=True, drawEdges=False)
+        item.setGLOptions("opaque")
+        self.model_item = item
+        self.view.addItem(item)
+        self._update_camera()

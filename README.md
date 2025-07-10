@@ -39,6 +39,11 @@ There are two major components:
 1. Firmware written in C++ for the ESP32 (master and slave roles).
 2. A PyQt desktop interface in `src/led_ui` that communicates with the device.
 
+   The LED simulator includes a 3D view which can now load external `.stl` or
+   `.obj` models for visualization.  Use the **Load Model** button in the
+   interface to import a mesh and inspect how your animations map onto a real
+   object.
+
 The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types. Parameters are exchanged over serial/Mesh using the IDs from this header so that the C++ firmware and Python UI stay in sync.
 
 Recent updates added a few LED patterns including a falling bricks build-up effect and a "nebula" gradient that uses noise for subtle color variation. The bricks animation now supports a direction toggle and per-brick hue variance with a gradient towards `HueEnd`, while the nebula effect fades in using a noise-driven brightness.
