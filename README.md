@@ -43,9 +43,10 @@ There are two major components:
    `.obj` models for visualization.  Use the **Load Model** button in the
    interface to import a mesh and inspect how your animations map onto a real
    object.  Loaded meshes use sharp per-face lighting via a "shaded" shader so
-   geometric forms appear crisp.  The LEDs are always drawn on top of the model
-   and a **Show Ground** checkbox toggles a ground grid aligned with the bottom
-   of the loaded mesh.
+   geometric forms appear crisp.  The LEDs can be displayed as billboards,
+   spheres or cubes with a configurable radius.  LEDs are always drawn on top of
+   the model and a **Show Ground** checkbox toggles a ground grid aligned with
+   the bottom of the loaded mesh.
 
 The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types. Parameters are exchanged over serial/Mesh using the IDs from this header so that the C++ firmware and Python UI stay in sync.
 

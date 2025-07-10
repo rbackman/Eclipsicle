@@ -1,4 +1,13 @@
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QCheckBox, QFileDialog
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QCheckBox,
+    QFileDialog,
+    QComboBox,
+    QDoubleSpinBox,
+    QLabel,
+    QHBoxLayout,
+)
 from PyQt5.QtCore import Qt
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
@@ -33,6 +42,20 @@ class LED3DWidget(QWidget):
         self.groundCheckBox = QCheckBox('Show Ground')
         self.groundCheckBox.setChecked(False)
         self.groundCheckBox.stateChanged.connect(self._update_ground_plane)
+        # LED appearance controls
+        self.shapeCombo = QComboBox()
+        self.shapeCombo.addItems(['Billboard', 'Sphere', 'Cube'])
+        self.shapeCombo.currentIndexChanged.connect(self._update_led_display)
+        self.radiusSpin = QDoubleSpinBox()
+        self.radiusSpin.setRange(0.01, 0.5)
+        self.radiusSpin.setSingleStep(0.01)
+        self.radiusSpin.setValue(0.05)
+        self.radiusSpin.valueChanged.connect(self._update_led_display)
+        ctrl_layout = QHBoxLayout()
+        ctrl_layout.addWidget(QLabel('LED Shape'))
+        ctrl_layout.addWidget(self.shapeCombo)
+        ctrl_layout.addWidget(QLabel('Radius'))
+        ctrl_layout.addWidget(self.radiusSpin)
         self.view = gl.GLViewWidget()
         self.layout.addWidget(self.view)
         self.view.opts['distance'] = 4
@@ -45,6 +68,7 @@ class LED3DWidget(QWidget):
             # fallback for older pyqtgraph versions that used string options
             self.scatter.setGLOptions({'depthTest': False})
         self.view.addItem(self.scatter)
+        self.led_items = []
 
         self.current_shape = None
         self.shape_item = None
@@ -62,9 +86,10 @@ class LED3DWidget(QWidget):
         self.layout.addWidget(self.updateNodesButton)
         self.layout.addWidget(self.loadModelButton)
         self.layout.addWidget(self.groundCheckBox)
+        self.layout.addLayout(ctrl_layout)
 
         self._rebuild_positions()
-        self._update_scatter()
+        self._update_led_display()
         self._update_camera()
         self._update_ground_plane()
         self._sim_state_changed(self.simulate_checkbox.checkState())
@@ -122,6 +147,7 @@ class LED3DWidget(QWidget):
 
         self._update_camera()
         self._update_ground_plane()
+        self._update_led_display()
 
     def _update_camera(self):
         """Zoom and center the view so all points are visible."""
@@ -141,7 +167,9 @@ class LED3DWidget(QWidget):
             self.view.opts['center'] = center
         self.view.opts['distance'] = max(span * 1.2, 1.0)
 
-    def _update_scatter(self):
+    def _update_led_display(self):
+        """Update LED geometry based on current shape and colors."""
+        # compute color array
         color_arrays = []
         for strip_index in sorted(self.strips.keys()):
             strip = self.strips[strip_index]
@@ -155,10 +183,39 @@ class LED3DWidget(QWidget):
                 display.append(disp.getRgbF())
             color_arrays.append(np.array(display, dtype=float))
         if color_arrays:
-            colors = np.concatenate(color_arrays, axis=0)
+            self.colors = np.concatenate(color_arrays, axis=0)
         else:
-            colors = np.zeros((0, 4))
-        self.scatter.setData(pos=self.positions, size=5, color=colors)
+            self.colors = np.zeros((0, 4))
+
+        # clear existing mesh LEDs
+        for item in self.led_items:
+            self.view.removeItem(item)
+        self.led_items = []
+
+        shape = self.shapeCombo.currentText().lower() if hasattr(self, 'shapeCombo') else 'billboard'
+        radius = self.radiusSpin.value() if hasattr(self, 'radiusSpin') else 0.05
+
+        if shape == 'billboard':
+            self.scatter.setData(pos=self.positions, size=radius * 20, color=self.colors)
+            self.scatter.setVisible(True)
+            return
+
+        self.scatter.setVisible(False)
+
+        if shape == 'sphere':
+            base = gl.MeshData.sphere(rows=8, cols=16)
+            smooth = True
+        else:  # cube
+            base = gl.MeshData.cube()
+            smooth = False
+
+        for pos, color in zip(self.positions, self.colors):
+            item = gl.GLMeshItem(meshdata=base, smooth=smooth, color=color, shader='shaded')
+            item.setGLOptions({GL.GL_DEPTH_TEST: False})
+            item.scale(radius, radius, radius)
+            item.translate(pos[0], pos[1], pos[2])
+            self.view.addItem(item)
+            self.led_items.append(item)
 
     def save_nodes(self):
         """Save the current nodes to a file."""
@@ -180,7 +237,7 @@ class LED3DWidget(QWidget):
                     if self.process_string(line.strip()):
                         continue
             self._rebuild_positions()
-            self._update_scatter()
+            self._update_led_display()
             self._update_camera()
             print(f"Loaded nodes from {filename}")
         except Exception as e:
@@ -202,7 +259,7 @@ class LED3DWidget(QWidget):
             strip["led_colors"] = colors
             strip["led_count"] = len(colors)
             self._rebuild_positions()
-            self._update_scatter()
+            self._update_led_display()
             self._update_camera()
             return True
         if string.startswith("nodes:"):
@@ -235,7 +292,7 @@ class LED3DWidget(QWidget):
                 elif len(strip["led_colors"]) > led_count:
                     strip["led_colors"] = strip["led_colors"][:led_count]
                 self._rebuild_positions()
-                self._update_scatter()
+                self._update_led_display()
                 self._update_camera()
                 self.save_nodes()
                 return True
