@@ -46,7 +46,8 @@ There are two major components:
    geometric forms appear crisp.  The LEDs can be displayed as billboards,
    spheres or cubes with a configurable radius.  LEDs are always drawn on top of
    the model and a **Show Ground** checkbox toggles a ground grid aligned with
-   the bottom of the loaded mesh.
+   the bottom of the loaded mesh.  A **Show Model** toggle lets you hide the
+   imported mesh to view only the LED positions.
 
 The code uses a modular `ParameterManager` class so that each subsystem can expose tunable parameters.  See `shared.h` for enums describing menus, parameters and message types. Parameters are exchanged over serial/Mesh using the IDs from this header so that the C++ firmware and Python UI stay in sync.
 
