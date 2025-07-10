@@ -64,12 +64,8 @@ class LED3DWidget(QWidget):
         self.view.opts['distance'] = 4
         self.scatter = gl.GLScatterPlotItem()
         # keep LEDs visible even when a model overlaps
-        try:
-            # modern pyqtgraph expects raw GL constants
-            self.scatter.setGLOptions({GL.GL_DEPTH_TEST: False})
-        except Exception:
-            # fallback for older pyqtgraph versions that used string options
-            self.scatter.setGLOptions({'depthTest': False})
+        # use the string option for broad compatibility
+        self.scatter.setGLOptions({'depthTest': False})
         self.view.addItem(self.scatter)
         self.led_items = []
         self.current_mesh_shape = None
@@ -195,6 +191,12 @@ class LED3DWidget(QWidget):
         shape = self.shapeCombo.currentText().lower() if hasattr(self, 'shapeCombo') else 'billboard'
         radius = self.radiusSpin.value() if hasattr(self, 'radiusSpin') else 0.05
 
+        # avoid huge memory use if there are thousands of LEDs
+        max_mesh = 500
+        if shape != 'billboard' and len(self.positions) > max_mesh:
+            print(f"Too many LEDs for {shape} mode; falling back to billboards")
+            shape = 'billboard'
+
         if shape == 'billboard':
             for item in self.led_items:
                 self.view.removeItem(item)
@@ -221,7 +223,8 @@ class LED3DWidget(QWidget):
             self.current_mesh_shape = shape
             for _ in range(needed):
                 item = gl.GLMeshItem(meshdata=base, smooth=smooth, shader='shaded')
-                item.setGLOptions({GL.GL_DEPTH_TEST: False})
+                # disable depth testing so LEDs always appear on top
+                item.setGLOptions({'depthTest': False})
                 self.view.addItem(item)
                 self.led_items.append(item)
 
