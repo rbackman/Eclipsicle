@@ -1,7 +1,7 @@
 #pragma once
 #include "shared.h"
-
-#define DEBOUNCE_DELAY 50
+#include <SPI.h>
+#define DEBOUNCE_DELAY 10
 
 class SensorManager
 {
@@ -11,9 +11,10 @@ private:
     int currentSensor = 0;
     static SensorManager *instance;
     SensorGrid sensorGrid;
+    SPIClass *spiBus;
 
 public:
-    SensorManager(SensorGrid sensors);
+    SensorManager(SensorGrid sensors, SPIClass *spi = nullptr);
 
     void updateSensors();
     int getSensorValue(SensorID name, int min, int max);
@@ -21,7 +22,7 @@ public:
     bool handleSensorCommand(String command);
     bool messageAvailable();
     sensor_message getNextMessage();
-
+    int readADC(SensorState *sensor);
     // void handleButtonPressed(String name)
     // {
     //     unsigned long currentTime = millis();

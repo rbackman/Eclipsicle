@@ -23,6 +23,9 @@
 #include <Adafruit_SSD1306.h>
 #endif
 
+#ifdef DISPLAY_MANAGER
+#include "lib/displayManager.h"
+#endif
 #ifdef USE_ACCELEROMETER
 #include <Adafruit_MPU6050.h>
 #endif
@@ -45,10 +48,16 @@ JsonDocument doc;
 SerialManager *serialManager;
 ParameterManager *parameterManager;
 
+#ifdef DISPLAY_MANAGER
+DisplayManager displayManager;
+#endif
 #ifdef USE_LEDS
 LEDManager *ledManager;
 #endif
+#ifdef USE_SENSORS
 
+SensorManager *sensorManager;
+#endif
 ConfigManager configManager;
 
 #ifdef MESH_NET
@@ -95,8 +104,19 @@ SensorHandler sensorHandler = [](sensor_message msg)
   {
     Serial.println("Sensor received: " + String(getSensorName(msg.sensorId)) + " " + String(msg.value));
   }
-#endif
-#ifdef USE_LEDS
+  if (msg.sensorId == SLIDER1)
+  {
+    parameter_message paramMsg;
+    paramMsg.type = MESSAGE_TYPE_PARAMETER;
+    paramMsg.paramID = PARAM_SPAWN_RATE;
+    paramMsg.value = map(msg.value, 0, 255, 0, 100);
+    ledManager->respondToParameterMessage(paramMsg);
+  }
+  if (msg.sensorId == BUTTON_UP)
+  {
+    ledManager->toggleMode();
+  }
+
 #endif
 };
 
@@ -128,6 +148,17 @@ bool respondToParameterChange(parameter_message parameter)
 void setup()
 {
 
+#ifdef USE_SENSORS
+  SensorGrid grid = {
+      SensorState(SLIDER, 34, SLIDER1),
+
+      SensorState(BUTTON, 21, BUTTON_UP),
+      SensorState(BUTTON, 25, BUTTON_DOWN),
+
+  };
+  sensorManager = new SensorManager(grid);
+#endif
+#ifdef TESSERATICA_SEGMENT
   makeRig("Tesseratica", {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC});
   addStripToRig("Tesseratica", 0, 122, LED_STATE_MULTI_ANIMATION,
                 {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},
@@ -138,7 +169,14 @@ void setup()
   addStripToRig("Tesseratica", 2, 122, LED_STATE_MULTI_ANIMATION,
                 {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},
                 {{0, -54.5, -54.5, -49.5}, {49, -54.5, -54.5, 49.5}, {73, -26.5, -26.5, 21}, {94, -26.5, -26.5, -21}, {122, -54.5, -54.5, -49.5}});
+#endif
+#ifdef LIGHT_SWORD
+  makeRig("Lightsword", {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC});
+  addStripToRig("Lightsword", 3, 128, LED_STATE_MULTI_ANIMATION,
+                {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},
+                {{0, 0.0f, -54.5f, -54.5f}, {127, 0.0f, 54.5f, 54.5f}});
 
+#endif
   serialManager = new SerialManager(512, SLAVE_NAME);
   configManager.begin();
   parameterManager = new ParameterManager(SLAVE_NAME, {PARAM_DISPLAY_ACCEL});
@@ -211,6 +249,11 @@ void setup()
 
   Serial.println("Free memory Setup: ");
   Serial.println(ESP.getFreeHeap());
+
+#ifdef DISPLAY_MANAGER
+  displayManager.begin();
+  displayManager.showText("Hello, World!", 10, 10, 4, 0xFFFF);
+#endif
 }
 static void confirmParameters()
 {
@@ -425,6 +468,15 @@ bool processCmd(String command)
 
 void loop()
 {
+#ifdef USE_SENSORS
+  sensorManager->updateSensors();
+  if (sensorManager->messageAvailable())
+  {
+    sensor_message msg = sensorManager->getNextMessage();
+
+    sensorHandler(msg);
+  }
+#endif
 #ifdef ENABLE_PROFILER
   unsigned long loopStart = micros();
 #endif
@@ -432,6 +484,10 @@ void loop()
   if (serialManager->stringAvailable())
   {
     String command = serialManager->readString();
+#ifdef DISPLAY_MANAGER
+    Serial.println("add to display: " + command);
+    displayManager.showText(command, 0, 0);
+#endif
     if (command.length() == 0)
       return;
 

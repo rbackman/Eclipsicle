@@ -12,7 +12,7 @@ private:
     bool _jsonAvailable;
     int bufferSize;
     String _name = "default";
-    bool echo = false;
+    bool echo = true;
 
 public:
     SerialManager(int size, String name);

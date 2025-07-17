@@ -1,5 +1,6 @@
 //   animations.h
 #pragma once
+#ifdef USE_LEDS
 #include "shared.h"
 #include "parameterManager.h"
 #include <string>
@@ -218,3 +219,5 @@ public:
     {
     }
 };
+
+#endif

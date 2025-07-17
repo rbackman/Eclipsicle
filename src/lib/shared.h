@@ -412,7 +412,7 @@ struct SensorState
     SensorType type;
     SensorID sensorID;
     int pin;
-
+    int csPin = -1; // Chip select pin for SPI sensors
     bool invert = false;
     int value = 0;
 
@@ -423,7 +423,7 @@ struct SensorState
     unsigned long lastDebounceTime = 0;
     int tolerance = 1;
     SensorState(SensorType t, int p, SensorID n) : type(t), pin(p), sensorID(n) {}
-    SensorState(SensorType t, int p, SensorID n, int tol) : type(t), pin(p), sensorID(n), tolerance(tol) {}
+    SensorState(SensorType t, int p, SensorID n, int cs) : type(t), pin(p), sensorID(n), csPin(cs) {}
 };
 struct led
 {

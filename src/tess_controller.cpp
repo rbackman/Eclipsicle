@@ -1,0 +1,133 @@
+#ifdef TESSERATICA_CONTROLLER
+#include <Arduino.h>
+#include <WiFi.h>
+#if USE_DISPLAY
+#include "./lib/displayManager.h"
+#endif
+#include "./lib/sensors.h"
+#include "./lib/serial.h"
+#define SDA_PIN 9
+#define SCL_PIN 18
+#define DATA_PIN 5
+#define DOUT_PIN 8
+#define MCP_CS 12
+#define AMP_MIC_BLCK_PIN 37
+#define AMP_MIC_LRC_PIN 38
+#define AMP_DIN_PIN 42
+#define MIC_SDA_PIN 39
+
+#define LED_1_PIN 17
+#define LED_2_PIN 16
+#define LED_3_PIN 35
+#define LED_4_PIN 48
+
+#define SD_CARD_CS 10
+
+#define DISPLAY_RST 15
+#define DISPLAY_DC 14
+#define DISPLAY_CS 13
+#define DISPLAY_BL 4
+
+#define BUTTON_1_PIN 1
+#define BUTTON_2_PIN 2
+#define BUTTON_3_PIN 41
+#define BUTTON_4_PIN 40
+#define BUTTON_5_PIN 19
+#define BUTTON_6_PIN 47
+
+#define ACCEL_SDA_PIN 20
+#define ACCEL_SCL_PIN 21
+#define ACCEL_INT_PIN 36
+#if USE_DISPLAY
+DisplayManager *displayManager;
+#endif
+SensorManager *sensorManager;
+SerialManager *serialManager;
+
+// SPI settings: 1 MHz, MSB first, SPI mode 0
+SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
+
+void setup()
+{
+  SPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
+  pinMode(MCP_CS, OUTPUT);
+  digitalWrite(MCP_CS, HIGH); // Set MCP CS high to deselect it
+  serialManager = new SerialManager(1024, "TesseraticaController");
+#if USE_DISPLAY
+  displayManager = new DisplayManager();
+#endif
+
+  auto sliderState = SensorState(SLIDER, 0, SLIDER1, MCP_CS);
+  sensorManager = new SensorManager({
+                                        SensorState(BUTTON, BUTTON_2_PIN, BUTTON_UP),
+                                        SensorState(BUTTON, BUTTON_6_PIN, BUTTON_DOWN),
+                                        SensorState(BUTTON, BUTTON_5_PIN, BUTTON_LEFT),
+                                        SensorState(BUTTON, BUTTON_4_PIN, BUTTON_RIGHT),
+                                        SensorState(SLIDER, 0, SLIDER1, MCP_CS),
+                                        SensorState(SLIDER, 1, SLIDER2, MCP_CS),
+                                        SensorState(SLIDER, 2, SLIDER3, MCP_CS),
+                                        SensorState(SLIDER, 3, SLIDER4, MCP_CS),
+                                        SensorState(SLIDER, 4, SLIDER5, MCP_CS),
+                                    },
+                                    &SPI);
+#if USE_DISPLAY
+  displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN, DISPLAY_RST, DISPLAY_BL);
+  //  turn on the display backlight
+
+  displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFFFF);
+  displayManager->showText("Ready!", 10, 30, 2, 0xFFFF);
+  // show macaddress
+  String macAddress = WiFi.macAddress();
+  displayManager->showText("MAC: " + macAddress, 10, 50, 2, 0xFFFF);
+#endif
+
+  delay(1000); // Wait for serial monitor to open
+}
+
+void loop()
+{
+  serialManager->updateSerial();
+  // displayManager->clear();
+  sensorManager->updateSensors();
+
+  if (sensorManager->messageAvailable())
+  {
+    sensor_message message = sensorManager->getNextMessage();
+    String sensorLabel = getSensorName(message.sensorId);
+    String sensorValue = String(message.value);
+    String txt = "Sensor: " + sensorLabel + " Value: " + sensorValue;
+    Serial.println(txt.c_str());
+    // displayManager->showText(txt.c_str(), 10, 70, 2, 0xFFFF);
+  }
+  if (serialManager->stringAvailable())
+  {
+    String command = serialManager->readString();
+    if (sensorManager->handleSensorCommand(command))
+    {
+      Serial.println("Handled command: " + command);
+    }
+  }
+  if (serialManager->jsonAvailable())
+  {
+    JsonDocument doc;
+    if (serialManager->readJson(doc))
+    {
+      // Handle JSON commands here
+      String command = doc["command"];
+      if (command == "printSensor")
+      {
+        int sensorId = doc["sensorId"];
+        sensorManager->handleSensorCommand("printSensor " + String(sensorId));
+      }
+      else if (command == "printAllSensors")
+      {
+        sensorManager->handleSensorCommand("printAllSensors");
+      }
+      else
+      {
+        Serial.println("Unknown JSON command: " + command);
+      }
+    }
+  }
+}
+#endif

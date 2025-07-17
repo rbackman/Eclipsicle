@@ -1,13 +1,14 @@
 
 #ifdef USE_SENSORS
-
+#include <Arduino.h>
 #include "sensors.h"
 #include "shared.h"
-#include "FunctionalInterrupt.h"
-
-SensorManager *SensorManager::instance = nullptr;
-
 // #define USE_BUTTON_INTERRUPTS
+
+#ifdef USE_BUTTON_INTERRUPTS
+#include "FunctionalInterrupt.h"
+#endif
+SensorManager *SensorManager::instance = nullptr;
 
 #ifdef USE_BUTTON_INTERRUPTS
 int button1Pin = -1;
@@ -41,32 +42,41 @@ static void handleButton4Interrupt()
 
 #endif
 
-
-SensorManager::SensorManager(SensorGrid sensors) : sensorGrid(sensors)
+SensorManager::SensorManager(SensorGrid sensors, SPIClass *spi) : sensorGrid(sensors), spiBus(spi)
 {
     instance = this;
     for (int i = 0; i < sensors.size(); i++)
     {
+        if (sensors[i].csPin != -1 && spiBus != nullptr)
+        {
+
+            pinMode(sensors[i].csPin, OUTPUT);
+            digitalWrite(sensors[i].csPin, HIGH); // Deselect the sensor
+        }
+        if (sensors[i].type == DIAL || sensors[i].type == SLIDER)
+        {
+            sensors[i].tolerance = 5; // Set tolerance for DIAL and SLIDER sensors
+        }
 #ifdef USE_BUTTON_INTERRUPTS
         if (sensors[i].type == BUTTON)
         {
-            pinMode(sensors[i].pin, INPUT_PULLUP);
-            if (sensors[i].name == "Button1")
+            pinMode(sensors[i].pin, INPUT);
+            if (sensors[i].sensorID == BUTTON_UP)
             {
                 button1Pin = sensors[i].pin;
                 attachInterrupt(digitalPinToInterrupt(sensors[i].pin), handleButton1Interrupt, FALLING);
             }
-            if (sensors[i].name == "Button2")
+            if (sensors[i].sensorID == BUTTON_DOWN)
             {
                 button2Pin = sensors[i].pin;
                 attachInterrupt(digitalPinToInterrupt(sensors[i].pin), handleButton2Interrupt, FALLING);
             }
-            if (sensors[i].name == "Button3")
+            if (sensors[i].sensorID == BUTTON_LEFT)
             {
                 button3Pin = sensors[i].pin;
                 attachInterrupt(digitalPinToInterrupt(sensors[i].pin), handleButton3Interrupt, FALLING);
             }
-            if (sensors[i].name == "Button4")
+            if (sensors[i].sensorID == BUTTON_RIGHT)
             {
                 button4Pin = sensors[i].pin;
                 attachInterrupt(digitalPinToInterrupt(sensors[i].pin), handleButton4Interrupt, FALLING);
@@ -126,10 +136,36 @@ sensor_message SensorManager::getNextMessage()
         message.sensorId = sensorGrid[currentSensor].sensorID;
         return message;
     }
+    return sensor_message{MESSAGE_TYPE_TEXT, DIAL, SLIDER1, 0}; // return an empty message if no message is available
 
     // should never get here
 }
+int SensorManager::readADC(SensorState *sensor)
+{
+    if (spiBus == nullptr)
+    {
+        Serial.println("SPI bus not initialized");
+        return 0;
+    }
 
+    if (sensor->csPin == -1)
+    {
+        Serial.println("No chip select pin for this sensor");
+    }
+
+    spiBus->beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+    digitalWrite(sensor->csPin, LOW);
+
+    byte command = 0b10000000 | (sensor->pin << 4); // Start bit + single-ended + channel
+    SPI.transfer(0x01);                             // Start bit
+    byte highByte = SPI.transfer(command);
+    byte lowByte = SPI.transfer(0x00);
+
+    digitalWrite(sensor->csPin, HIGH);
+    spiBus->endTransaction();
+
+    return ((highByte & 0x03) << 8) | lowByte; // 10-bit result
+}
 void SensorManager::updateSensors()
 {
     // only update one sensor each cycle to avoid saturating the ADC
@@ -222,9 +258,30 @@ void SensorManager::updateSensors()
 #endif
         return;
     }
-    else
-
+    else if (sensor->csPin > 0)
     {
+        int value = readADC(sensor);
+        if (sensor->tolerance > 0)
+        {
+
+            if (abs(value - sensor->value) <= sensor->tolerance)
+            {
+                return; // Value is within tolerance, no change
+            }
+        }
+        if (value != -1 && value != sensor->value && !sensor->changed) // only change on value change
+        {
+            if (isVerbose() || printSensor == currentSensor || printSensor == -2)
+            {
+                Serial.printf("Sensor %s value changed: %d\n", getSensorName(sensor->sensorID), value);
+            }
+            sensor->value = value;
+            sensor->changed = true;
+        }
+    }
+    else
+    {
+        printf("Reading analog pin %d (%s)\n", sensor->pin, getSensorName(sensor->sensorID));
         int anlg = analogRead(sensor->pin);
         // linearize logrithmic sensor value
         int value = map(pow(anlg, 1.5), 262048, 0, 0, 255);

@@ -1,3 +1,4 @@
+#ifdef USE_LEDS
 // animations.cpp
 #include "animations.h"
 #include "shared.h"
@@ -615,3 +616,5 @@ void PlaneAnimation::update()
         setPixelHSV(i, hue, 1.0f, bright);
     }
 }
+
+#endif

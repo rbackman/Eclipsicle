@@ -60,8 +60,9 @@ void LEDManager::initStrips()
     for (int i = 0; i < stripStates.size(); i++)
     {
         StripState *strip = stripStates[i];
+        int stripIndex = strip->getStripIndex();
         Serial.printf("Adding strip %d with %d LEDs\n", i + 1, strip->getNumLEDS());
-        switch (i)
+        switch (stripIndex)
         {
         case 0:
 
@@ -142,7 +143,7 @@ void LEDManager::setLEDImage(image_message msg)
     }
     else
     {
-        stripStates[currentStrip - 1]->setLEDRow(row);
+        stripStates[currentStrip]->setLEDRow(row);
     }
 }
 
@@ -299,8 +300,9 @@ void LEDManager::setGravityPosition(float position)
     // gravity position is the LED index that is the bottom of the strip according to the accelerometer
     gravityPosition = position;
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
-    if (currentStrip == 0)
+    if (currentStrip < 0 || currentStrip >= stripStates.size())
     {
+
         for (int i = 0; i < stripStates.size(); i++)
         {
             stripStates[i]->setGravityPosition(position);
@@ -308,15 +310,16 @@ void LEDManager::setGravityPosition(float position)
     }
     else
     {
-        stripStates[currentStrip - 1]->setGravityPosition(position);
+        stripStates[currentStrip]->setGravityPosition(position);
     }
 }
 
 void LEDManager::toggleMode()
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
-    if (currentStrip == 0)
+    if (currentStrip < 0 || currentStrip >= stripStates.size())
     {
+
         for (int i = 0; i < stripStates.size(); i++)
         {
             stripStates[i]->toggleMode();
@@ -324,37 +327,40 @@ void LEDManager::toggleMode()
     }
     else
     {
-        stripStates[currentStrip - 1]->toggleMode();
+
+        stripStates[currentStrip]->toggleMode();
     }
 }
 std::string LEDManager::getStripState(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
-    if (currentStrip == 0)
+    if (currentStrip < 0 || currentStrip >= stripStates.size())
     {
+
         return stripStates[0]->getStripState(verbose);
     }
-    return stripStates[currentStrip - 1]->getStripState(verbose);
+    return stripStates[currentStrip]->getStripState(verbose);
 }
 
 std::string LEDManager::getStripsStateJson(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
-    if (currentStrip == 0)
+    if (currentStrip < 0 || currentStrip >= stripStates.size())
     {
         return getStripStateJson(stripStates[0], verbose);
     }
-    return getStripStateJson(stripStates[currentStrip - 1], verbose);
+    return getStripStateJson(stripStates[currentStrip], verbose);
 }
 
 std::string LEDManager::getStripStateCompact(bool verbose)
 {
     int currentStrip = getInt(PARAM_CURRENT_STRIP);
-    if (currentStrip == 0)
+    if (currentStrip < 0 || currentStrip >= stripStates.size())
+
     {
         return stripStates[0]->getStripStateCompact();
     }
-    return stripStates[currentStrip - 1]->getStripStateCompact();
+    return stripStates[currentStrip]->getStripStateCompact();
 }
 
 std::string LEDManager::getAnimationInfoJson()
