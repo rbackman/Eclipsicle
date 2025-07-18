@@ -109,8 +109,12 @@ void loop()
       {
         sliderValues[index] = message.value;
 #if DISPLAY_MANAGER
-        displayManager->clear();
-        displayManager->showBars(sliderValues, 5, 10, 80, 300, 160);
+
+        // displayManager->showBars(sliderValues, 5, 90, 120, 360, 60);
+        // convert value to hue
+
+        float barHeight = (float)message.value / 1023.0f; // Scale to bar height
+        displayManager->drawBar(index, 100, 300, 60, barHeight, 200, barHeight);
 #endif
       }
     }

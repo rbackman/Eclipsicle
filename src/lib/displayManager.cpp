@@ -39,13 +39,80 @@ void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
 }
 void DisplayManager::showBars(const int *values, int len, int x, int y, int w, int h, uint16_t color)
 {
-    gfx->drawRect(x, y, w, h, color);
+    gfx->drawRect(x, y, w, h, 0xFFFF); // Draw border
     int barWidth = w / len;
     for (int i = 0; i < len; i++)
     {
+        // first draw the background
+        gfx->fillRect(x + i * barWidth, y, barWidth, h, 0x0000); // Clear bar area
         int barHeight = map(values[i], 0, 1023, 0, h);
         gfx->fillRect(x + i * barWidth + 1, y + h - barHeight, barWidth - 2, barHeight, color);
     }
+}
+void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b)
+{
+    int i = int(h * 6);
+    float f = h * 6 - i;
+    float p = v * (1 - s);
+    float q = v * (1 - f * s);
+    float t = v * (1 - (1 - f) * s);
+
+    switch (i % 6)
+    {
+    case 0:
+        r = v * 255;
+        g = t * 255;
+        b = p * 255;
+        break;
+    case 1:
+        r = q * 255;
+        g = v * 255;
+        b = p * 255;
+        break;
+    case 2:
+        r = p * 255;
+        g = v * 255;
+        b = t * 255;
+        break;
+    case 3:
+        r = p * 255;
+        g = q * 255;
+        b = v * 255;
+        break;
+    case 4:
+        r = t * 255;
+        g = p * 255;
+        b = v * 255;
+        break;
+    case 5:
+        r = v * 255;
+        g = p * 255;
+        b = q * 255;
+        break;
+    }
+}
+void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalHeight, float hue)
+{
+    if (index < 0 || index >= 5)
+    {
+        Serial.println("Index out of bounds for drawBar");
+        return;
+    }
+
+    int barWidth = w;
+    int barHeight = totalHeight * h; // height from 0 to totalHeight
+    uint8_t r, g, b;
+    hsvToRgb(hue, 1.0, 1.0, r, g, b); // hue: 0.0–1.0, full saturation and value
+    uint16_t color = gfx->color565(r, g, b);
+
+    int barX = x + index * barWidth;
+    int barY = y - barHeight; // top of the bar
+
+    // Clear the area first
+    gfx->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x0000);
+
+    // Draw the bar going upwards
+    gfx->fillRect(barX + 1, barY, barWidth - 2, barHeight, color);
 }
 void DisplayManager::showText(const String &text, int x, int y, int size, uint16_t color)
 {

@@ -19,6 +19,7 @@ public:
                int RST_PIN, int BL_PIN, SPIClass *spi = &SPI,
                int MISO_PIN = -1);
     void showBars(const int *values, int len, int x, int y, int w, int h, uint16_t color = 0xFFFF);
+    void drawBar(int index, int x, int y, int w, float h, int totalHeight, float hue);
 
 private:
     Arduino_GFX *gfx;
