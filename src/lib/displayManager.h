@@ -24,7 +24,9 @@ public:
 
 private:
     Arduino_GFX *gfx;
-    GFXcanvas16 *canvas = nullptr;
+    GFXcanvas8 *canvas = nullptr;
+    uint16_t color332To565(uint8_t c);
+    uint8_t color565To332(uint16_t c);
     void flush();
 };
 #endif
