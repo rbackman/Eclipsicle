@@ -11,7 +11,7 @@
 // #define BL_PIN 13  // Backlight control pin (optional, can be connected to GPIO)
 void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
                            int RST_PIN, int BL_PIN, SPIClass *spi,
-                           int MISO_PIN)
+                           int miso_pin)
 
 {
     Arduino_DataBus *bus = new Arduino_HWSPI(
@@ -19,7 +19,7 @@ void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
         CS_PIN,   // CS
         SCLK_PIN, // SCK
         MOSI_PIN, // MOSI
-        MISO_PIN, // MISO pin (optional)
+        miso_pin, // MISO pin (optional)
         spi,      // shared SPI bus
         true      // is_shared_interface
     );
