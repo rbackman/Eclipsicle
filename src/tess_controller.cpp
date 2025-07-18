@@ -45,6 +45,7 @@ SerialManager *serialManager;
 DisplayManager *displayManager;
 #endif
 SensorManager *sensorManager;
+SPIClass sensorSPI(HSPI);
 int sliderValues[5] = {0};
 // SPI settings: 1 MHz, MSB first, SPI mode 0
 // SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
@@ -53,7 +54,7 @@ void setup()
 {
   serialManager = new SerialManager(1024, SLAVE_NAME);
   delay(300);
-  SPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
+  sensorSPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
   pinMode(MCP_CS, OUTPUT);
   digitalWrite(MCP_CS, HIGH); // Set MCP CS high to deselect it
 
@@ -68,10 +69,10 @@ void setup()
                                         SensorState(SLIDER, 3, SLIDER4, MCP_CS),
                                         SensorState(SLIDER, 4, SLIDER5, MCP_CS),
                                     },
-                                    &SPI);
+                                    &sensorSPI);
 #if DISPLAY_MANAGER
   displayManager = new DisplayManager();
-  displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN, DISPLAY_RST, DISPLAY_BL);
+  displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN, DISPLAY_RST, DISPLAY_BL, 1); // 1 = HSPI_HOST
   //  turn on the display backlight
 
   displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFFFF);
