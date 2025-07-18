@@ -21,17 +21,26 @@ void DisplayManager::beginSPI(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN
         -1,       // MISO (not used)
         spiHost   // SPI bus
     );
+    Serial.println("Display bus initialized");
     gfx = new Arduino_ST7796(
         bus, RST_PIN, 0, true, 320, 480, 0, 80);
+    Serial.println("Display object created");
+    if (gfx == nullptr)
+    {
+        Serial.println("Failed to create display object");
+        return;
+    }
     if (!gfx->begin())
     {
         Serial.println("Failed to initialize display");
         return;
     }
+    Serial.println("Display initialized successfully");
     gfx->fillScreen(0x0000); // Clear screen with black color
     pinMode(BL_PIN, OUTPUT);
     digitalWrite(BL_PIN, HIGH); // Turn on backlight
-    gfx->setRotation(1);        // landscape
+    Serial.printf("Display backlight set to HIGH on pin %d\n", BL_PIN);
+    gfx->setRotation(1); // landscape
     gfx->fillScreen(0x0000);
     Serial.println("Display initialized");
 }
