@@ -4,6 +4,10 @@
 #include <Adafruit_GFX.h>
 #include <SPI.h>
 
+#ifndef DISPLAY_USE_DOUBLE_BUFFER
+#define DISPLAY_USE_DOUBLE_BUFFER 1
+#endif
+
 class DisplayManager
 {
     int _DC_PIN;
@@ -24,9 +28,11 @@ public:
 
 private:
     Arduino_GFX *gfx;
+#if DISPLAY_USE_DOUBLE_BUFFER
     GFXcanvas8 *canvas = nullptr;
     uint16_t color332To565(uint8_t c);
     uint8_t color565To332(uint16_t c);
+#endif
     void flush();
 };
 #endif
