@@ -1,7 +1,7 @@
 #ifdef TESSERATICA_CONTROLLER
 #include <Arduino.h>
 #include <WiFi.h>
-#if USE_DISPLAY
+#if DISPLAY_MANAGER
 #include "./lib/displayManager.h"
 #endif
 #include "./lib/sensors.h"
@@ -38,39 +38,37 @@
 #define ACCEL_SDA_PIN 20
 #define ACCEL_SCL_PIN 21
 #define ACCEL_INT_PIN 36
-#if USE_DISPLAY
+
+SerialManager *serialManager;
+#if DISPLAY_MANAGER
 DisplayManager *displayManager;
 #endif
 SensorManager *sensorManager;
-SerialManager *serialManager;
-
 // SPI settings: 1 MHz, MSB first, SPI mode 0
-SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
+// SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
 
 void setup()
 {
-  SPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
-  pinMode(MCP_CS, OUTPUT);
-  digitalWrite(MCP_CS, HIGH); // Set MCP CS high to deselect it
-  serialManager = new SerialManager(1024, "TesseraticaController");
-#if USE_DISPLAY
-  displayManager = new DisplayManager();
-#endif
+  serialManager = new SerialManager(1024, SLAVE_NAME);
+  delay(300);
+  // SPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
+  // pinMode(MCP_CS, OUTPUT);
+  // digitalWrite(MCP_CS, HIGH); // Set MCP CS high to deselect it
 
-  auto sliderState = SensorState(SLIDER, 0, SLIDER1, MCP_CS);
-  sensorManager = new SensorManager({
-                                        SensorState(BUTTON, BUTTON_2_PIN, BUTTON_UP),
-                                        SensorState(BUTTON, BUTTON_6_PIN, BUTTON_DOWN),
-                                        SensorState(BUTTON, BUTTON_5_PIN, BUTTON_LEFT),
-                                        SensorState(BUTTON, BUTTON_4_PIN, BUTTON_RIGHT),
-                                        SensorState(SLIDER, 0, SLIDER1, MCP_CS),
-                                        SensorState(SLIDER, 1, SLIDER2, MCP_CS),
-                                        SensorState(SLIDER, 2, SLIDER3, MCP_CS),
-                                        SensorState(SLIDER, 3, SLIDER4, MCP_CS),
-                                        SensorState(SLIDER, 4, SLIDER5, MCP_CS),
-                                    },
-                                    &SPI);
-#if USE_DISPLAY
+  // sensorManager = new SensorManager({
+  //                                       SensorState(BUTTON, BUTTON_2_PIN, BUTTON_UP),
+  //                                       SensorState(BUTTON, BUTTON_6_PIN, BUTTON_DOWN),
+  //                                       SensorState(BUTTON, BUTTON_5_PIN, BUTTON_LEFT),
+  //                                       SensorState(BUTTON, BUTTON_4_PIN, BUTTON_RIGHT),
+  //                                       SensorState(SLIDER, 0, SLIDER1, MCP_CS),
+  //                                       SensorState(SLIDER, 1, SLIDER2, MCP_CS),
+  //                                       SensorState(SLIDER, 2, SLIDER3, MCP_CS),
+  //                                       SensorState(SLIDER, 3, SLIDER4, MCP_CS),
+  //                                       SensorState(SLIDER, 4, SLIDER5, MCP_CS),
+  //                                   },
+  //                                   &SPI);
+#if DISPLAY_MANAGER
+  displayManager = new DisplayManager();
   displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN, DISPLAY_RST, DISPLAY_BL);
   //  turn on the display backlight
 
@@ -88,24 +86,24 @@ void loop()
 {
   serialManager->updateSerial();
   // displayManager->clear();
-  sensorManager->updateSensors();
+  // sensorManager->updateSensors();
 
-  if (sensorManager->messageAvailable())
-  {
-    sensor_message message = sensorManager->getNextMessage();
-    String sensorLabel = getSensorName(message.sensorId);
-    String sensorValue = String(message.value);
-    String txt = "Sensor: " + sensorLabel + " Value: " + sensorValue;
-    Serial.println(txt.c_str());
-    // displayManager->showText(txt.c_str(), 10, 70, 2, 0xFFFF);
-  }
+  // if (sensorManager->messageAvailable())
+  // {
+  //   sensor_message message = sensorManager->getNextMessage();
+  //   String sensorLabel = getSensorName(message.sensorId);
+  //   String sensorValue = String(message.value);
+  //   String txt = "Sensor: " + sensorLabel + " Value: " + sensorValue;
+  //   Serial.println(txt.c_str());
+  //   // displayManager->showText(txt.c_str(), 10, 70, 2, 0xFFFF);
+  // }
   if (serialManager->stringAvailable())
   {
     String command = serialManager->readString();
-    if (sensorManager->handleSensorCommand(command))
-    {
-      Serial.println("Handled command: " + command);
-    }
+    // if (sensorManager->handleSensorCommand(command))
+    // {
+    //   Serial.println("Handled command: " + command);
+    // }
   }
   if (serialManager->jsonAvailable())
   {
@@ -114,19 +112,6 @@ void loop()
     {
       // Handle JSON commands here
       String command = doc["command"];
-      if (command == "printSensor")
-      {
-        int sensorId = doc["sensorId"];
-        sensorManager->handleSensorCommand("printSensor " + String(sensorId));
-      }
-      else if (command == "printAllSensors")
-      {
-        sensorManager->handleSensorCommand("printAllSensors");
-      }
-      else
-      {
-        Serial.println("Unknown JSON command: " + command);
-      }
     }
   }
 }
