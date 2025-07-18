@@ -329,6 +329,13 @@ void SensorManager::updateSensors()
     }
 }
 
+void SensorManager::beginSPI(int scl, int sda, int cs)
+{
+    spiBus = new SPIClass(HSPI);
+    spiBus->begin(scl, sda, -1, cs); // -1 for MISO since we don't use it
+    Serial.printf("SPI bus initialized on SCL: %d, SDA: %d, CS: %d\n", scl, sda, cs);
+}
+
 int SensorManager::getSensorValue(SensorID id, int min, int max)
 {
     for (int i = 0; i < sensorGrid.size(); i++)

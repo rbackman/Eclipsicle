@@ -9,9 +9,10 @@
 // #define DC_PIN 32  // Data Command control pin
 // #define RST_PIN 33 // Reset pin (could connect to NodeMCU RST, see next line)
 // #define BL_PIN 13  // Backlight control pin (optional, can be connected to GPIO)
-void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN, int RST_PIN, int BL_PIN, int spiHost)
+void DisplayManager::beginSPI(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN, int RST_PIN, int BL_PIN, int spiHost)
 
 {
+    Serial.println("Initializing display...");
     Arduino_DataBus *bus = new Arduino_ESP32SPI(
         DC_PIN,   // DC
         CS_PIN,   // CS

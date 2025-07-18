@@ -21,6 +21,7 @@ public:
     bool buttonPressed(SensorID name);
     bool handleSensorCommand(String command);
     bool messageAvailable();
+    void beginSPI(int scl, int sda, int cs);
     sensor_message getNextMessage();
     int readADC(SensorState *sensor);
     // void handleButtonPressed(String name)
