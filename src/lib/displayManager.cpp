@@ -24,7 +24,7 @@ void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
         true      // is_shared_interface
     );
     gfx = new Arduino_ST7796(
-        bus, RST_PIN, 0, true, 320, 480, 0, 80);
+        bus, RST_PIN, 0, true, 320, 480, 0, 0);
     if (!gfx->begin())
     {
         Serial.println("Failed to initialize display");
