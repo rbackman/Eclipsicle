@@ -9,15 +9,19 @@
 // #define DC_PIN 32  // Data Command control pin
 // #define RST_PIN 33 // Reset pin (could connect to NodeMCU RST, see next line)
 // #define BL_PIN 13  // Backlight control pin (optional, can be connected to GPIO)
-void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN, int RST_PIN, int BL_PIN)
+void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
+                           int RST_PIN, int BL_PIN, SPIClass *spi,
+                           int MISO_PIN)
 
 {
-    Arduino_DataBus *bus = new Arduino_ESP32SPI(
+    Arduino_DataBus *bus = new Arduino_HWSPI(
         DC_PIN,   // DC
         CS_PIN,   // CS
         SCLK_PIN, // SCK
         MOSI_PIN, // MOSI
-        -1        // MISO (not used)
+        MISO_PIN, // MISO pin (optional)
+        spi,      // shared SPI bus
+        true      // is_shared_interface
     );
     gfx = new Arduino_ST7796(
         bus, RST_PIN, 0, true, 320, 480, 0, 80);

@@ -72,7 +72,8 @@ void setup()
                                     &sensorSPI);
 #if DISPLAY_MANAGER
   displayManager = new DisplayManager();
-  displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN, DISPLAY_RST, DISPLAY_BL);
+  displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN,
+                        DISPLAY_RST, DISPLAY_BL, &sensorSPI, DOUT_PIN);
   //  turn on the display backlight
 
   displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFFFF);

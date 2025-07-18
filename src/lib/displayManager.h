@@ -1,6 +1,7 @@
 #pragma once
 #ifdef DISPLAY_MANAGER
 #include <Arduino_GFX_Library.h>
+#include <SPI.h>
 
 class DisplayManager
 {
@@ -14,7 +15,9 @@ public:
     void showGraph(float *data, int len, int x, int y, int w, int h);
     void showParticles();
     void clear();
-    void begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN, int RST_PIN, int BL_PIN);
+    void begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
+               int RST_PIN, int BL_PIN, SPIClass *spi = &SPI,
+               int MISO_PIN = -1);
     void showBars(const int *values, int len, int x, int y, int w, int h, uint16_t color = 0xFFFF);
 
 private:
