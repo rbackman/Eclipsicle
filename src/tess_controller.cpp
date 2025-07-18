@@ -45,7 +45,6 @@ SerialManager *serialManager;
 DisplayManager *displayManager;
 #endif
 SensorManager *sensorManager;
-SPIClass sensorSPI(HSPI);
 int sliderValues[5] = {0};
 // SPI settings: 1 MHz, MSB first, SPI mode 0
 // SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
@@ -54,7 +53,7 @@ void setup()
 {
   serialManager = new SerialManager(1024, SLAVE_NAME);
   delay(300);
-  sensorSPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
+  SPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
   pinMode(MCP_CS, OUTPUT);
   digitalWrite(MCP_CS, HIGH); // Set MCP CS high to deselect it
 
@@ -69,7 +68,7 @@ void setup()
                                         SensorState(SLIDER, 3, SLIDER4, MCP_CS),
                                         SensorState(SLIDER, 4, SLIDER5, MCP_CS),
                                     },
-                                    &sensorSPI);
+                                    &SPI);
 #if DISPLAY_MANAGER
   displayManager = new DisplayManager();
   displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN, DISPLAY_RST, DISPLAY_BL);
