@@ -39,6 +39,11 @@ void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
     if (canvas)
     {
         canvas->fillScreen(0x0000);
+        flush();
+    }
+    else
+    {
+        Serial.println("Failed to allocate display buffer");
     }
     Serial.println("Display initialized");
 }
@@ -181,9 +186,9 @@ void DisplayManager::flush()
 {
     if (canvas && gfx)
     {
-        gfx->draw16bitRGBBitmap(0, 0,
-                                 (uint16_t *)canvas->getBuffer(),
-                                 canvas->width(), canvas->height());
+        gfx->drawRGBBitmap(0, 0,
+                           (uint16_t *)canvas->getBuffer(),
+                           canvas->width(), canvas->height());
     }
 }
 
