@@ -15,6 +15,7 @@ public:
     void showParticles();
     void clear();
     void begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN, int RST_PIN, int BL_PIN);
+    void showBars(const int *values, int len, int x, int y, int w, int h, uint16_t color = 0xFFFF);
 
 private:
     Arduino_GFX *gfx;

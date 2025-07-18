@@ -15,7 +15,7 @@ int button1Pin = -1;
 int button2Pin = -1;
 int button3Pin = -1;
 int button4Pin = -1;
-
+SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
 volatile bool button1Pressed = false;
 volatile bool button2Pressed = false;
 volatile bool button3Pressed = false;
@@ -152,17 +152,18 @@ int SensorManager::readADC(SensorState *sensor)
     {
         Serial.println("No chip select pin for this sensor");
     }
-
-    spiBus->beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+    Serial.printf("Reading ADC for sensor %s on pin %d\n", getSensorName(sensor->sensorID), sensor->pin);
+    spiBus->beginTransaction(settings);
     digitalWrite(sensor->csPin, LOW);
 
     byte command = 0b10000000 | (sensor->pin << 4); // Start bit + single-ended + channel
-    SPI.transfer(0x01);                             // Start bit
-    byte highByte = SPI.transfer(command);
-    byte lowByte = SPI.transfer(0x00);
+    spiBus->transfer(0x01);                         // Start bit
+    byte highByte = spiBus->transfer(command);
+    byte lowByte = spiBus->transfer(0x00);
 
     digitalWrite(sensor->csPin, HIGH);
     spiBus->endTransaction();
+    Serial.printf("Finished reading ADC for sensor %s on pin %d\n", getSensorName(sensor->sensorID), sensor->pin);
 
     return ((highByte & 0x03) << 8) | lowByte; // 10-bit result
 }

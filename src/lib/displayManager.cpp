@@ -33,7 +33,16 @@ void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN, i
     gfx->fillScreen(0x0000);
     Serial.println("Display initialized");
 }
-
+void DisplayManager::showBars(const int *values, int len, int x, int y, int w, int h, uint16_t color)
+{
+    gfx->drawRect(x, y, w, h, color);
+    int barWidth = w / len;
+    for (int i = 0; i < len; i++)
+    {
+        int barHeight = map(values[i], 0, 1023, 0, h);
+        gfx->fillRect(x + i * barWidth + 1, y + h - barHeight, barWidth - 2, barHeight, color);
+    }
+}
 void DisplayManager::showText(const String &text, int x, int y, int size, uint16_t color)
 {
     // clear the previous text
