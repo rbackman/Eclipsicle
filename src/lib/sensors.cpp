@@ -152,7 +152,7 @@ int SensorManager::readADC(SensorState *sensor)
     {
         Serial.println("No chip select pin for this sensor");
     }
-    Serial.printf("Reading ADC for sensor %s on pin %d\n", getSensorName(sensor->sensorID), sensor->pin);
+
     spiBus->beginTransaction(settings);
     digitalWrite(sensor->csPin, LOW);
 
@@ -163,7 +163,6 @@ int SensorManager::readADC(SensorState *sensor)
 
     digitalWrite(sensor->csPin, HIGH);
     spiBus->endTransaction();
-    Serial.printf("Finished reading ADC for sensor %s on pin %d\n", getSensorName(sensor->sensorID), sensor->pin);
 
     return ((highByte & 0x03) << 8) | lowByte; // 10-bit result
 }

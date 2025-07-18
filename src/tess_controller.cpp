@@ -63,16 +63,17 @@ void setup()
                                         SensorState(BUTTON, BUTTON_6_PIN, BUTTON_DOWN),
                                         SensorState(BUTTON, BUTTON_5_PIN, BUTTON_LEFT),
                                         SensorState(BUTTON, BUTTON_4_PIN, BUTTON_RIGHT),
-                                        SensorState(SLIDER, 0, SLIDER1, MCP_CS),
-                                        SensorState(SLIDER, 1, SLIDER2, MCP_CS),
-                                        SensorState(SLIDER, 2, SLIDER3, MCP_CS),
-                                        SensorState(SLIDER, 3, SLIDER4, MCP_CS),
-                                        SensorState(SLIDER, 4, SLIDER5, MCP_CS),
+                                        SensorState(SLIDER, 3, SLIDER1, MCP_CS),
+                                        SensorState(SLIDER, 2, SLIDER2, MCP_CS),
+                                        SensorState(SLIDER, 1, SLIDER3, MCP_CS),
+                                        SensorState(SLIDER, 4, SLIDER4, MCP_CS),
+                                        SensorState(SLIDER, 0, SLIDER5, MCP_CS),
                                     },
                                     &sensorSPI);
 #if DISPLAY_MANAGER
   displayManager = new DisplayManager();
-  displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN, DISPLAY_RST, DISPLAY_BL);
+  displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN,
+                        DISPLAY_RST, DISPLAY_BL, &sensorSPI, DOUT_PIN);
   //  turn on the display backlight
 
   displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFFFF);
@@ -96,9 +97,11 @@ void loop()
     sensor_message message = sensorManager->getNextMessage();
     String sensorLabel = getSensorName(message.sensorId);
     String sensorValue = String(message.value);
-    String txt = "Sensor: " + sensorLabel + " Value: " + sensorValue;
-    Serial.println(txt.c_str());
-
+    if (isVerbose())
+    {
+      String txt = "Sensor: " + sensorLabel + " Value: " + sensorValue;
+      Serial.println(txt.c_str());
+    }
     if (message.sensorType == SLIDER)
     {
       int index = message.sensorId - SLIDER1;
