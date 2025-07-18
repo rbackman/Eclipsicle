@@ -1,6 +1,7 @@
 #pragma once
 #ifdef DISPLAY_MANAGER
 #include <Arduino_GFX_Library.h>
+#include <Adafruit_GFX.h>
 #include <SPI.h>
 
 class DisplayManager
@@ -23,5 +24,7 @@ public:
 
 private:
     Arduino_GFX *gfx;
+    GFXcanvas16 *canvas = nullptr;
+    void flush();
 };
 #endif
