@@ -20,6 +20,9 @@ SerialManager::~SerialManager()
 }
 SerialManager::SerialManager(int bufferSize)
 {
+    this->bufferSize = bufferSize;
+    _stringAvailable = false;
+    _jsonAvailable = false;
     Serial.begin(921600);
 
     buffer = (char *)malloc(sizeof(char) * bufferSize);
@@ -95,7 +98,7 @@ void SerialManager::updateSerial()
                 if (res == "verbose")
                 {
                     setVerbose(true);
-                    Serial.println("verbose set to " + String(isVerbose()));
+                    Serial.println("verbose  mode turned on");
                     clearBuffer();
 
                     return;
@@ -173,8 +176,18 @@ String SerialManager::readString()
 {
     _stringAvailable = false;
     String res = String(buffer);
+    //  trim off the trailing newline and null character
     res.trim();
+    if (res.length() == 0)
+    {
+        Serial.println("No string available");
+        return String();
+    }
     clearBuffer();
+    if (isVerbose())
+    {
+        Serial.println("readString: " + String(res.c_str()));
+    }
     return res;
 }
 
@@ -204,7 +217,7 @@ bool SerialManager::readJson(JsonDocument &doc)
     {
         Serial.print(F("deserializeJson() failed with code "));
         Serial.println(error.c_str());
-        Serial.println("Buffer: " + String(jsonString));
+        Serial.printf("Buffer: %s", jsonString);
         clearBuffer();
         return false;
     }

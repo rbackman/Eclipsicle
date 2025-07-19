@@ -6,13 +6,13 @@
 class SerialManager
 {
 private:
-    char *buffer;
-    int bufPos;
-    bool _stringAvailable;
-    bool _jsonAvailable;
-    int bufferSize;
-
+    char *buffer = nullptr;
+    int bufPos = 0;
+    bool _stringAvailable = false;
+    bool _jsonAvailable = false;
+    int bufferSize = 0;
     bool echo = true;
+    char *readBuffer();
 
 public:
     SerialManager(int bufferSize = 1024);
@@ -24,6 +24,6 @@ public:
     bool stringAvailable();
     bool jsonAvailable();
     String readString();
-    char *readBuffer();
+
     bool readJson(JsonDocument &doc);
 };

@@ -1,6 +1,6 @@
 #pragma once
 #ifdef SLAVE_BOARD
-
+#include <Arduino.h>
 #ifdef USE_LEDS
 #include "lib/ledManager.h"
 #endif
@@ -23,9 +23,9 @@
 #ifdef USE_PROFILER
 #include "lib/profiler.h"
 #endif
-
-#include "lib/serial.h"
 #include "lib/shared.h"
+#include "lib/serial.h"
+
 #include "lib/config.h"
 
 #include "lib/string_utils.h"
@@ -59,12 +59,10 @@ private:
 #endif
 
 public:
-  SlaveBoard()
+  SlaveBoard(SerialManager *serialManager)
       : ParameterManager(SLAVE_NAME), serialManager(serialManager)
   {
-
-    serialManager = new SerialManager(512);
-
+    this->serialManager = serialManager;
 // Constructor implementation
 #ifdef MESH_NET
     meshManager = new MeshnetManager();
@@ -123,19 +121,19 @@ public:
   void loop()
   {
     serialManager->updateSerial();
-    // if (serialManager->stringAvailable())
-    // {
-    //   String command = serialManager->readString();
+    if (serialManager->stringAvailable())
+    {
+      auto command = serialManager->readString();
 
-    //   if (processCmd(command))
-    //   {
-    //     Serial.println("Command processed: " + command);
-    //   }
-    //   else
-    //   {
-    //     Serial.println("Command not recognized: " + command);
-    //   }
-    // }
+      if (processCmd(command))
+      {
+        Serial.println("Command processed: " + command);
+      }
+      else
+      {
+        Serial.println("Command not recognized: " + command);
+      }
+    }
     // if (serialManager->jsonAvailable())
     // {
     //   JsonDocument doc;

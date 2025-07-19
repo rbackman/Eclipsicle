@@ -365,7 +365,7 @@ const char *getMenuName(MenuID type, int MaxSize = 6);
 const MenuID getParentMenu(MenuID type);
 
 std::vector<std::string> splitString(const std::string &path, char delimiter);
-
+std::vector<std::string> splitString(const std::string &path, char delimiter);
 // Maximum sizes
 #define MAX_TEXT_SIZE 144
 #define MAX_PIXLE_BYTES_SIZE 144

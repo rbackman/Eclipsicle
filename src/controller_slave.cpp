@@ -3,13 +3,14 @@
 
 #include "./lib/pins.h"
 #include "slave.h"
-#include "lib/ledManager.h"
+
 SlaveBoard *slaveBoard;
 
+SerialManager *serialManager;
 void setup()
 {
-
-  slaveBoard = new SlaveBoard();
+  serialManager = new SerialManager(512);
+  slaveBoard = new SlaveBoard(serialManager);
 
   slaveBoard->getLEDManager()->addStrip(0, 122, LED_STATE_MULTI_ANIMATION,
                                         {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},
