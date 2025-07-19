@@ -5,64 +5,22 @@
 #include "leds.h"
 #include <string>
 #include "shared_esp.h"
-LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
+
+LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
-
-    LEDRig rig;
-    auto rigs = getLEDRigs();
-    for (int i = 0; i < rigs.size(); i++)
-    {
-        LEDRig slave = rigs[i];
-
-        if (slave.name.compare(slavename) == 0)
-        {
-            rig = slave;
-        }
-    }
-    if (rig.name == "")
-    {
-        Serial.printf("No LED rig found with name %s\n", slavename.c_str());
-        return;
-    }
-    if (rig.strips.size() == 0)
-    {
-        Serial.printf("No LED strips defined. add slave %s to shared.h \n", slavename.c_str());
-        return;
-    }
-    ledMatrix = new LedMatrix();
-
-    // Serial.printf("Adding LEDManager for %s with %d strips\n", rig.name.c_str(), rig.strips.size());
-    for (int i = 0; i < rig.strips.size(); i++)
-    {
-        LEDParams params = rig.strips[i];
-
-        StripState *strip = new StripState(params.state, params.numLEDS, params.stripIndex,
-                                           params.nodes);
-        for (int j = 0; j < params.animations.size(); j++)
-        {
-            AnimationParams anim = params.animations[j];
-            if (isVerbose())
-            {
-                Serial.printf("Adding animation %d to strip %d\n", getAnimationName(anim.type), strip->getStripIndex());
-            }
-            strip->addAnimation(anim.type, anim.start, anim.end, anim.params);
-        }
-        stripStates.push_back(strip);
-        if (isVerbose())
-        {
-            Serial.printf("Adding strip %d with %d animations\n", i + 1, strip->getNumAnimations());
-        }
-    }
-    initStrips();
 }
 void LEDManager::initStrips()
 {
+
+    ledMatrix = new LedMatrix();
+
+    // Serial.printf("Adding LEDManager for %s with %d strips\n", rig.name.c_str(), rig.strips.size());
 
     for (int i = 0; i < stripStates.size(); i++)
     {
         StripState *strip = stripStates[i];
         int stripIndex = strip->getStripIndex();
-        Serial.printf("Adding strip %d with %d LEDs\n", i + 1, strip->getNumLEDS());
+
         switch (stripIndex)
         {
         case 0:
@@ -90,24 +48,6 @@ void LEDManager::initStrips()
             break;
         }
     }
-}
-LEDManager::LEDManager(std::string name, std::vector<StripState *> strips) : ParameterManager(name.c_str(), {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
-{
-    Serial.printf("Creating LEDManager with %d strips\n", strips.size());
-    stripStates = strips; // Changed &strips to strips
-    if (strips.size() == 0)
-    {
-        Serial.println("No strips defined");
-        return;
-    }
-    ledMatrix = new LedMatrix();
-    for (int i = 0; i < strips.size(); i++) // Changed sizeof(strips) to strips.size()
-    {
-        stripStates.push_back(strips[i]);                                                // Changed &strips[i] to strips[i]
-        Serial.printf("Adding strip %d with %d LEDs\n", i + 1, strips[i]->getNumLEDS()); // Changed strips[i].getNumLEDS() to strips[i]->getNumLEDS()
-    }
-    initStrips();
-    setInt(PARAM_CURRENT_STRIP, -1);
 }
 int LEDManager::getCurrentStrip()
 {
@@ -157,7 +97,7 @@ void LEDManager::setLED(int ledIndex, led color)
     }
 }
 
-bool LEDManager::handleLEDCommand(String command)
+bool LEDManager::handleString(String command)
 {
 
     if (command.startsWith("brightness"))
@@ -200,9 +140,9 @@ bool LEDManager::handleLEDCommand(String command)
     }
 }
 
-bool LEDManager::respondToParameterMessage(parameter_message parameter)
+bool LEDManager::handleParameterMessage(parameter_message parameter)
 {
-    ParameterManager::respondToParameterMessage(parameter);
+    ParameterManager::handleParameterMessage(parameter);
 
     if (parameter.paramID == PARAM_BRIGHTNESS)
     {
@@ -232,7 +172,7 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
         {
             for (int i = 0; i < stripStates.size(); i++)
             {
-                stripStates[i]->respondToParameterMessage(parameter);
+                stripStates[i]->handleParameterMessage(parameter);
             }
             return true;
         }
@@ -242,7 +182,7 @@ bool LEDManager::respondToParameterMessage(parameter_message parameter)
             Serial.printf("Invalid current strip %d, valid range is 0 to %d\n", currentStrip, stripStates.size() - 1);
             return false;
         }
-        return stripStates[currentStrip]->respondToParameterMessage(parameter);
+        return stripStates[currentStrip]->handleParameterMessage(parameter);
     }
     return false;
 }
@@ -294,25 +234,6 @@ void LEDManager::update()
     //     }
     // }
     FastLED.show();
-}
-
-void LEDManager::setGravityPosition(float position)
-{
-    // gravity position is the LED index that is the bottom of the strip according to the accelerometer
-    gravityPosition = position;
-    int currentStrip = getInt(PARAM_CURRENT_STRIP);
-    if (currentStrip < 0 || currentStrip >= stripStates.size())
-    {
-
-        for (int i = 0; i < stripStates.size(); i++)
-        {
-            stripStates[i]->setGravityPosition(position);
-        }
-    }
-    else
-    {
-        stripStates[currentStrip]->setGravityPosition(position);
-    }
 }
 
 void LEDManager::toggleMode()

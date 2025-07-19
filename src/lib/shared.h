@@ -500,25 +500,6 @@ struct Vec3D
     float y = 0.0f;
     float z = 0.0f;
 };
-struct LEDParams
-{
-
-    int stripIndex;
-    int pin;
-    int numLEDS;
-    LED_STATE state;
-    std::vector<AnimationParams> animations;
-    // nodes along the strip with optional 3D coordinates
-    std::vector<Node3D> nodes = {};
-};
-
-struct LEDRig
-{
-    // presets for devices with different LED configurations
-    std::string name;
-    MacAddress mac;
-    std::vector<LEDParams> strips;
-};
 
 // map to state names
 const std::map<LED_STATE, std::string> LED_STATE_NAMES = {
@@ -612,10 +593,7 @@ const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 // std::vector<AnimationParams> animations;
 // // nodes along the strip with optional 3D coordinates
 // std::vector<Node3D> nodes = {};
-void makeRig(const std::string &name, const MacAddress &mac);
-void addStripToRig(const std::string &name, int stripIndex, int pin, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations = {}, std::vector<Node3D> nodes = {});
-std::vector<LEDRig> getLEDRigs();
-LEDRig *getLEDRig(const std::string &name);
+
 void colorFromHSV(led &color, float h, float s, float v);
 void setVerbose(bool verb);
 
@@ -623,3 +601,4 @@ int lerp(int min, int max, int minIn, int maxIn, int value);
 int interpolate(int from, int to, float t);
 
 void sanityCheckParameters();
+std::string getName();

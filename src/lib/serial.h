@@ -11,11 +11,11 @@ private:
     bool _stringAvailable;
     bool _jsonAvailable;
     int bufferSize;
-    String _name = "default";
+
     bool echo = true;
 
 public:
-    SerialManager(int size, String name);
+    SerialManager(int bufferSize = 1024);
     ~SerialManager(); // You may want a destructor if you are going to deallocate the buffer
 
     void clearBuffer();
@@ -26,8 +26,4 @@ public:
     String readString();
     char *readBuffer();
     bool readJson(JsonDocument &doc);
-    String getName()
-    {
-        return _name;
-    }
 };

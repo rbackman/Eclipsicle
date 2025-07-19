@@ -9,6 +9,54 @@ typedef bool (*ParameterChangeListener)(parameter_message parameter);
 // Stores int, float and bool parameters for a component.
 // Parameter IDs are defined in shared.h so firmware and UI share the same enum.
 
+static void confirmParameters()
+{
+    Serial.println("Confirming parameters...");
+
+    JsonDocument paramJson; // adjust size as needed
+    paramJson["type"] = "parameters";
+    JsonObject data = paramJson["data"].to<JsonObject>();
+
+    auto paramList = getParameterNames();
+
+    for (const auto &bParam : getDefaultBoolParameters())
+    {
+        const char *name = paramList[bParam.id].c_str();
+        JsonObject obj = data[name].to<JsonObject>();
+        obj["id"] = bParam.id;
+        obj["type"] = "bool";
+        obj["value"] = bParam.value;
+        obj["name"] = bParam.name;
+    }
+
+    for (const auto &iParam : getDefaultIntParameters())
+    {
+        const char *name = paramList[iParam.id].c_str();
+        JsonObject obj = data[name].to<JsonObject>();
+        obj["id"] = iParam.id;
+        obj["type"] = "int";
+        obj["value"] = iParam.value;
+        obj["name"] = iParam.name;
+        obj["min"] = iParam.min;
+        obj["max"] = iParam.max;
+    }
+
+    for (const auto &fParam : getDefaultFloatParameters())
+    {
+        const char *name = paramList[fParam.id].c_str();
+        JsonObject obj = data[name].to<JsonObject>();
+        obj["id"] = fParam.id;
+        obj["type"] = "float";
+        obj["value"] = fParam.value;
+        obj["name"] = fParam.name;
+        obj["min"] = fParam.min;
+        obj["max"] = fParam.max;
+    }
+
+    serializeJson(paramJson, Serial);
+    Serial.println(";");
+}
+
 class ParameterManager
 {
     // parameter change listeners
@@ -53,7 +101,7 @@ public:
     BoolParameter getBoolParameter(ParameterID id);
     FloatParameter getFloatParameter(ParameterID id);
 
-    virtual bool respondToParameterMessage(parameter_message parameter);
+    virtual bool handleParameterMessage(parameter_message parameter);
     bool handleJsonMessage(JsonDocument &doc);
     bool handleTextMessage(std::string message);
     bool parameterChanged()

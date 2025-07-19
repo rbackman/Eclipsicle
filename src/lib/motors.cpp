@@ -32,7 +32,7 @@ bool MotorManager::handleMotorCommand(String cmd)
     return false;
 }
 
-bool MotorManager::respondToParameterMessage(parameter_message parameter)
+bool MotorManager::handleParameterMessage(parameter_message parameter)
 {
     if (parameter.paramID == PARAM_MOTOR_SPEED)
     {

@@ -1,4 +1,6 @@
 #pragma once
+#ifdef USE_SENSORS
+
 #include "shared.h"
 #include <SPI.h>
 #define DEBOUNCE_DELAY 10
@@ -39,3 +41,5 @@ public:
     //     }
     // }
 };
+
+#endif

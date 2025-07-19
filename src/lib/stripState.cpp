@@ -905,10 +905,10 @@ void StripState::clearPixel(int index)
     leds[index] = CRGB(0, 0, 0);
 }
 
-bool StripState::respondToParameterMessage(parameter_message parameter)
+bool StripState::handleParameterMessage(parameter_message parameter)
 {
 
-    bool stripTookParam = ParameterManager::respondToParameterMessage(parameter);
+    bool stripTookParam = ParameterManager::handleParameterMessage(parameter);
     if (parameter.paramID == PARAM_BEAT)
     {
         beatSize = parameter.value;
@@ -930,7 +930,7 @@ bool StripState::respondToParameterMessage(parameter_message parameter)
         bool animationTookParam = false;
         for (int i = 0; i < animations.size(); i++)
         {
-            if (animations[i]->respondToParameterMessage(parameter))
+            if (animations[i]->handleParameterMessage(parameter))
             {
                 animationTookParam = true;
             }

@@ -1,7 +1,7 @@
 #ifdef CONTROLLER_PINS
 #define SDA_PIN 9
 #define SCL_PIN 18
-#define DATA_PIN 5
+
 #define DOUT_PIN 8
 #define MCP_CS 12
 #define AMP_MIC_BLCK_PIN 37
