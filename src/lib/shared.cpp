@@ -318,7 +318,7 @@ void makeRig(const std::string &name, const MacAddress &mac)
   ledRigs.push_back(rig);
 }
 
-void addStripToRig(const std::string &name, int stripIndex, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations, std::vector<Node3D> nodes)
+void addStripToRig(const std::string &name, int stripIndex, int pin, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations, std::vector<Node3D> nodes)
 {
   for (auto &rig : ledRigs)
   {
@@ -326,6 +326,7 @@ void addStripToRig(const std::string &name, int stripIndex, int numLEDS, LED_STA
     {
       LEDParams params;
       params.stripIndex = stripIndex;
+      params.pin = pin;
       params.numLEDS = numLEDS;
       params.state = state;
       params.animations = animations;

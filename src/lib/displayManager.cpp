@@ -10,7 +10,6 @@
 // #define RST_PIN 33 // Reset pin (could connect to NodeMCU RST, see next line)
 // #define BL_PIN 13  // Backlight control pin (optional, can be connected to GPIO)
 
-#if DISPLAY_USE_DOUBLE_BUFFER
 uint16_t DisplayManager::color332To565(uint8_t c)
 {
     uint8_t r = (c >> 5) & 0x07;
@@ -26,7 +25,7 @@ uint8_t DisplayManager::rgbTo332(uint8_t r, uint8_t g, uint8_t b)
 {
     return (r & 0xE0) | ((g & 0xE0) >> 3) | (b >> 6);
 }
-#endif
+
 void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
                            int RST_PIN, int BL_PIN, SPIClass *spi,
                            int miso_pin)
@@ -85,12 +84,12 @@ void DisplayManager::showBars(const int *values, int len, int x, int y, int w, i
     }
     flush();
 #else
-    gfx->drawRect(x, y, w, h, color332To565(0xFF));
+    gfx->drawRect(x, y, w, h, 0xFF);
     int barWidth = w / len;
     for (int i = 0; i < len; i++)
     {
         int barHeight = map(values[i], 0, 1023, 0, h);
-        gfx->fillRect(x + i * barWidth, y, barWidth, h - barHeight, color332To565(0x00));
+        gfx->fillRect(x + i * barWidth, y, barWidth, h - barHeight, 0x00);
         gfx->fillRect(x + i * barWidth + 1, y + h - barHeight, barWidth - 2, barHeight, color332To565(color));
     }
 #endif
@@ -174,8 +173,9 @@ void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalH
     int barX = x + index * barWidth;
     int barY = y - barHeight;
 
-    gfx->fillRect(barX, y - totalHeight, barWidth, totalHeight - barHeight, color332To565(0x00));
+    gfx->fillRect(barX, y - totalHeight - barY, barWidth, totalHeight, 0x0000);
     gfx->fillRect(barX + 1, barY, barWidth - 2, barHeight, color332To565(color));
+
 #endif
 }
 void DisplayManager::showText(const String &text, int x, int y, int size, uint8_t color)
@@ -256,11 +256,11 @@ void DisplayManager::clear()
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (canvas)
     {
-        canvas->fillScreen(0x00);
+        canvas->fillScreen(color332To565(0x00));
         flush();
     }
 #else
-    gfx->fillScreen(color332To565(0x00));
+    gfx->fillScreen(0x00);
 #endif
 }
 
@@ -288,7 +288,7 @@ void DisplayManager::flush()
                 uint8_t c = buf[y * w + x];
                 line[x] = color332To565(c);
             }
-            gfx->drawRGBBitmap(0, y, line, w, 1);
+            gfx->draw16bitBeRGBBitmap(0, y, line, w, 1);
         }
     }
 #endif

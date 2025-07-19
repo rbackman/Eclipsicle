@@ -20,6 +20,7 @@ class StripState : public ParameterManager
 
 private:
     int stripIndex;
+
     int currentAnimation = 0;
     int gravityPosition = 0;
     int numLEDS = 128;
@@ -46,6 +47,7 @@ public:
     {
         numLEDS = num;
     }
+
     void addAnimation(ANIMATION_TYPE animis, int start = -1, int end = -1, std::map<ParameterID, float> params = {});
     void setSimulate(int simulateCount)
     {

@@ -28,10 +28,11 @@ public:
 
 private:
     Arduino_GFX *gfx;
-#if DISPLAY_USE_DOUBLE_BUFFER
-    GFXcanvas8 *canvas = nullptr;
     uint16_t color332To565(uint8_t c);
     uint8_t rgbTo332(uint8_t r, uint8_t g, uint8_t b);
+#if DISPLAY_USE_DOUBLE_BUFFER
+    GFXcanvas8 *canvas = nullptr;
+
 #endif
     void flush();
 };
