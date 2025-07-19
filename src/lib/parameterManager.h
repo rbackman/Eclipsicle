@@ -1,6 +1,7 @@
 // parameterManager.h
 #pragma once
 #include "shared.h"
+#include <Arduino.h>
 #include <ArduinoJson.h>
 
 #include <vector>
@@ -57,6 +58,7 @@ static void confirmParameters()
     Serial.println(";");
 }
 
+void printParameterMessage(const parameter_message &parameter);
 class ParameterManager
 {
     // parameter change listeners

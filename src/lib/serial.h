@@ -11,7 +11,7 @@ private:
     bool _stringAvailable = false;
     bool _jsonAvailable = false;
     int bufferSize = 0;
-    bool echo = true;
+    bool echo = false;
     char *readBuffer();
 
 public:

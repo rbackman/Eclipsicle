@@ -3,7 +3,26 @@
 #include "shared.h"
 #include "Arduino.h"
 #include <algorithm>
-
+void printParameterMessage(const parameter_message &parameter)
+{
+    Serial.print("Parameter ID: ");
+    Serial.print(parameter.paramID);
+    Serial.print(", Type: ");
+    Serial.print(parameter.type);
+    Serial.print(", Value: ");
+    if (isFloatParameter(parameter.paramID))
+    {
+        Serial.print(parameter.floatValue);
+    }
+    else if (isIntParameter(parameter.paramID))
+    {
+        Serial.print(parameter.value);
+    }
+    else if (isBoolParameter(parameter.paramID))
+    {
+        Serial.print(parameter.boolValue ? "true" : "false");
+    }
+}
 ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> filterParams, std::map<ParameterID, float> paramOverrides) : name(name)
 {
     auto intParameterList = getDefaultIntParameters();
