@@ -20,10 +20,13 @@ SerialManager::~SerialManager()
 }
 SerialManager::SerialManager(int bufferSize)
 {
+    delay(100); // Give some time for the serial to initialize
     this->bufferSize = bufferSize;
     _stringAvailable = false;
     _jsonAvailable = false;
     Serial.begin(921600);
+
+    Serial.printf("\n\nStarting serial on device %s  \n \n", getName());
 
     buffer = (char *)malloc(sizeof(char) * bufferSize);
     bufPos = 0; // Initialize bufPos
@@ -37,10 +40,12 @@ SerialManager::SerialManager(int bufferSize)
     memset(buffer, 0, bufferSize);
 
     WiFi.mode(WIFI_STA);
-    WiFi.begin(); // Only if needed, even if you're not connecting
-    delay(500);   // let the MAC populate
+    // WiFi.begin(); // Only if needed, even if you're not connecting
+    delay(500); // let the MAC populate
     // Serial.println("ESPNow Init Success  " + String(WiFi.macAddress()));
-    Serial.printf("Starting serial on device %s  \nwith address %s \n", getName(), String(WiFi.macAddress()).c_str());
+
+    auto macAddress = WiFi.macAddress();
+    Serial.printf("MAC Address: %s\n", macAddress.c_str());
 }
 void SerialManager::updateSerial()
 {
