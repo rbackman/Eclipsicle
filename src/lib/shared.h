@@ -446,11 +446,6 @@ using MacAddresses = std::map<std::string, MacAddress>;
 
 #define MAX_LEDS_PER_STRIP 200
 
-#define LED_PIN_1 23
-#define LED_PIN_2 5
-#define LED_PIN_3 19
-#define LED_PIN_4 18
-
 enum LED_STATE
 {
     LED_STATE_IDLE,
@@ -509,6 +504,7 @@ struct LEDParams
 {
 
     int stripIndex;
+    int pin;
     int numLEDS;
     LED_STATE state;
     std::vector<AnimationParams> animations;
@@ -617,7 +613,7 @@ const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 // // nodes along the strip with optional 3D coordinates
 // std::vector<Node3D> nodes = {};
 void makeRig(const std::string &name, const MacAddress &mac);
-void addStripToRig(const std::string &name, int stripIndex, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations = {}, std::vector<Node3D> nodes = {});
+void addStripToRig(const std::string &name, int stripIndex, int pin, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations = {}, std::vector<Node3D> nodes = {});
 std::vector<LEDRig> getLEDRigs();
 LEDRig *getLEDRig(const std::string &name);
 void colorFromHSV(led &color, float h, float s, float v);

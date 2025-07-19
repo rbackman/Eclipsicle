@@ -1,4 +1,4 @@
-#ifdef TESSERATICA_CONTROLLER
+#ifdef CONTROLLER_SLAVE
 #include <Arduino.h>
 #include <WiFi.h>
 #include <SPI.h>
@@ -9,7 +9,8 @@
 #include "./lib/serial.h"
 #include "./lib/meshnet.h"
 #include "./lib/audio.h"
-
+#include "./lib/shared.h"
+#include "./lib/ledManager.h"
 #include "./boardConfigs/tessControllerPins.h"
 
 SerialManager *serialManager;
@@ -21,44 +22,70 @@ MeshnetManager *meshManager;
 AudioManager *audioManager;
 #endif
 
+LEDManager *ledManager;
+
 SensorManager *sensorManager;
 SPIClass sensorSPI(HSPI);
 int sliderValues[5] = {0};
 // SPI settings: 1 MHz, MSB first, SPI mode 0
 // SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
 
+void on_sensor_message(sensor_message msg)
+{
+  if (msg.sensorType == SLIDER)
+  {
+    int index = msg.sensorId - SLIDER1;
+    if (index >= 0 && index < 5)
+    {
+      sliderValues[index] = msg.value;
+    }
+  }
+}
+void on_text_message(text_message msg)
+{
+  if (isVerbose())
+  {
+    Serial.println("Text message received: " + String(msg.text));
+  }
+}
+void on_image_message(image_message msg)
+{
+  if (isVerbose())
+  {
+    Serial.println("Image message received: " + String(msg.numBytes));
+  }
+  ledManager->setLEDImage(msg);
+}
+void on_parameter_message(const parameter_message &msg)
+{
+  if (isVerbose())
+  {
+    Serial.println("Parameter message received: " + String(msg.paramID) + " = " + String(msg.value));
+  }
+  parameterManager->setParameter(msg.paramID, msg.value);
+}
 void setup()
 {
+  makeRig("ControllerSlave", {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC});
+  makeRig("ControllerSlave", {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC});
+  addStripToRig("ControllerSlave", 0, 122, LED_STATE_MULTI_ANIMATION,
+                {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},
+                {{0, 54.5, -54.5, -49.5}, {49, 54.5, -54.5, 50}, {73, 26.5, -26.5, 21}, {94, 26.5, -26.5, -21}, {122, 54.5, -54.5, -49.5}});
+  addStripToRig("ControllerSlave", 1, 122, LED_STATE_MULTI_ANIMATION,
+                {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},
+                {{0, 49.5, -54.5f, -54.5}, {49, -49.5, -54.5, -54.5}, {73, -21, -26.5, -26.5}, {94, 21, -26.5, -26.5}, {122, 49.5, -54.5f, -54.5}});
+  addStripToRig("ControllerSlave", 2, 122, LED_STATE_MULTI_ANIMATION,
+                {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},
+                {{0, -54.5, -54.5, -49.5}, {49, -54.5, -54.5, 49.5}, {73, -26.5, -26.5, 21}, {94, -26.5, -26.5, -21}, {122, -54.5, -54.5, -49.5}});
+
   serialManager = new SerialManager(1024, SLAVE_NAME);
-  delay(300);
-  sensorSPI.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
-  pinMode(MCP_CS, OUTPUT);
-  digitalWrite(MCP_CS, HIGH); // Set MCP CS high to deselect it
-
-  sensorManager = new SensorManager({
-                                        SensorState(BUTTON, BUTTON_2_PIN, BUTTON_UP),
-                                        SensorState(BUTTON, BUTTON_6_PIN, BUTTON_DOWN),
-                                        SensorState(BUTTON, BUTTON_5_PIN, BUTTON_LEFT),
-                                        SensorState(BUTTON, BUTTON_4_PIN, BUTTON_RIGHT),
-                                        SensorState(SLIDER, 3, SLIDER1, MCP_CS),
-                                        SensorState(SLIDER, 2, SLIDER2, MCP_CS),
-                                        SensorState(SLIDER, 1, SLIDER3, MCP_CS),
-                                        SensorState(SLIDER, 4, SLIDER4, MCP_CS),
-                                        SensorState(SLIDER, 0, SLIDER5, MCP_CS),
-                                    },
-                                    &sensorSPI);
-
-#ifdef USE_AUDIO
-  audioManager = new AudioManager(AMP_MIC_BLCK_PIN, AMP_MIC_LRC_PIN, AMP_DIN_PIN, MIC_SDA_PIN);
-  audioManager->begin();
-  audioManager->setVolume(50);          // Set volume to 50%
-  audioManager->playTone(1000, 100, 5); // Play a test tone
-  audioManager->setMicGain(50);         // Set microphone gain to 50%
-#endif
 
   meshManager = new MeshnetManager();
   meshManager->init();
-  meshManager->connectSlaves();
+  meshManager->setTextHandler(on_text_message);
+  meshManager->setImageHandler(on_image_message);
+  meshManager->setSensorHandler(on_sensor_message);
+  meshManager->setParameterHandler(on_parameter_message);
 
 #if DISPLAY_MANAGER
   displayManager = new DisplayManager();

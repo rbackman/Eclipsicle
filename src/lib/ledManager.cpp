@@ -1,5 +1,5 @@
 #ifdef USE_LEDS
-
+#include "pins.h"
 #include "stripState.h"
 #include "ledManager.h"
 #include "leds.h"
@@ -57,6 +57,7 @@ LEDManager::LEDManager(std::string slavename) : ParameterManager("LEDManager", {
 }
 void LEDManager::initStrips()
 {
+
     for (int i = 0; i < stripStates.size(); i++)
     {
         StripState *strip = stripStates[i];
@@ -76,7 +77,7 @@ void LEDManager::initStrips()
             break;
         case 2:
 
-            FastLED.addLeds<LED_TYPE, LED_PIN_3>(
+            FastLED.addLeds<LED_TYPE, LED_PIN_3, COLOR_ORDER>(
                 strip->leds, strip->getNumLEDS());
             break;
         case 3:
