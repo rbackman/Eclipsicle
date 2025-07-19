@@ -76,11 +76,11 @@ void setup()
                         DISPLAY_RST, DISPLAY_BL, &sensorSPI, DOUT_PIN);
   //  turn on the display backlight
 
-  displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFFFF);
-  displayManager->showText("Ready!", 10, 30, 2, 0xFFFF);
+  displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFF);
+  displayManager->showText("Ready!", 10, 30, 2, 0xFF);
   // show macaddress
   String macAddress = WiFi.macAddress();
-  displayManager->showText("MAC: " + macAddress, 10, 50, 2, 0xFFFF);
+  displayManager->showText("MAC: " + macAddress, 10, 50, 2, 0xFF);
 #endif
 
   delay(1000); // Wait for serial monitor to open

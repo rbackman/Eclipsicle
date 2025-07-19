@@ -22,15 +22,9 @@ uint16_t DisplayManager::color332To565(uint8_t c)
     return (r5 << 11) | (g6 << 5) | b5;
 }
 
-uint8_t DisplayManager::color565To332(uint16_t c)
+uint8_t DisplayManager::rgbTo332(uint8_t r, uint8_t g, uint8_t b)
 {
-    uint8_t r5 = (c >> 11) & 0x1F;
-    uint8_t g6 = (c >> 5) & 0x3F;
-    uint8_t b5 = c & 0x1F;
-    uint8_t r = (r5 * 7) / 31;
-    uint8_t g = (g6 * 7) / 63;
-    uint8_t b = (b5 * 3) / 31;
-    return (r << 5) | (g << 2) | b;
+    return (r & 0xE0) | ((g & 0xE0) >> 3) | (b >> 6);
 }
 #endif
 void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
@@ -63,7 +57,7 @@ void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
     canvas = new GFXcanvas8(gfx->width(), gfx->height());
     if (canvas)
     {
-        canvas->fillScreen(color565To332(0x0000));
+        canvas->fillScreen(0x00);
         flush();
     }
     else
@@ -73,29 +67,31 @@ void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
 #endif
     Serial.println("Display initialized");
 }
-void DisplayManager::showBars(const int *values, int len, int x, int y, int w, int h, uint16_t color)
+void DisplayManager::showBars(const int *values, int len, int x, int y, int w, int h, uint8_t color)
 {
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (!canvas)
         return;
 
-    canvas->drawRect(x, y, w, h, color565To332(0xFFFF)); // Draw border
+    canvas->drawRect(x, y, w, h, 0xFF); // Draw border
     int barWidth = w / len;
     for (int i = 0; i < len; i++)
     {
-        canvas->fillRect(x + i * barWidth, y, barWidth, h, color565To332(0x0000)); // Clear bar area
         int barHeight = map(values[i], 0, 1023, 0, h);
-        canvas->fillRect(x + i * barWidth + 1, y + h - barHeight, barWidth - 2, barHeight, color565To332(color));
+        // Clear area above the bar
+        canvas->fillRect(x + i * barWidth, y, barWidth, h - barHeight, 0x00);
+        // Draw the bar
+        canvas->fillRect(x + i * barWidth + 1, y + h - barHeight, barWidth - 2, barHeight, color);
     }
     flush();
 #else
-    gfx->drawRect(x, y, w, h, color);
+    gfx->drawRect(x, y, w, h, color332To565(0xFF));
     int barWidth = w / len;
     for (int i = 0; i < len; i++)
     {
-        gfx->fillRect(x + i * barWidth, y, barWidth, h, 0x0000);
         int barHeight = map(values[i], 0, 1023, 0, h);
-        gfx->fillRect(x + i * barWidth + 1, y + h - barHeight, barWidth - 2, barHeight, color);
+        gfx->fillRect(x + i * barWidth, y, barWidth, h - barHeight, color332To565(0x00));
+        gfx->fillRect(x + i * barWidth + 1, y + h - barHeight, barWidth - 2, barHeight, color332To565(color));
     }
 #endif
 }
@@ -156,45 +152,46 @@ void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalH
     int barHeight = totalHeight * h; // height from 0 to totalHeight
     uint8_t r, g, b;
     hsvToRgb(hue, 1.0, 1.0, r, g, b); // hue: 0.0–1.0, full saturation and value
-    uint16_t color = gfx->color565(r, g, b);
+    uint8_t color = rgbTo332(r, g, b);
 
     int barX = x + index * barWidth;
     int barY = y - barHeight; // top of the bar
 
-    // Clear the area first
-    canvas->fillRect(barX, y - totalHeight, barWidth, totalHeight, color565To332(0x0000));
+    // Clear only the area above the bar
+    if (totalHeight > barHeight)
+        canvas->fillRect(barX, y - totalHeight, barWidth, totalHeight - barHeight, 0x00);
 
     // Draw the bar going upwards
-    canvas->fillRect(barX + 1, barY, barWidth - 2, barHeight, color565To332(color));
+    canvas->fillRect(barX + 1, barY, barWidth - 2, barHeight, color);
     flush();
 #else
     int barWidth = w;
     int barHeight = totalHeight * h;
     uint8_t r, g, b;
     hsvToRgb(hue, 1.0, 1.0, r, g, b);
-    uint16_t color = gfx->color565(r, g, b);
+    uint8_t color = rgbTo332(r, g, b);
 
     int barX = x + index * barWidth;
     int barY = y - barHeight;
 
-    gfx->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x0000);
-    gfx->fillRect(barX + 1, barY, barWidth - 2, barHeight, color);
+    gfx->fillRect(barX, y - totalHeight, barWidth, totalHeight - barHeight, color332To565(0x00));
+    gfx->fillRect(barX + 1, barY, barWidth - 2, barHeight, color332To565(color));
 #endif
 }
-void DisplayManager::showText(const String &text, int x, int y, int size, uint16_t color)
+void DisplayManager::showText(const String &text, int x, int y, int size, uint8_t color)
 {
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (!canvas)
         return;
 
     canvas->setTextSize(size);
-    canvas->setTextColor(color565To332(color), color565To332(0xFFFF));
+    canvas->setTextColor(color, 0xFF);
     canvas->setCursor(x, y);
     canvas->print(text);
     flush();
 #else
     gfx->setTextSize(size);
-    gfx->setTextColor(color, 0xFFFF);
+    gfx->setTextColor(color332To565(color), color332To565(0xFF));
     gfx->setCursor(x, y);
     gfx->print(text);
 #endif
@@ -205,25 +202,25 @@ void DisplayManager::showGraph(float *data, int len, int x, int y, int w, int h)
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (!canvas)
         return;
-    canvas->drawRect(x, y, w, h, color565To332(0xFFFF));
+    canvas->drawRect(x, y, w, h, 0xFF);
     for (int i = 1; i < len; i++)
     {
         int x0 = x + (i - 1) * w / len;
         int x1 = x + i * w / len;
         int y0 = y + h - (data[i - 1] * h);
         int y1 = y + h - (data[i] * h);
-        canvas->drawLine(x0, y0, x1, y1, color565To332(0xFFFF));
+        canvas->drawLine(x0, y0, x1, y1, 0xFF);
     }
     flush();
 #else
-    gfx->drawRect(x, y, w, h, 0xFFFF);
+    gfx->drawRect(x, y, w, h, color332To565(0xFF));
     for (int i = 1; i < len; i++)
     {
         int x0 = x + (i - 1) * w / len;
         int x1 = x + i * w / len;
         int y0 = y + h - (data[i - 1] * h);
         int y1 = y + h - (data[i] * h);
-        gfx->drawLine(x0, y0, x1, y1, 0xFFFF);
+        gfx->drawLine(x0, y0, x1, y1, color332To565(0xFF));
     }
 #endif
 }
@@ -237,8 +234,8 @@ void DisplayManager::showParticles()
     {
         int x = random(canvas->width());
         int y = random(canvas->height());
-        uint16_t color = gfx->color565(random(255), random(255), random(255));
-        canvas->fillCircle(x, y, 2, color565To332(color));
+        uint8_t color = rgbTo332(random(255), random(255), random(255));
+        canvas->fillCircle(x, y, 2, color);
     }
     flush();
 #else
@@ -248,8 +245,8 @@ void DisplayManager::showParticles()
     {
         int x = random(w);
         int y = random(h);
-        uint16_t color = gfx->color565(random(255), random(255), random(255));
-        gfx->fillCircle(x, y, 2, color);
+        uint8_t color = rgbTo332(random(255), random(255), random(255));
+        gfx->fillCircle(x, y, 2, color332To565(color));
     }
 #endif
 }
@@ -259,11 +256,11 @@ void DisplayManager::clear()
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (canvas)
     {
-        canvas->fillScreen(color565To332(0x0000));
+        canvas->fillScreen(0x00);
         flush();
     }
 #else
-    gfx->fillScreen(0x0000);
+    gfx->fillScreen(color332To565(0x00));
 #endif
 }
 

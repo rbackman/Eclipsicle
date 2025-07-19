@@ -252,7 +252,7 @@ void setup()
 
 #ifdef DISPLAY_MANAGER
   displayManager.begin();
-  displayManager.showText("Hello, World!", 10, 10, 4, 0xFFFF);
+  displayManager.showText("Hello, World!", 10, 10, 4, 0xFF);
 #endif
 }
 static void confirmParameters()
