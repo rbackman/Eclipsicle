@@ -18,11 +18,9 @@ SerialManager::~SerialManager()
 {
     free(buffer);
 }
-SerialManager::SerialManager(int size, String name)
+SerialManager::SerialManager(int bufferSize)
 {
     Serial.begin(921600);
-    _name = name;
-    bufferSize = size;
 
     buffer = (char *)malloc(sizeof(char) * bufferSize);
     bufPos = 0; // Initialize bufPos
@@ -37,7 +35,7 @@ SerialManager::SerialManager(int size, String name)
 
     WiFi.mode(WIFI_STA);
     WiFi.begin(); // Only if needed, even if you're not connecting
-    delay(100);   // let the MAC populate
+    delay(500);   // let the MAC populate
     // Serial.println("ESPNow Init Success  " + String(WiFi.macAddress()));
     Serial.printf("Starting serial on device %s  \nwith address %s \n", getName(), String(WiFi.macAddress()).c_str());
 }
@@ -64,7 +62,7 @@ void SerialManager::updateSerial()
 
             if (data == 27)
             {
-
+                Serial.println("ESC received, clearing buffer");
                 clearBuffer();
             }
 
@@ -96,13 +94,20 @@ void SerialManager::updateSerial()
                 }
                 if (res == "verbose")
                 {
-                    setVerbose(!isVerbose());
+                    setVerbose(true);
                     Serial.println("verbose set to " + String(isVerbose()));
                     clearBuffer();
 
                     return;
                 }
-                if (res == "echo")
+                else if (res == "quiet")
+                {
+                    setVerbose(false);
+                    Serial.println("Verbose mode: " + String(isVerbose() ? "ON" : "OFF"));
+                    clearBuffer();
+                    return;
+                }
+                else if (res == "echo")
                 {
                     echo = true;
                     Serial.println("echo set to " + String(echo));
@@ -118,7 +123,7 @@ void SerialManager::updateSerial()
                 }
                 if (res.indexOf("getMac") != -1)
                 {
-                    Serial.println("deviceid," + getName() + "," + WiFi.macAddress());
+                    Serial.printf("deviceid,%s,%s", getName().c_str(), WiFi.macAddress().c_str());
                     clearBuffer();
                     _stringAvailable = false;
                     return;

@@ -3,31 +3,14 @@
 #include <cmath>
 
 bool _verbose = false;
-std::string _name = "default";
-
-std::vector<LEDRig> ledRigs = {
-
-};
-
-std::vector<LEDRig> getLEDRigs()
-{
-  return ledRigs;
-}
-LEDRig *getLEDRig(const std::string &name)
-{
-  for (auto &rig : ledRigs)
-  {
-    if (rig.name == name)
-    {
-      return &rig;
-    }
-  }
-  return nullptr;
-}
 
 std::string getName()
 {
-  return _name;
+#ifdef SLAVE_NAME
+  return SLAVE_NAME;
+#else
+  return "UNKNOWN_NAME";
+#endif
 }
 
 int lerp(int fromMin, int fromMax, int toMin, int toMax, int value)
@@ -307,32 +290,5 @@ void sanityCheckParameters()
   if (missingParams == 0)
   {
     printf("All parameters accounted for\n");
-  }
-}
-
-void makeRig(const std::string &name, const MacAddress &mac)
-{
-  LEDRig rig;
-  rig.name = name;
-  rig.mac = mac;
-  ledRigs.push_back(rig);
-}
-
-void addStripToRig(const std::string &name, int stripIndex, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations, std::vector<Node3D> nodes)
-{
-  for (auto &rig : ledRigs)
-  {
-    if (rig.name == name)
-    {
-      LEDParams params;
-      params.stripIndex = stripIndex;
-      params.numLEDS = numLEDS;
-      params.state = state;
-      params.animations = animations;
-      params.nodes = nodes;
-
-      rig.strips.push_back(params);
-      return;
-    }
   }
 }

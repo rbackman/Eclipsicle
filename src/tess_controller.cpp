@@ -7,43 +7,20 @@
 #endif
 #include "./lib/sensors.h"
 #include "./lib/serial.h"
-#define SDA_PIN 9
-#define SCL_PIN 18
-#define DATA_PIN 5
-#define DOUT_PIN 8
-#define MCP_CS 12
-#define AMP_MIC_BLCK_PIN 37
-#define AMP_MIC_LRC_PIN 38
-#define AMP_DIN_PIN 42
-#define MIC_SDA_PIN 39
+#include "./lib/meshnet.h"
+#include "./lib/audio.h"
 
-#define LED_1_PIN 17
-#define LED_2_PIN 16
-#define LED_3_PIN 35
-#define LED_4_PIN 48
-
-#define SD_CARD_CS 10
-
-#define DISPLAY_RST 15
-#define DISPLAY_DC 14
-#define DISPLAY_CS 13
-#define DISPLAY_BL 4
-
-#define BUTTON_1_PIN 1
-#define BUTTON_2_PIN 2
-#define BUTTON_3_PIN 41
-#define BUTTON_4_PIN 40
-#define BUTTON_5_PIN 19
-#define BUTTON_6_PIN 47
-
-#define ACCEL_SDA_PIN 20
-#define ACCEL_SCL_PIN 21
-#define ACCEL_INT_PIN 36
+#include "./boardConfigs/tessControllerPins.h"
 
 SerialManager *serialManager;
 #if DISPLAY_MANAGER
 DisplayManager *displayManager;
 #endif
+MeshnetManager *meshManager;
+#ifdef USE_AUDIO
+AudioManager *audioManager;
+#endif
+
 SensorManager *sensorManager;
 SPIClass sensorSPI(HSPI);
 int sliderValues[5] = {0};
@@ -70,17 +47,30 @@ void setup()
                                         SensorState(SLIDER, 0, SLIDER5, MCP_CS),
                                     },
                                     &sensorSPI);
+
+#ifdef USE_AUDIO
+  audioManager = new AudioManager(AMP_MIC_BLCK_PIN, AMP_MIC_LRC_PIN, AMP_DIN_PIN, MIC_SDA_PIN);
+  audioManager->begin();
+  audioManager->setVolume(50);          // Set volume to 50%
+  audioManager->playTone(1000, 100, 5); // Play a test tone
+  audioManager->setMicGain(50);         // Set microphone gain to 50%
+#endif
+
+  meshManager = new MeshnetManager();
+  meshManager->init();
+  meshManager->connectSlaves();
+
 #if DISPLAY_MANAGER
   displayManager = new DisplayManager();
   displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN,
                         DISPLAY_RST, DISPLAY_BL, &sensorSPI, DOUT_PIN);
   //  turn on the display backlight
 
-  displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFFFF);
-  displayManager->showText("Ready!", 10, 30, 2, 0xFFFF);
+  displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFF);
+  displayManager->showText("Ready!", 10, 30, 2, 0xFF);
   // show macaddress
   String macAddress = WiFi.macAddress();
-  displayManager->showText("MAC: " + macAddress, 10, 50, 2, 0xFFFF);
+  displayManager->showText("MAC: " + macAddress, 10, 50, 2, 0xFF);
 #endif
 
   delay(1000); // Wait for serial monitor to open

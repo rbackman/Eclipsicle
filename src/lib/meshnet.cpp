@@ -22,9 +22,15 @@ MeshnetManager::MeshnetManager()
     init();
 }
 
-void MeshnetManager::connectSlaves()
-
+void MeshnetManager::connectSlaves(std::vector<MacAddress> slaves)
 {
+    _slaves = slaves;
+
+    if (_slaves.empty())
+    {
+        Serial.println("No slaves to connect to.");
+        return;
+    }
 
     // Set device as a Wi-Fi Station
     WiFi.mode(WIFI_STA);
@@ -40,12 +46,10 @@ void MeshnetManager::connectSlaves()
     // Register peer
     esp_now_peer_info_t peerInfo;
     memset(&peerInfo, 0, sizeof(peerInfo));
-    auto rigs = getLEDRigs();
-    for (int i = 0; i < rigs.size(); i++)
-    {
-        MacAddress mac = rigs[i].mac;
-        _slaves.push_back(mac);
 
+    for (int i = 0; i < _slaves.size(); i++)
+    {
+        MacAddress mac = _slaves[i];
         memcpy(peerInfo.peer_addr, mac.data(), 6);
         peerInfo.channel = 0;
         peerInfo.encrypt = false;

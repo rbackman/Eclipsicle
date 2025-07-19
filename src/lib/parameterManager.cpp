@@ -246,7 +246,7 @@ bool ParameterManager::getBool(ParameterID id)
     return false;
 }
 
-bool ParameterManager::respondToParameterMessage(parameter_message parameter)
+bool ParameterManager::handleParameterMessage(parameter_message parameter)
 {
 
     if (!listeners.empty())
@@ -401,7 +401,7 @@ bool ParameterManager::handleJsonMessage(JsonDocument &doc)
                     Serial.printf("bool param %s\n", parameter.boolValue ? "true" : "false");
                 }
             }
-            respondToParameterMessage(parameter);
+            handleParameterMessage(parameter);
             return true;
         }
         else

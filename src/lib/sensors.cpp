@@ -10,6 +10,25 @@
 #endif
 SensorManager *SensorManager::instance = nullptr;
 
+#ifdef USE_ACCELEROMETER
+// setup accelerometer
+if (!mpu.begin())
+{
+    Serial.println("Failed to find MPU6050 chip");
+}
+
+pinMode(buttonPin, INPUT_PULLUP);
+Serial.println("MPU6050 Found!");
+
+// setupt motion detection
+mpu.setHighPassFilter(MPU6050_HIGHPASS_0_63_HZ);
+mpu.setMotionDetectionThreshold(1);
+mpu.setMotionDetectionDuration(20);
+mpu.setInterruptPinLatch(true); // Keep it latched.  Will turn off when reinitialized.
+mpu.setInterruptPinPolarity(true);
+mpu.setMotionInterrupt(true);
+#endif
+
 #ifdef USE_BUTTON_INTERRUPTS
 int button1Pin = -1;
 int button2Pin = -1;

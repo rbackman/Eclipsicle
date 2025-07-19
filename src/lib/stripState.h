@@ -20,8 +20,9 @@ class StripState : public ParameterManager
 
 private:
     int stripIndex;
+
     int currentAnimation = 0;
-    int gravityPosition = 0;
+
     int numLEDS = 128;
     int simulateCount = -1;
     int counter = 0;
@@ -46,6 +47,7 @@ public:
     {
         numLEDS = num;
     }
+
     void addAnimation(ANIMATION_TYPE animis, int start = -1, int end = -1, std::map<ParameterID, float> params = {});
     void setSimulate(int simulateCount)
     {
@@ -69,10 +71,7 @@ public:
     {
         return stripIndex;
     }
-    void setGravityPosition(float position)
-    {
-        gravityPosition = (int)(position * numLEDS);
-    }
+
     void replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params = {});
 
     void setLEDRow(LedRow ledRow)
@@ -154,7 +153,7 @@ public:
     {
         return animations;
     }
-    bool respondToParameterMessage(parameter_message parameter);
+    bool handleParameterMessage(parameter_message parameter);
     LED_STATE getLedState() const
     {
         return ledState;

@@ -21,7 +21,7 @@ public:
     MeshnetManager();
 
 public:
-    void connectSlaves();
+    void connectSlaves(std::vector<MacAddress> slaves);
     void sendSensorCommandToSlaves(sensor_message msg);
     void sendImageToSlaves(image_message image);
     void sendParametersToSlaves(ParameterID paramID, int value);

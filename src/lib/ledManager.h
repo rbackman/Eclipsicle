@@ -7,25 +7,38 @@ class LEDManager : public ParameterManager
 {
 
 private:
-    bool safeLight = false; // the last led in the strip points back so it can be seen
     LedMatrix *ledMatrix;
-    float gravityPosition = 0;
-    // strip state array
 
     std::vector<StripState *> stripStates;
     int lastUpdate = 0;
     int fps = 60;
 
 public:
-    LEDManager(std::string name);
-    LEDManager(std::string name, std::vector<StripState *> strips);
+    LEDManager();
+
+    void addStrip(int stripIndex, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations, std::vector<Node3D> nodes)
+    {
+
+        StripState *stripState = new StripState(state, numLEDS, stripIndex, nodes);
+        for (int j = 0; j < animations.size(); j++)
+        {
+            AnimationParams anim = animations[j];
+            if (isVerbose())
+            {
+                Serial.printf("Adding animation %d to strip %d\n", getAnimationName(anim.type), stripState->getStripIndex());
+            }
+            stripState->addAnimation(anim.type, anim.start, anim.end, anim.params);
+        }
+
+        stripStates.push_back(stripState);
+    }
     void initStrips();
     void setGravityPosition(float position);
     void update();
     void setLEDImage(image_message image);
     void setBrightness(int brightness);
     void setAll(led color);
-    bool handleLEDCommand(String command);
+
     void setLED(int ledIndex, led color);
     void toggleMode();
     std::string getStripState(bool verbose = false);
@@ -34,7 +47,8 @@ public:
     std::string getAnimationInfoJson();
     int getCurrentStrip();
     std::vector<StripState *> &getStrips() { return stripStates; }
-    bool respondToParameterMessage(parameter_message parameter);
+    bool handleParameterMessage(parameter_message parameter);
+    bool handleString(String command);
 };
 
 #endif

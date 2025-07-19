@@ -1,5 +1,6 @@
 
 #pragma once
+#ifdef USE_MOTORS
 #include <Wire.h>
 #include "shared.h"
 
@@ -17,7 +18,8 @@ public:
     void initMotors();
     void initDriver();
     bool handleMotorCommand(String command);
-    bool respondToParameterMessage(parameter_message parameter);
+    bool handleParameterMessage(parameter_message parameter);
     void updateMotors();
     void setMotor(int motorVal);
 };
+#endif
