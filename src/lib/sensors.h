@@ -26,6 +26,7 @@ public:
     sensor_message getNextMessage();
     int readADC(SensorState *sensor);
     bool handleParameterMessage(parameter_message parameter);
+
     // void handleButtonPressed(String name)
     // {
     //     unsigned long currentTime = millis();

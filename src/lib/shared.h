@@ -116,10 +116,10 @@ enum SensorID
     RANGEFINDER,
 };
 
-const SensorID sliderIDs[] = {SLIDER1, SLIDER2, SLIDER3, SLIDER4, SLIDER5};
+static const SensorID sliderIDs[] = {SLIDER1, SLIDER2, SLIDER3, SLIDER4, SLIDER5};
 
 bool isSlider(SensorID id);
-const std::map<SensorID, std::string> sensorIDMap = {
+static const std::map<SensorID, std::string> sensorIDMap = {
     {SLIDER1, "Slider1"},
     {SLIDER2, "Slider2"},
     {SLIDER3, "Slider3"},
@@ -421,13 +421,13 @@ struct Vec3D
 };
 
 // map to state names
-const std::map<LED_STATE, std::string> LED_STATE_NAMES = {
+static const std::map<LED_STATE, std::string> LED_STATE_NAMES = {
     {LED_STATE_IDLE, "IDLE"},
     {LED_STATE_POINT_CONTROL, "POINTCONTROL"},
     {LED_STATE_SINGLE_ANIMATION, "SINGLEANIMATION"},
     {LED_STATE_MULTI_ANIMATION, "MULTIANIMATION"}};
 
-const std::map<ANIMATION_TYPE, std::string> ANIMATION_TYPE_NAMES = {
+static const std::map<ANIMATION_TYPE, std::string> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_NONE, "NONE"},
     {ANIMATION_TYPE_PARTICLES, "PARTICLES"},
     {ANIMATION_TYPE_RAINBOW, "RAINBOW"},
