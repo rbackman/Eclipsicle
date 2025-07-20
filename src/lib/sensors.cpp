@@ -305,7 +305,7 @@ void SensorManager::updateSensors()
         {
             if (isVerbose() || printSensor == currentSensor || printSensor == -2)
             {
-                Serial.printf("Sensor %s value changed: %d\n", getSensorName(sensor->sensorID), value);
+                Serial.printf(" %s : %d\n", getSensorName(sensor->sensorID).c_str(), value);
             }
             sensor->value = value;
             sensor->changed = true;
@@ -313,7 +313,7 @@ void SensorManager::updateSensors()
     }
     else
     {
-        printf("Reading analog pin %d (%s)\n", sensor->pin, getSensorName(sensor->sensorID));
+        printf("Reading analog pin %d (%s)\n", sensor->pin, getSensorName(sensor->sensorID).c_str());
         int anlg = analogRead(sensor->pin);
         // linearize logrithmic sensor value
         int value = map(pow(anlg, 1.5), 262048, 0, 0, 255);

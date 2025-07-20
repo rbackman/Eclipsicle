@@ -61,7 +61,7 @@ bool MasterBoard::processSensorMessage(sensor_message message)
 };
 bool MasterBoard::handleTextMessage(std::string command)
 {
-
+    menuManager->handleTextMessage(command);
     return ParameterManager::handleTextMessage(command);
 }
 void MasterBoard::update()

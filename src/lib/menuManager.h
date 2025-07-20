@@ -3,7 +3,7 @@
 #include "shared.h"
 #include "menus.h"
 #include <Arduino.h>
-
+#include "string_utils.h"
 enum MenuMode
 {
 
@@ -30,10 +30,33 @@ public:
     bool handleSensorMessage(sensor_message message);
     bool handleTextMessage(std::string message)
     {
-        if (message.find("confirmMenu") == 0)
+        if (message.find("confirmmenu") == 0)
         {
             confirmMenus();
             return true;
+        }
+
+        if (message.find("menu") == 0)
+        {
+            // search for : <menu_name>
+            if (message.find(':') == std::string::npos)
+            {
+                printMenu();
+                return true;
+            }
+
+            std::string menuName = message.substr(5);
+            trim(menuName);
+            auto menuID = getMenuByName(menuName);
+            //  find in the list of menus
+            if (menuID != MENU_IDLE)
+            {
+                currentMenu = menuID;
+                selectedMenu = 0; // Reset selected menu
+                printMenu();
+                return true;
+            }
+            Serial.printf("Menu %s not found\n", menuName.c_str());
         }
         return false;
     }
@@ -42,9 +65,37 @@ public:
 
     std::string getMenuPath(MenuID type, MenuID root);
     MenuID getParentMenu(MenuID type);
+    MenuID getMenuByName(const std::string &name)
+    {
+        // first look in the current menus
+        auto children = getChildrenOfMenu(currentMenu);
+        for (const auto &child : children)
+        {
+            if (equalsIgnoreCase(getMenuName(child), name))
+            {
+                return child;
+            }
+        }
+        for (const auto &menu : menuTypeMap)
+        {
+            if (startsWith(menu.second.first, name))
+            {
+                return menu.first;
+            }
+        }
+        return MENU_IDLE; // Return a default value if not found
+    }
+    void printMenu()
+    {
+        auto items = getMenuItems();
 
+        for (const auto &item : items)
+        {
+            Serial.println(item.c_str());
+        }
+    }
     std::vector<ParameterID> getParametersForMenu(MenuID type);
     int numMenus();
     void confirmMenus();
-    void updateMenu();
+    std::vector<std::string> getMenuItems();
 };

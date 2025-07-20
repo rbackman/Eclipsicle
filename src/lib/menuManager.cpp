@@ -253,7 +253,8 @@ bool MenuManager::handleSensorMessage(sensor_message message)
 
             if (used)
             {
-                updateMenu();
+                Serial.printf("Menu Changed: %s\n", getMenuName(currentMenu).c_str());
+
                 return true;
             }
         }
@@ -266,7 +267,8 @@ void MenuManager::confirmMenus()
     //  this menu prints all the menus so the controller can confirm them
     //  should generate a json string that looks like this:
 
-        JsonDocument doc;
+    Serial.println("Confirming Menus");
+    JsonDocument doc;
     JsonObject root = doc.to<JsonObject>();
     for (const auto &menu : menuTypeMap)
     {
@@ -365,7 +367,51 @@ std::vector<ParameterID> MenuManager::getParametersForMenu(MenuID type)
     }
     return params;
 }
-void MenuManager::updateMenu() {
+std::vector<std::string> MenuManager::getMenuItems()
+{
+    std::vector<std::string> menuText;
+    if (currentMenu == MENU_IDLE)
+    {
+        menuText.push_back(".");
+        return menuText;
+    }
+    if (menuMode == MENU_MODE_MENU_CHOOSER)
+    {
+        auto availableMenus = getChildrenOfMenu(currentMenu);
+        for (const auto &amenu : availableMenus)
+        {
+            std::string name = getMenuName(amenu, 8);
+            menuText.push_back(name);
+        }
+    }
+    else if (menuMode == MENU_MODE_EDIT_MODE)
+    {
+        auto activeParams = getParametersForMenu(currentMenu);
+        for (const auto &param : activeParams)
+        {
+            auto name = getParameterName(param);
+            if (name.size() > 6)
+            {
+                name = name.substr(0, 6);
+            }
+            else if (name.size() < 6)
+            {
+                name = name + std::string(6 - name.size(), ' ');
+            }
+            if (isBoolParameter(param)) // TODO:: figure how to get the value
+            {
+                auto menuName = name;
+                menuText.push_back(menuName);
+            }
+            else
+            {
+                auto menuName = name; // TODO:: figure how to get the value
+                menuText.push_back(menuName);
+            }
+        }
+    }
+    return menuText;
+
     // TODO: Implement the menu update logic
 
     // display.clearDisplay();
