@@ -59,6 +59,7 @@ public:
         animations.clear();
         addAnimation(animType, start, end, params);
     }
+    void setAnimationFromName(std::string animationName);
     int getNumLEDS()
     {
         return numLEDS;

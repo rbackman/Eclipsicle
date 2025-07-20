@@ -15,7 +15,7 @@ private:
 
 public:
     LEDManager();
-
+    void setAnimation(std::string animationName);
     void addStrip(int stripIndex, int numLEDS, LED_STATE state, std::vector<AnimationParams> animations, std::vector<Node3D> nodes)
     {
 

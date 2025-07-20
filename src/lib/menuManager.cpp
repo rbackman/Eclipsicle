@@ -39,7 +39,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
         lastParameter.paramID = paramID;
         lastParameter.value = message.value;
 
-        parameterChanged = true;
+        _parameterChanged = true;
 
         return true; // disable slider for now
 
@@ -133,11 +133,14 @@ bool MenuManager::handleSensorMessage(sensor_message message)
 
                     std::string menuName = getMenuName(currentMenu);
                     currentMenu = getParentMenu(currentMenu);
-                    Serial.print("Leaving parameter Mode ");
-                    Serial.println(menuName.c_str());
-                    // verticalAlignment = true;
+                    if (isVerbose())
+                    {
+                        Serial.printf("Leaving edit mode for %s\n", menuName.c_str());
+                        Serial.println(menuName.c_str());
+                    }
+
                     menuMode = MENU_MODE_MENU_CHOOSER;
-                    menuChanged = true;
+                    _menuChanged = true;
                     // used = true;
                 }
 
@@ -196,7 +199,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
 
                     auto menu = smenus[selectedMenu];
 
-                    menuChanged = true;
+                    _selectionChanged = true;
                     used = true;
                 }
 
@@ -222,7 +225,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                     auto menu = smenus[selectedMenu];
                     Serial.printf("Selected Menu %d  %d %s\n", selectedMenu, menu, getMenuName(menu));
 
-                    menuChanged = true;
+                    _selectionChanged = true;
                     used = true;
                 }
                 if (message.sensorId == BUTTON_LEFT)
@@ -235,7 +238,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                         currentMenu = getParentMenu(currentMenu);
                     }
 
-                    menuChanged = true;
+                    _menuChanged = true;
                     used = true;
                 }
 
@@ -257,8 +260,6 @@ bool MenuManager::handleSensorMessage(sensor_message message)
 
                     std::string name = getMenuName(currentMenu, 32);
 
-                    // meshManager->sendStringToSlaves("menu:" + String(name.c_str()));
-
                     if (getChildrenOfMenu(currentMenu).size() == 0) // if there are zero root menus for a mode, then go to edit mode
                     {
                         selectedMenu = 0;
@@ -267,7 +268,8 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                         verticalAlignment = false;
                         menuMode = MENU_MODE_EDIT_MODE;
                     }
-                    menuChanged = true;
+
+                    _menuChanged = true;
                 }
                 if (message.sensorId == BUTTON_TRIGGER)
                 {
@@ -349,11 +351,11 @@ std::string MenuManager::getMenuName(MenuID type, int MaxSize)
 
 std::string MenuManager::getMenuPath(MenuID type, MenuID root)
 {
-    std::string path = getMenuName(type);
+    std::string path = getMenuName(type, 16);
     MenuID parent = getParentMenu(type);
     while (parent != MENU_ROOT && parent != root)
     {
-        path = std::string(getMenuName(parent)) + "/" + path;
+        path = std::string(getMenuName(parent, 16)) + "/" + path;
         parent = getParentMenu(parent);
     }
     return path;

@@ -259,10 +259,10 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
                                           int selectedIndex, const std::string &header, bool forceClear)
 {
     // shift bars to the right so they align above the physical sliders
-    const int baseX = 100; // previously 20
-    const int barWidth = 40;
+    const int baseX = 30; // previously 20
+    const int barWidth = 70;
     const int spacing = 10;
-    const int totalHeight = 160;
+    const int totalHeight = 220;
     const int baseY = gfx->height() - 40;
 
     bool fullRedraw = forceClear || firstDraw || items.size() != lastParams.size() || header != lastHeader;

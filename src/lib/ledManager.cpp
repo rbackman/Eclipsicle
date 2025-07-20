@@ -97,6 +97,16 @@ void LEDManager::setLED(int ledIndex, led color)
     }
 }
 
+void LEDManager::setAnimation(std::string animationName)
+{
+    // set the current animation for all strips
+
+    for (int i = 0; i < stripStates.size(); i++)
+    {
+        stripStates[i]->setAnimationFromName(animationName);
+    }
+}
+
 bool LEDManager::handleString(String command)
 {
 

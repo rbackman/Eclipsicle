@@ -102,54 +102,6 @@ void MasterBoard::update()
     sensorManager->updateSensors();
     serialManager->updateSerial();
 
-    if (menuManager->isMenuChanged())
-    {
-        int selected = menuManager->getSelectedIndex();
-        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
-        {
-            renderParameterMenu(true);
-        }
-        else
-        {
-            auto menuItems = menuManager->getMenuItems();
-            displayManager->displayMenu(menuItems, selected);
-        }
-    }
-    if (menuManager->messageAvailable())
-    {
-        auto message = menuManager->getMessage();
-        if (isIntParameter(message.paramID))
-        {
-            auto p = getIntParameter(message.paramID);
-            message.value = lerp(0, 1023, p.min, p.max, message.value);
-            setInt(message.paramID, message.value);
-        }
-        else if (isFloatParameter(message.paramID))
-        {
-            auto p = getFloatParameter(message.paramID);
-            float val = ((float)message.value / 1023.0f) * (p.max - p.min) + p.min;
-            setFloat(message.paramID, val);
-            message.value = (int)val;
-        }
-        else if (isBoolParameter(message.paramID))
-        {
-            bool val = message.value != 0;
-            setBool(message.paramID, val);
-            message.value = val ? 1 : 0;
-        }
-        else
-        {
-            Serial.printf("Error: Parameter %d not found\n", message.paramID);
-            return;
-        }
-        if (isVerbose())
-            Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
-        meshManager->sendParametersToSlaves(message.paramID, message.value);
-        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
-        {
-            renderParameterMenu();
-        }
-    }
     if (sensorManager->messageAvailable())
     {
 
@@ -181,6 +133,75 @@ void MasterBoard::update()
         {
             handleJson(doc);
             serialManager->clearBuffer();
+        }
+    }
+    if (menuManager->menuChanged())
+    {
+
+        auto menuPath = menuManager->getMenuName(menuManager->getCurrentMenu(), 16);
+
+        auto stringCmd = "menu:" + menuPath;
+        if (isVerbose())
+        {
+            Serial.printf(stringCmd.c_str());
+        }
+        meshManager->sendStringToSlaves(stringCmd.c_str());
+        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
+        {
+            renderParameterMenu(true);
+        }
+        else
+        {
+            auto menuItems = menuManager->getMenuItems();
+            displayManager->displayMenu(menuItems, 0);
+        }
+    }
+    if (menuManager->selectionChanged())
+    {
+        int selected = menuManager->getSelectedIndex();
+        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
+        {
+            renderParameterMenu();
+        }
+        else
+        {
+            auto menuItems = menuManager->getMenuItems();
+            displayManager->displayMenu(menuItems, selected);
+        }
+    }
+    if (menuManager->parameterChanged())
+    {
+        auto message = menuManager->getMessage();
+        if (isIntParameter(message.paramID))
+        {
+            auto p = getIntParameter(message.paramID);
+            message.value = lerp(0, 1023, p.min, p.max, message.value);
+            setInt(message.paramID, message.value);
+        }
+        else if (isFloatParameter(message.paramID))
+        {
+            auto p = getFloatParameter(message.paramID);
+            float val = ((float)message.value / 1023.0f) * (p.max - p.min) + p.min;
+            setFloat(message.paramID, val);
+            message.value = (int)val;
+        }
+        else if (isBoolParameter(message.paramID))
+        {
+            bool val = message.value < 512 ? false : true;
+            setBool(message.paramID, val);
+            message.value = val ? 1 : 0;
+        }
+        else
+        {
+            Serial.printf("Error: Parameter %d not found\n", message.paramID);
+            return;
+        }
+        if (isVerbose())
+            Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
+        meshManager->sendParametersToSlaves(message.paramID, message.value);
+        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
+        {
+            renderParameterMenu();
         }
     }
 }

@@ -277,10 +277,6 @@ void SensorManager::updateSensors()
         if (value != sensor->value && !sensor->changed) // only change on button press
         {
 
-            if (isVerbose())
-            {
-                Serial.printf("Button %s pressed: %d\n", getSensorName(sensor->sensorID).c_str(), value);
-            }
             sensor->value = value;
             sensor->changed = true;
 

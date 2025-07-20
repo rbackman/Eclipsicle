@@ -60,6 +60,16 @@ StripState::StripState(LED_STATE state, const int numLEDS, int STRIP_INDEX,
     leds = new CRGB[numLEDS];
 }
 
+void StripState::setAnimationFromName(std::string animationName)
+{
+    ANIMATION_TYPE animType = getAnimationTypeFromName(animationName);
+    if (animType == ANIMATION_TYPE_NONE)
+    {
+
+        return;
+    }
+    setAnimation(animType);
+}
 void StripState::toggleMode()
 {
     ledState = (LED_STATE)(((int)ledState + 1) % LED_STATE_COUNT);

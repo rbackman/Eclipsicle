@@ -24,8 +24,10 @@ private:
     int selectedMenu;
     int textOffset = 0;
     bool verticalAlignment = true; // Set this flag to true for vertical alignment, false for horizontal
-    bool parameterChanged = false;
-    bool menuChanged = false;
+    bool _parameterChanged = false;
+    bool _menuChanged = false;
+    bool _selectionChanged = false;
+
     param_change lastParameter;
 
 public:
@@ -35,14 +37,22 @@ public:
 
         Serial.println("MenuManager initialized");
     }
-    bool messageAvailable() const
+    bool parameterChanged()
     {
-        return parameterChanged;
+        auto changed = _parameterChanged;
+        _parameterChanged = false; // Reset after checking
+        return changed;
     }
-    bool isMenuChanged()
+    bool menuChanged()
     {
-        auto changed = menuChanged;
-        menuChanged = false; // Reset after checking
+        auto changed = _menuChanged;
+        _menuChanged = false; // Reset after checking
+        return changed;
+    }
+    bool selectionChanged()
+    {
+        auto changed = _selectionChanged;
+        _selectionChanged = false; // Reset after checking
         return changed;
     }
     int getSelectedIndex() const { return selectedMenu; }
@@ -50,7 +60,7 @@ public:
     MenuID getCurrentMenu() const { return currentMenu; }
     param_change getMessage()
     {
-        parameterChanged = false;
+        _parameterChanged = false;
         return lastParameter;
     }
     bool handleSensorMessage(sensor_message message);
@@ -78,7 +88,7 @@ public:
             {
                 currentMenu = MENU_ROOT;
                 selectedMenu = 0; // Reset selected menu
-                menuChanged = true;
+                _menuChanged = true;
                 printMenu();
                 return true;
             }
@@ -86,7 +96,7 @@ public:
             {
                 currentMenu = getParentMenu(currentMenu);
                 selectedMenu = 0; // Reset selected menu
-                menuChanged = true;
+                _menuChanged = true;
                 printMenu();
                 return true;
             }
@@ -106,7 +116,7 @@ public:
             {
                 currentMenu = menuID;
                 selectedMenu = 0; // Reset selected menu
-                menuChanged = true;
+                _menuChanged = true;
                 printMenu();
                 return true;
             }
@@ -120,10 +130,14 @@ public:
     {
         currentMenu = type;
         selectedMenu = 0; // Reset selected menu
-        menuChanged = true;
-        Serial.printf("Selected menu: %s\n", getMenuName(type).c_str());
-    }
+        _menuChanged = true;
+        }
     std::string getMenuPath(MenuID type, MenuID root);
+    std::string getCurrentMenuPath()
+    {
+        return getMenuPath(currentMenu, MENU_MAIN);
+    }
+
     MenuID getParentMenu(MenuID type);
     MenuID getMenuByName(const std::string &name)
     {

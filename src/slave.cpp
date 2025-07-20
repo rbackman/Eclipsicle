@@ -186,6 +186,13 @@ bool SlaveBoard::handleString(String command)
 
         return true;
     }
+    else if (command.startsWith("menu:"))
+    {
+        // command is in form "menu:MENU_NAME"
+        std::string menuName = command.substring(5).c_str();
+
+        ledManager->setAnimation(menuName);
+    }
     else if (command == "saveDefaults")
     {
         configManager.saveParameters(this);
