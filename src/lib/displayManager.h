@@ -70,7 +70,8 @@ public:
             showText(menuItems[i], 10, y, 2, textColor);
         }
     }
-    void displayParameterBars(const std::vector<ParameterDisplayItem> &items, int selectedIndex = -1);
+    void displayParameterBars(const std::vector<ParameterDisplayItem> &items, int selectedIndex = -1,
+                              const std::string &header = "");
 
 private:
     Arduino_GFX *gfx;

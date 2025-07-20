@@ -107,36 +107,7 @@ void MasterBoard::update()
         int selected = menuManager->getSelectedIndex();
         if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
         {
-            auto paramIDs = menuManager->getParametersForMenu(menuManager->getCurrentMenu());
-            std::vector<ParameterDisplayItem> params;
-            params.reserve(paramIDs.size());
-            for (auto id : paramIDs)
-            {
-                ParameterDisplayItem item;
-                item.name = getParameterName(id);
-                if (isIntParameter(id))
-                {
-                    auto p = getIntParameter(id);
-                    item.normalized = (float)(p.value - p.min) / (float)(p.max - p.min);
-                    item.valueText = std::to_string(p.value);
-                }
-                else if (isFloatParameter(id))
-                {
-                    auto p = getFloatParameter(id);
-                    item.normalized = (p.value - p.min) / (p.max - p.min);
-                    char buf[8];
-                    snprintf(buf, sizeof(buf), "%.2f", p.value);
-                    item.valueText = buf;
-                }
-                else if (isBoolParameter(id))
-                {
-                    auto p = getBoolParameter(id);
-                    item.normalized = p.value ? 1.0f : 0.0f;
-                    item.valueText = p.value ? "ON" : "OFF";
-                }
-                params.push_back(item);
-            }
-            displayManager->displayParameterBars(params, selected);
+            renderParameterMenu();
         }
         else
         {
@@ -147,18 +118,24 @@ void MasterBoard::update()
     if (menuManager->messageAvailable())
     {
         auto message = menuManager->getMessage();
-        //  set the parameter
         if (isIntParameter(message.paramID))
         {
+            auto p = getIntParameter(message.paramID);
+            message.value = lerp(0, 1023, p.min, p.max, message.value);
             setInt(message.paramID, message.value);
         }
         else if (isFloatParameter(message.paramID))
         {
-            setFloat(message.paramID, message.value);
+            auto p = getFloatParameter(message.paramID);
+            float val = ((float)message.value / 1023.0f) * (p.max - p.min) + p.min;
+            setFloat(message.paramID, val);
+            message.value = (int)val;
         }
         else if (isBoolParameter(message.paramID))
         {
-            setBool(message.paramID, message.value);
+            bool val = message.value != 0;
+            setBool(message.paramID, val);
+            message.value = val ? 1 : 0;
         }
         else
         {
@@ -168,6 +145,10 @@ void MasterBoard::update()
         if (isVerbose())
             Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
         meshManager->sendParametersToSlaves(message.paramID, message.value);
+        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
+        {
+            renderParameterMenu();
+        }
     }
     if (sensorManager->messageAvailable())
     {
@@ -262,6 +243,42 @@ bool MasterBoard::handleParameterMessage(parameter_message parameter)
 #endif
 
     return true;
+}
+
+void MasterBoard::renderParameterMenu()
+{
+    int selected = menuManager->getSelectedIndex();
+    auto paramIDs = menuManager->getParametersForMenu(menuManager->getCurrentMenu());
+    std::vector<ParameterDisplayItem> params;
+    params.reserve(paramIDs.size());
+    for (auto id : paramIDs)
+    {
+        ParameterDisplayItem item;
+        item.name = getParameterName(id);
+        if (isIntParameter(id))
+        {
+            auto p = getIntParameter(id);
+            item.normalized = (float)(p.value - p.min) / (float)(p.max - p.min);
+            item.valueText = std::to_string(p.value);
+        }
+        else if (isFloatParameter(id))
+        {
+            auto p = getFloatParameter(id);
+            item.normalized = (p.value - p.min) / (p.max - p.min);
+            char buf[8];
+            snprintf(buf, sizeof(buf), "%.2f", p.value);
+            item.valueText = buf;
+        }
+        else if (isBoolParameter(id))
+        {
+            auto p = getBoolParameter(id);
+            item.normalized = p.value ? 1.0f : 0.0f;
+            item.valueText = p.value ? "ON" : "OFF";
+        }
+        params.push_back(item);
+    }
+    auto menuPath = menuManager->getMenuPath(menuManager->getCurrentMenu(), MENU_MAIN);
+    displayManager->displayParameterBars(params, selected, menuPath);
 }
 
 #endif

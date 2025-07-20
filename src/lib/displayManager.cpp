@@ -250,20 +250,33 @@ void DisplayManager::showParticles()
 #endif
 }
 
-void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem> &items, int selectedIndex)
+void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem> &items,
+                                          int selectedIndex, const std::string &header)
 {
     const int baseX = 20;
     const int barWidth = 40;
-    const int spacing = 10;
+    const int maxBars = std::min((int)items.size(), 5);
+    const int availableWidth = gfx->width() - 2 * baseX;
+    int spacing = 0;
+    if (maxBars > 1)
+    {
+        spacing = (availableWidth - barWidth * maxBars) / (maxBars - 1);
+        if (spacing < 0)
+            spacing = 0;
+    }
     const int totalHeight = 100;
     const int baseY = gfx->height() - 40;
 
     clear();
-    for (size_t i = 0; i < items.size() && i < 5; ++i)
+    if (!header.empty())
+    {
+        showText(header, 10, 10, 2, 0xFF);
+    }
+    for (int i = 0; i < maxBars; ++i)
     {
         int x = baseX + i * (barWidth + spacing);
-        drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, totalHeight, items[i].normalized);
-        if (static_cast<int>(i) == selectedIndex)
+        drawBar(i, baseX + i * spacing, baseY, barWidth, items[i].normalized, totalHeight, items[i].normalized);
+        if (i == selectedIndex)
         {
 #if DISPLAY_USE_DOUBLE_BUFFER
             if (canvas)
