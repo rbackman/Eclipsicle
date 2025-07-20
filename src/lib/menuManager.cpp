@@ -25,20 +25,23 @@ bool MenuManager::handleSensorMessage(sensor_message message)
             pindex = 4;
         if (pindex < 0 || pindex >= activeparams.size())
         {
-            Serial.printf("Slider %s not found in active parameters %d of %d\n", name.c_str(), pindex, activeparams.size());
+            // Serial.printf("Slider %s not found in active parameters %d of %d\n", name.c_str(), pindex, activeparams.size());
 
             return false; // disable slider for now
         }
         auto paramID = activeparams[pindex];
         auto paramName = getParameterName(paramID);
+        if (isVerbose())
+        {
+            Serial.printf("Slider %s value %d for parameter %s\n", name.c_str(), message.value, paramName.c_str());
+        }
 
-        Serial.printf("Set param %s %d from slider %s\n", paramName.c_str(), message.value, name.c_str());
         lastParameter.paramID = paramID;
         lastParameter.value = message.value;
 
         parameterChanged = true;
 
-        return false; // disable slider for now
+        return true; // disable slider for now
 
         // try
         // {
@@ -134,6 +137,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                     Serial.println(menuName.c_str());
                     // verticalAlignment = true;
                     menuMode = MENU_MODE_MENU_CHOOSER;
+                    menuChanged = true;
                     // used = true;
                 }
 
@@ -192,6 +196,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
 
                     auto menu = smenus[selectedMenu];
 
+                    menuChanged = true;
                     used = true;
                 }
 
@@ -217,6 +222,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                     auto menu = smenus[selectedMenu];
                     Serial.printf("Selected Menu %d  %d %s\n", selectedMenu, menu, getMenuName(menu));
 
+                    menuChanged = true;
                     used = true;
                 }
                 if (message.sensorId == BUTTON_LEFT)
@@ -229,6 +235,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                         currentMenu = getParentMenu(currentMenu);
                     }
 
+                    menuChanged = true;
                     used = true;
                 }
 
@@ -260,6 +267,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                         verticalAlignment = false;
                         menuMode = MENU_MODE_EDIT_MODE;
                     }
+                    menuChanged = true;
                 }
                 if (message.sensorId == BUTTON_TRIGGER)
                 {
@@ -400,32 +408,14 @@ std::vector<std::string> MenuManager::getMenuItems()
     auto availableMenus = getChildrenOfMenu(currentMenu);
     for (const auto &amenu : availableMenus)
     {
-        std::string name = getMenuName(amenu, 8);
-        menuText.push_back(name);
+        menuText.push_back(getMenuName(amenu, 32));
     }
 
     auto activeParams = getParametersForMenu(currentMenu);
     for (const auto &param : activeParams)
     {
         auto name = getParameterName(param);
-        if (name.size() > 6)
-        {
-            name = name.substr(0, 6);
-        }
-        else if (name.size() < 6)
-        {
-            name = name + std::string(6 - name.size(), ' ');
-        }
-        if (isBoolParameter(param)) // TODO:: figure how to get the value
-        {
-            auto menuName = "p:" + name;
-            menuText.push_back(menuName);
-        }
-        else
-        {
-            auto menuName = "p:" + name; // TODO:: figure how to get the value
-            menuText.push_back(menuName);
-        }
+        menuText.push_back("p:" + name);
     }
 
     return menuText;

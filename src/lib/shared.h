@@ -165,6 +165,12 @@ enum ParameterID
     PARAMETER_LIST
 #undef X
 };
+const std::vector<ParameterID> allParameterIDs = {
+#define X(name) name,
+    PARAMETER_LIST
+#undef X
+};
+
 std::vector<std::string> getParameterNames();
 std::string getParameterName(ParameterID id);
 

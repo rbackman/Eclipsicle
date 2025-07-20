@@ -102,6 +102,7 @@ std::vector<std::string> getParameterNames()
   };
   return names;
 }
+
 std::string getParameterName(ParameterID type)
 {
   auto names = getParameterNames();

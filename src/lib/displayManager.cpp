@@ -250,6 +250,35 @@ void DisplayManager::showParticles()
 #endif
 }
 
+void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem> &items, int selectedIndex)
+{
+    const int baseX = 20;
+    const int barWidth = 40;
+    const int spacing = 10;
+    const int totalHeight = 100;
+    const int baseY = gfx->height() - 40;
+
+    clear();
+    for (size_t i = 0; i < items.size() && i < 5; ++i)
+    {
+        int x = baseX + i * (barWidth + spacing);
+        drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, totalHeight, items[i].normalized);
+        if (static_cast<int>(i) == selectedIndex)
+        {
+#if DISPLAY_USE_DOUBLE_BUFFER
+            if (canvas)
+            {
+                canvas->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, 0xFF);
+            }
+#else
+            gfx->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, color332To565(0xFF));
+#endif
+        }
+        showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
+        showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
+    }
+}
+
 void DisplayManager::clear()
 {
 #if DISPLAY_USE_DOUBLE_BUFFER

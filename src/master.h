@@ -65,7 +65,7 @@ private:
 
 public:
     MasterBoard()
-        : ParameterManager(SLAVE_NAME, {PARAM_SHOW_FPS})
+        : ParameterManager(SLAVE_NAME, allParameterIDs)
     {
         init();
     }

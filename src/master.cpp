@@ -104,14 +104,69 @@ void MasterBoard::update()
 
     if (menuManager->isMenuChanged())
     {
-
-        auto menuItems = menuManager->getMenuItems();
-        displayManager->displayMenu(menuItems);
+        int selected = menuManager->getSelectedIndex();
+        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
+        {
+            auto paramIDs = menuManager->getParametersForMenu(menuManager->getCurrentMenu());
+            std::vector<ParameterDisplayItem> params;
+            params.reserve(paramIDs.size());
+            for (auto id : paramIDs)
+            {
+                ParameterDisplayItem item;
+                item.name = getParameterName(id);
+                if (isIntParameter(id))
+                {
+                    auto p = getIntParameter(id);
+                    item.normalized = (float)(p.value - p.min) / (float)(p.max - p.min);
+                    item.valueText = std::to_string(p.value);
+                }
+                else if (isFloatParameter(id))
+                {
+                    auto p = getFloatParameter(id);
+                    item.normalized = (p.value - p.min) / (p.max - p.min);
+                    char buf[8];
+                    snprintf(buf, sizeof(buf), "%.2f", p.value);
+                    item.valueText = buf;
+                }
+                else if (isBoolParameter(id))
+                {
+                    auto p = getBoolParameter(id);
+                    item.normalized = p.value ? 1.0f : 0.0f;
+                    item.valueText = p.value ? "ON" : "OFF";
+                }
+                params.push_back(item);
+            }
+            displayManager->displayParameterBars(params, selected);
+        }
+        else
+        {
+            auto menuItems = menuManager->getMenuItems();
+            displayManager->displayMenu(menuItems, selected);
+        }
     }
     if (menuManager->messageAvailable())
     {
         auto message = menuManager->getMessage();
-        Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
+        //  set the parameter
+        if (isIntParameter(message.paramID))
+        {
+            setInt(message.paramID, message.value);
+        }
+        else if (isFloatParameter(message.paramID))
+        {
+            setFloat(message.paramID, message.value);
+        }
+        else if (isBoolParameter(message.paramID))
+        {
+            setBool(message.paramID, message.value);
+        }
+        else
+        {
+            Serial.printf("Error: Parameter %d not found\n", message.paramID);
+            return;
+        }
+        if (isVerbose())
+            Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
         meshManager->sendParametersToSlaves(message.paramID, message.value);
     }
     if (sensorManager->messageAvailable())
@@ -185,6 +240,7 @@ bool MasterBoard::handleParameterMessage(parameter_message parameter)
         return true;
     }
 #endif
+
 #ifdef USE_SENSORS
     if (sensorManager && sensorManager->handleParameterMessage(parameter))
     {
@@ -198,14 +254,13 @@ bool MasterBoard::handleParameterMessage(parameter_message parameter)
     }
 #endif
 
-    if (!ParameterManager::handleParameterMessage(parameter))
-    {
-        Serial.println("sending to slaves");
-        // Handle the case where no manager processed the message
+    ParameterManager::handleParameterMessage(parameter);
+
+    // Handle the case where no manager processed the message
 #ifdef MESH_NET
-        meshManager->sendParametersToSlaves(parameter.paramID, parameter.value);
+    meshManager->sendParametersToSlaves(parameter.paramID, parameter.value);
 #endif
-    }
+
     return true;
 }
 
