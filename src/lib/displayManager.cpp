@@ -154,12 +154,13 @@ void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalH
     int barX = x + index * barWidth;
     int barY = y - barHeight; // top of the bar
 
-    // Clear only the area above the bar
-    if (totalHeight > barHeight)
-        canvas->fillRect(barX, y - totalHeight, barWidth, totalHeight - barHeight, 0x00);
-
-    // Draw the bar going upwards
-    canvas->fillRect(barX + 1, barY, barWidth - 2, barHeight, color);
+    canvas->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x00);
+    canvas->fillRoundRect(barX + 1, barY, barWidth - 2, barHeight, 3, color);
+    // simple 3d effect
+    canvas->drawLine(barX + 1, barY, barX + barWidth - 2, barY, 0xFF);
+    canvas->drawLine(barX + 1, barY, barX + 1, barY + barHeight - 1, 0xFF);
+    canvas->drawLine(barX + 1, barY + barHeight - 1, barX + barWidth - 2, barY + barHeight - 1, 0x00);
+    canvas->drawLine(barX + barWidth - 2, barY, barX + barWidth - 2, barY + barHeight - 1, 0x00);
     flush();
 #else
     int barWidth = w;
@@ -171,8 +172,12 @@ void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalH
     int barX = x + index * barWidth;
     int barY = y - barHeight;
 
-    gfx->fillRect(barX, y - totalHeight - barY, barWidth, totalHeight, 0x0000);
-    gfx->fillRect(barX + 1, barY, barWidth - 2, barHeight, color332To565(color));
+    gfx->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x0000);
+    gfx->fillRoundRect(barX + 1, barY, barWidth - 2, barHeight, 3, color332To565(color));
+    gfx->drawLine(barX + 1, barY, barX + barWidth - 2, barY, color332To565(0xFF));
+    gfx->drawLine(barX + 1, barY, barX + 1, barY + barHeight - 1, color332To565(0xFF));
+    gfx->drawLine(barX + 1, barY + barHeight - 1, barX + barWidth - 2, barY + barHeight - 1, color332To565(0x0000));
+    gfx->drawLine(barX + barWidth - 2, barY, barX + barWidth - 2, barY + barHeight - 1, color332To565(0x0000));
 
 #endif
 }
@@ -251,45 +256,73 @@ void DisplayManager::showParticles()
 }
 
 void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem> &items,
-                                          int selectedIndex, const std::string &header)
+                                          int selectedIndex, const std::string &header, bool forceClear)
 {
     const int baseX = 20;
     const int barWidth = 40;
-    const int maxBars = std::min((int)items.size(), 5);
-    const int availableWidth = gfx->width() - 2 * baseX;
-    int spacing = 0;
-    if (maxBars > 1)
-    {
-        spacing = (availableWidth - barWidth * maxBars) / (maxBars - 1);
-        if (spacing < 0)
-            spacing = 0;
-    }
+    const int spacing = 10;
     const int totalHeight = 100;
     const int baseY = gfx->height() - 40;
 
-    clear();
-    if (!header.empty())
+    bool fullRedraw = forceClear || firstDraw || items.size() != lastParams.size() || header != lastHeader;
+    if (fullRedraw)
     {
-        showText(header, 10, 10, 2, 0xFF);
+        clear();
+        if (!header.empty())
+            showText(header, 10, 10, 2, 0xFF);
     }
+    else if (header != lastHeader)
+    {
+        // redraw header only
+        clear();
+        if (!header.empty())
+            showText(header, 10, 10, 2, 0xFF);
+    }
+
+    int maxBars = std::min((int)items.size(), 5);
     for (int i = 0; i < maxBars; ++i)
     {
-        int x = baseX + i * (barWidth + spacing);
-        drawBar(i, baseX + i * spacing, baseY, barWidth, items[i].normalized, totalHeight, items[i].normalized);
-        if (i == selectedIndex)
+        bool changed = fullRedraw;
+        if (!fullRedraw && i < (int)lastParams.size())
         {
+            if (fabs(items[i].normalized - lastParams[i].normalized) > 0.001f ||
+                items[i].valueText != lastParams[i].valueText ||
+                items[i].name != lastParams[i].name)
+            {
+                changed = true;
+            }
+        }
+        if (changed || selectedIndex != lastSelected || (i == lastSelected) || (i == selectedIndex))
+        {
+            int x = baseX + i * (barWidth + spacing);
+            // Clear area for bar and texts
 #if DISPLAY_USE_DOUBLE_BUFFER
             if (canvas)
             {
-                canvas->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, 0xFF);
+                canvas->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 28, 0x00);
             }
 #else
-            gfx->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, color332To565(0xFF));
+            gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 28, color332To565(0x00));
 #endif
+            drawBar(i, baseX + i * spacing, baseY, barWidth, items[i].normalized, totalHeight, items[i].normalized);
+            if (i == selectedIndex)
+            {
+#if DISPLAY_USE_DOUBLE_BUFFER
+                if (canvas)
+                    canvas->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, 0xFF);
+#else
+                gfx->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, color332To565(0xFF));
+#endif
+            }
+            showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
+            showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
         }
-        showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
-        showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
     }
+
+    lastParams = items;
+    lastSelected = selectedIndex;
+    lastHeader = header;
+    firstDraw = false;
 }
 
 void DisplayManager::clear()

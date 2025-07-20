@@ -71,7 +71,7 @@ public:
         }
     }
     void displayParameterBars(const std::vector<ParameterDisplayItem> &items, int selectedIndex = -1,
-                              const std::string &header = "");
+                              const std::string &header = "", bool forceClear = false);
 
 private:
     Arduino_GFX *gfx;
@@ -82,5 +82,9 @@ private:
 
 #endif
     void flush();
+    std::vector<ParameterDisplayItem> lastParams;
+    int lastSelected = -1;
+    std::string lastHeader;
+    bool firstDraw = true;
 };
 #endif

@@ -107,7 +107,7 @@ void MasterBoard::update()
         int selected = menuManager->getSelectedIndex();
         if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
         {
-            renderParameterMenu();
+            renderParameterMenu(true);
         }
         else
         {
@@ -245,7 +245,7 @@ bool MasterBoard::handleParameterMessage(parameter_message parameter)
     return true;
 }
 
-void MasterBoard::renderParameterMenu()
+void MasterBoard::renderParameterMenu(bool forceClear)
 {
     int selected = menuManager->getSelectedIndex();
     auto paramIDs = menuManager->getParametersForMenu(menuManager->getCurrentMenu());
@@ -278,7 +278,7 @@ void MasterBoard::renderParameterMenu()
         params.push_back(item);
     }
     auto menuPath = menuManager->getMenuPath(menuManager->getCurrentMenu(), MENU_MAIN);
-    displayManager->displayParameterBars(params, selected, menuPath);
+    displayManager->displayParameterBars(params, selected, menuPath, forceClear);
 }
 
 #endif

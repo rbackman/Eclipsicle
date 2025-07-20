@@ -82,7 +82,7 @@ public:
     void handleJson(JsonDocument &doc);
     bool handleParameterMessage(parameter_message parameter);
     void menuChangedParameters(parameter_message listener);
-    void renderParameterMenu();
+    void renderParameterMenu(bool forceClear = false);
 };
 
 #endif
