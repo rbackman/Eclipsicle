@@ -25,20 +25,23 @@ bool MenuManager::handleSensorMessage(sensor_message message)
             pindex = 4;
         if (pindex < 0 || pindex >= activeparams.size())
         {
-            Serial.printf("Slider %s not found in active parameters %d of %d\n", name.c_str(), pindex, activeparams.size());
+            // Serial.printf("Slider %s not found in active parameters %d of %d\n", name.c_str(), pindex, activeparams.size());
 
             return false; // disable slider for now
         }
         auto paramID = activeparams[pindex];
         auto paramName = getParameterName(paramID);
+        if (isVerbose())
+        {
+            Serial.printf("Slider %s value %d for parameter %s\n", name.c_str(), message.value, paramName.c_str());
+        }
 
-        Serial.printf("Set param %s %d from slider %s\n", paramName.c_str(), message.value, name.c_str());
         lastParameter.paramID = paramID;
         lastParameter.value = message.value;
 
         parameterChanged = true;
 
-        return false; // disable slider for now
+        return true; // disable slider for now
 
         // try
         // {

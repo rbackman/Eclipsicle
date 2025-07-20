@@ -127,7 +127,8 @@ void MeshnetManager::sendParametersToSlaves(ParameterID paramID, int value)
         }
         else
         {
-            Serial.printf("Sent parameter data %d %d\n", data.paramID, data.value);
+            if (isVerbose())
+                Serial.printf("Sent parameter data %d %d\n", data.paramID, data.value);
         }
     }
 };

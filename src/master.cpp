@@ -147,7 +147,26 @@ void MasterBoard::update()
     if (menuManager->messageAvailable())
     {
         auto message = menuManager->getMessage();
-        Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
+        //  set the parameter
+        if (isIntParameter(message.paramID))
+        {
+            setInt(message.paramID, message.value);
+        }
+        else if (isFloatParameter(message.paramID))
+        {
+            setFloat(message.paramID, message.value);
+        }
+        else if (isBoolParameter(message.paramID))
+        {
+            setBool(message.paramID, message.value);
+        }
+        else
+        {
+            Serial.printf("Error: Parameter %d not found\n", message.paramID);
+            return;
+        }
+        if (isVerbose())
+            Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
         meshManager->sendParametersToSlaves(message.paramID, message.value);
     }
     if (sensorManager->messageAvailable())
@@ -221,6 +240,7 @@ bool MasterBoard::handleParameterMessage(parameter_message parameter)
         return true;
     }
 #endif
+
 #ifdef USE_SENSORS
     if (sensorManager && sensorManager->handleParameterMessage(parameter))
     {
@@ -234,14 +254,13 @@ bool MasterBoard::handleParameterMessage(parameter_message parameter)
     }
 #endif
 
-    if (!ParameterManager::handleParameterMessage(parameter))
-    {
-        Serial.println("sending to slaves");
-        // Handle the case where no manager processed the message
+    ParameterManager::handleParameterMessage(parameter);
+
+    // Handle the case where no manager processed the message
 #ifdef MESH_NET
-        meshManager->sendParametersToSlaves(parameter.paramID, parameter.value);
+    meshManager->sendParametersToSlaves(parameter.paramID, parameter.value);
 #endif
-    }
+
     return true;
 }
 

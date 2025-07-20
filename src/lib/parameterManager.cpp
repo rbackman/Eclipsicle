@@ -118,7 +118,7 @@ IntParameter ParameterManager::getIntParameter(ParameterID id)
     IntParameter iParam = {id, getParameterName(id), 0, 0, 0};
     intParams.push_back(iParam);
     auto name = getParameterName(id);
-    Serial.printf("Error: Int Parameter not found %d %s\n", id, name.c_str());
+    Serial.printf("Error: getIntParameter %d %s\n", id, name.c_str());
     return intParams.back();
 }
 BoolParameter ParameterManager::getBoolParameter(ParameterID id)
@@ -134,7 +134,7 @@ BoolParameter ParameterManager::getBoolParameter(ParameterID id)
     boolParams.push_back(bParam);
 
     auto name = getParameterName(id);
-    Serial.printf("Error: Parameter not found %d %s\n", id, name.c_str());
+    Serial.printf("Error: getBoolParameter not found %d %s\n", id, name.c_str());
 
     return boolParams.back();
 }
@@ -151,7 +151,7 @@ FloatParameter ParameterManager::getFloatParameter(ParameterID id)
     FloatParameter fParam = {id, getParameterName(id), 0.0, 0.0, 1.0};
     floatParams.push_back(fParam);
     auto name = getParameterName(id);
-    Serial.printf("Error: Parameter not found %d %s\n", id, name.c_str());
+    Serial.printf("Error: getFloatParameter not found %d %s\n", id, name.c_str());
     return floatParams.back();
 }
 void ParameterManager::setInt(ParameterID id, int val)
@@ -207,7 +207,7 @@ float ParameterManager::getFloat(ParameterID id)
     auto pname = getParameterName(id);
     floatParams.push_back({id, pname, 0.0, 0.0, 1.0});
 
-    Serial.printf("Error Float Parameter not found   %s for %s\n", pname.c_str(), name.c_str());
+    Serial.printf("Error getFloat Parameter not found   %s for %s\n", pname.c_str(), name.c_str());
     return 0;
 }
 bool ParameterManager::hasParameter(ParameterID paramID)
@@ -246,7 +246,7 @@ int ParameterManager::getInt(ParameterID id)
     }
     auto pname = getParameterName(id);
     // intParams.push_back({id, pname, 0, 0, 0});
-    Serial.printf("error: Int Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
+    Serial.printf("error: getInt Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
     return 0;
 }
 bool ParameterManager::getBool(ParameterID id)
@@ -261,7 +261,7 @@ bool ParameterManager::getBool(ParameterID id)
     auto pname = getParameterName(id);
     boolParams.push_back({id, pname, false});
 
-    Serial.printf("Error Bool Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
+    Serial.printf("Error getBool Parameter not found %d %s for %s\n", id, pname.c_str(), name.c_str());
     return false;
 }
 
@@ -288,7 +288,7 @@ bool ParameterManager::handleParameterMessage(parameter_message parameter)
     //  check if this manager has the parameter
     if (parameter.paramID == PARAM_UNKNOWN)
     {
-        Serial.printf("Error: Parameter not found %d %s for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), name.c_str());
+        Serial.printf("Error:handleParameterMessage not found %d %s for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), name.c_str());
         return false;
     }
     if (hasParameter(parameter.paramID) == false)
@@ -313,7 +313,7 @@ bool ParameterManager::handleParameterMessage(parameter_message parameter)
         return true;
     }
 
-    Serial.printf("Error: Parameter not found %d %s for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), name.c_str());
+    Serial.printf("Error: Cant find parameter %d %s for %s\n", parameter.paramID, getParameterName(parameter.paramID).c_str(), name.c_str());
     return false;
 }
 
