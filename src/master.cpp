@@ -104,9 +104,9 @@ void MasterBoard::update()
 
     if (menuManager->isMenuChanged())
     {
-
         auto menuItems = menuManager->getMenuItems();
-        displayManager->displayMenu(menuItems);
+        int selected = menuManager->getSelectedIndex();
+        displayManager->displayMenu(menuItems, selected);
     }
     if (menuManager->messageAvailable())
     {

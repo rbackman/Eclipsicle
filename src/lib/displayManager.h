@@ -41,13 +41,26 @@ public:
     void begin(SPIClass *spi = &SPI);
     void showBars(const int *values, int len, int x, int y, int w, int h, uint8_t color = 0xFF);
     void drawBar(int index, int x, int y, int w, float h, int totalHeight, float hue);
-    void displayMenu(const std::vector<std::string> &menuItems)
+    void displayMenu(const std::vector<std::string> &menuItems, int selectedIndex = -1)
     {
         clear();
         for (size_t i = 0; i < menuItems.size(); ++i)
         {
-            Serial.printf("Menu item %d: %s\n", i, menuItems[i].c_str());
-            showText(menuItems[i], 10, 10 + i * 20);
+            bool highlight = (static_cast<int>(i) == selectedIndex);
+            int y = 10 + i * 20;
+            if (highlight)
+            {
+#if DISPLAY_USE_DOUBLE_BUFFER
+                if (canvas)
+                {
+                    canvas->fillRect(0, y - 2, gfx->width(), 18, 0xFF);
+                }
+#else
+                gfx->fillRect(0, y - 2, gfx->width(), 18, color332To565(0xFF));
+#endif
+            }
+            uint8_t textColor = highlight ? 0x00 : 0xFF;
+            showText(menuItems[i], 10, y, 2, textColor);
         }
     }
 

@@ -45,6 +45,8 @@ public:
         menuChanged = false; // Reset after checking
         return changed;
     }
+    int getSelectedIndex() const { return selectedMenu; }
+    MenuMode getMenuMode() const { return menuMode; }
     param_change getMessage()
     {
         parameterChanged = false;

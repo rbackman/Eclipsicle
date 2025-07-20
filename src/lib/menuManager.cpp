@@ -134,6 +134,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                     Serial.println(menuName.c_str());
                     // verticalAlignment = true;
                     menuMode = MENU_MODE_MENU_CHOOSER;
+                    menuChanged = true;
                     // used = true;
                 }
 
@@ -192,6 +193,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
 
                     auto menu = smenus[selectedMenu];
 
+                    menuChanged = true;
                     used = true;
                 }
 
@@ -217,6 +219,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                     auto menu = smenus[selectedMenu];
                     Serial.printf("Selected Menu %d  %d %s\n", selectedMenu, menu, getMenuName(menu));
 
+                    menuChanged = true;
                     used = true;
                 }
                 if (message.sensorId == BUTTON_LEFT)
@@ -229,6 +232,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                         currentMenu = getParentMenu(currentMenu);
                     }
 
+                    menuChanged = true;
                     used = true;
                 }
 
@@ -260,6 +264,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                         verticalAlignment = false;
                         menuMode = MENU_MODE_EDIT_MODE;
                     }
+                    menuChanged = true;
                 }
                 if (message.sensorId == BUTTON_TRIGGER)
                 {
