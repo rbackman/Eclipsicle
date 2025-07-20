@@ -21,62 +21,15 @@ int interpolate(int from, int to, float t)
 {
   return from + (to - from) * t;
 }
-const char *getMenuName(MenuID type, int MaxSize)
-{
-  auto it = menuTypeMap.find(type);
-  if (it != menuTypeMap.end())
-  {
-    auto name = it->second.first;
-    if (name.size() > MaxSize)
-    {
-      return name.substr(0, MaxSize).c_str();
-    }
-    return name.c_str();
-  }
-  return "UNKNOWN";
-}
 
-const char *getSensorName(SensorID type)
+std::string getSensorName(SensorID type)
 {
   auto it = sensorIDMap.find(type);
   if (it != sensorIDMap.end())
   {
-    return it->second.c_str();
+    return it->second;
   }
   return "UNKNOWN";
-}
-
-std::vector<MenuID> getChildrenOfMenu(MenuID type)
-{
-  std::vector<MenuID> children;
-  for (auto it = menuTypeMap.begin(); it != menuTypeMap.end(); ++it)
-  {
-    if (it->second.second == type)
-    {
-      children.push_back(it->first);
-    }
-  }
-  return children;
-}
-std::string getMenuPath(MenuID type, MenuID root)
-{
-  std::string path = getMenuName(type);
-  MenuID parent = getParentMenu(type);
-  while (parent != MENU_ROOT && parent != root)
-  {
-    path = std::string(getMenuName(parent)) + "/" + path;
-    parent = getParentMenu(parent);
-  }
-  return path;
-}
-const MenuID getParentMenu(MenuID type)
-{
-  auto it = menuTypeMap.find(type);
-  if (it != menuTypeMap.end())
-  {
-    return it->second.second;
-  }
-  return MENU_IDLE;
 }
 
 void setVerbose(bool verb)

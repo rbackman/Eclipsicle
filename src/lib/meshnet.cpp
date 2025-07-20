@@ -20,6 +20,7 @@ MeshnetManager::MeshnetManager()
 {
     instance = this;
     init();
+    Serial.println("MeshnetManager initialized");
 }
 
 void MeshnetManager::connectSlaves(std::vector<MacAddress> slaves)

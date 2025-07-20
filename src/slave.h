@@ -69,8 +69,8 @@ public:
 #endif
 
   void loop();
-  bool processCmd(String command);
-  void processJson(JsonDocument &doc);
+  bool handleString(String command);
+  void handleJson(JsonDocument &doc);
   bool handleParameterMessage(parameter_message parameter)
   {
     if (isVerbose())

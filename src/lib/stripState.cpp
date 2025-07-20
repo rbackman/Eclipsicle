@@ -683,7 +683,7 @@ void StripState::setAll(led tcol)
         setPixel(i, tcol);
     }
 }
-bool StripState::respondToText(std::string command)
+bool StripState::handleTextMessage(std::string command)
 {
 
     bool verbose = isVerbose();

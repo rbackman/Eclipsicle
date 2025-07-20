@@ -4,9 +4,9 @@
 #include <Adafruit_GFX.h>
 #include <SPI.h>
 
-#ifndef DISPLAY_USE_DOUBLE_BUFFER
-#define DISPLAY_USE_DOUBLE_BUFFER 1
-#endif
+// #ifndef DISPLAY_USE_DOUBLE_BUFFER
+// #define DISPLAY_USE_DOUBLE_BUFFER 1
+// #endif
 
 #ifdef USE_DISPLAY
 // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally

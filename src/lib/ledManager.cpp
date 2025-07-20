@@ -128,7 +128,7 @@ bool LEDManager::handleString(String command)
             // if (currentStrip == 0 || currentStrip == i + 1)
             // {
 
-            if (stripStates[i]->respondToText(std::string(command.c_str())))
+            if (stripStates[i]->handleTextMessage(std::string(command.c_str())))
             {
 
                 res = true;

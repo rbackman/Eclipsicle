@@ -134,6 +134,19 @@ bool SensorManager::buttonPressed(SensorID id)
     return false;
 }
 
+bool SensorManager::handleParameterMessage(parameter_message parameter)
+{
+    // for (int i = 0; i < sensorGrid.size(); i++)
+    // {
+    //     if (sensorGrid[i].sensorID == parameter.id)
+    //     {
+    //         sensorGrid[i].value = parameter.value;
+    //         sensorGrid[i].changed = true;
+    //         return true;
+    //     }
+    // }
+    return false;
+}
 bool SensorManager::messageAvailable()
 {
 
@@ -373,7 +386,8 @@ bool SensorManager::handleSensorCommand(String command)
         for (int i = 0; i < sensorGrid.size(); i++)
         {
             SensorState *sensor = &sensorGrid[i];
-            String sensorName = getSensorName(sensor->sensorID);
+
+            String sensorName(getSensorName(sensor->sensorID).c_str());
             sensorName.trim();
             Serial.println("Checking sensor: " + sensorName);
             if (sensorName.equalsIgnoreCase(sensorToPrint))

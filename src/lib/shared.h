@@ -132,7 +132,6 @@ const std::map<SensorID, std::string> sensorIDMap = {
     {BUTTON_TRIGGER, "Trigger"},
     {BUTTON_RIGHT, "Right"},
     {BUTTON_LEFT, "Left"},
-
     {ACCEL_X, "AccelX"},
     {ACCEL_Y, "AccelY"},
     {ACCEL_Z, "AccelZ"},
@@ -143,8 +142,7 @@ const std::map<SensorID, std::string> sensorIDMap = {
     {AUDIO_FREQ, "AudioFreq"},
     {AUDIO_BEAT, "AudioBeat"}};
 
-const char *getSensorName(SensorID id);
-
+std::string getSensorName(SensorID id);
 enum MESSAGE_TYPE
 {
     MESSAGE_TYPE_TEXT,
@@ -169,75 +167,6 @@ enum ParameterID
 };
 std::vector<std::string> getParameterNames();
 std::string getParameterName(ParameterID id);
-enum MenuID
-{
-    MENU_ROOT = -1,
-    MENU_IDLE,
-    MENU_MAIN,
-    MENU_PATTERNS,
-    MENU_SAVE_PATTERN,
-    MENU_PARTICLES,
-    MENU_RANDOM_PARTICLES,
-    MENU_PARTICLES_COLOR_MODE,
-    MENU_PARTICLES_SPEED_MODE,
-    MENU_PARTICLES_LIFE_MODE,
-    MENU_RAINBOW_MODE,
-    MENU_DOUBLE_RAINBOW_MODE,
-    MENU_NEBULA_MODE,
-    MENU_BRICKS_MODE,
-    MENU_SLIDER,
-    MENU_SLIDER_COLOR_MODE,
-    MENU_SLIDER_SETTINGS_MODE,
-    MENU_RANDOM_MODE,
-    MENU_DEBUG,
-    MENU_DISPLAY_DEBUG_MODE,
-    MENU_SETTINGS_DEBUG_MODE,
-    MENU_MISC_DEBUG_MODE,
-    MENU_LED_DEBUG_MODE,
-    MENU_ANIMATION_TYPE,
-    MENU_SINGLE_ANIMATION,
-    MENU_MULTI_ANIMATION,
-    MENU_POINT_CONTROL,
-    MENU_MASTER_LED_MODE,
-    MENU_SETTINGS,
-    MENU_AUDIO,
-};
-
-// map MenuType to a string  for name and MenuType for reference to the parent menu
-const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
-    {MENU_IDLE, {"Idle", MENU_ROOT}},
-    {MENU_MAIN, {"Main", MENU_IDLE}},
-    {MENU_PATTERNS, {"Patterns", MENU_MAIN}},
-    {MENU_ANIMATION_TYPE, {"Animation Type", MENU_MAIN}},
-    {MENU_SINGLE_ANIMATION, {"Single Animation", MENU_ANIMATION_TYPE}},
-    {MENU_MULTI_ANIMATION, {"Multi Animation", MENU_ANIMATION_TYPE}},
-    {MENU_POINT_CONTROL, {"Point Control", MENU_ANIMATION_TYPE}},
-    {MENU_PARTICLES, {"Particles", MENU_PATTERNS}},
-
-    {MENU_RANDOM_PARTICLES, {"RndParticles", MENU_PATTERNS}},
-    {MENU_SAVE_PATTERN, {"Save", MENU_PATTERNS}},
-    {MENU_RAINBOW_MODE, {"Rainbow", MENU_PATTERNS}},
-    {MENU_NEBULA_MODE, {"Nebula", MENU_PATTERNS}},
-    {MENU_BRICKS_MODE, {"Falling Bricks", MENU_PATTERNS}},
-    {MENU_DOUBLE_RAINBOW_MODE, {"Double Rainbow", MENU_PATTERNS}},
-    {MENU_SLIDER, {"Slider", MENU_PATTERNS}},
-    {MENU_SLIDER_COLOR_MODE, {"Color", MENU_SLIDER}},
-    {MENU_SLIDER_SETTINGS_MODE, {"Settings", MENU_SLIDER}},
-    {MENU_RANDOM_MODE, {"Random", MENU_PATTERNS}},
-
-    {MENU_MASTER_LED_MODE, {"LED", MENU_MAIN}},
-
-    {MENU_PARTICLES_COLOR_MODE, {"Color", MENU_PARTICLES}},
-    {MENU_PARTICLES_LIFE_MODE, {"Life", MENU_PARTICLES}},
-    {MENU_PARTICLES_SPEED_MODE, {"Speed", MENU_PARTICLES}},
-    {MENU_AUDIO, {"Audio", MENU_MAIN}},
-
-    {MENU_DEBUG, {"Debug", MENU_MAIN}},
-    {MENU_DISPLAY_DEBUG_MODE, {"Display", MENU_DEBUG}},
-    {MENU_SETTINGS_DEBUG_MODE, {"Settings", MENU_DEBUG}},
-    {MENU_MISC_DEBUG_MODE, {"Misc", MENU_DEBUG}},
-
-};
 
 struct IntParameter
 {
@@ -263,8 +192,6 @@ struct FloatParameter
     float min;
     float max;
 };
-
-// // add parameters to menu
 
 static const std::vector<IntParameter> getDefaultIntParameters()
 {
@@ -355,14 +282,6 @@ bool isBoolParameter(ParameterID id);
 
 bool isFloatParameter(ParameterID id);
 bool isIntParameter(ParameterID id);
-
-// std::vector<ParameterID> getParametersForMenu(MenuID menu);
-
-std::vector<MenuID> getChildrenOfMenu(MenuID type);
-std::string getMenuPath(MenuID type, MenuID root);
-const char *getMenuName(MenuID type, int MaxSize = 6);
-
-const MenuID getParentMenu(MenuID type);
 
 std::vector<std::string> splitString(const std::string &path, char delimiter);
 std::vector<std::string> splitString(const std::string &path, char delimiter);

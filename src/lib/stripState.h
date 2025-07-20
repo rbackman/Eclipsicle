@@ -92,7 +92,7 @@ public:
 
     void setAll(CRGB color);
     void setAll(led color);
-    bool respondToText(std::string command);
+    bool handleTextMessage(std::string command);
     bool parseAnimationScript(std::string script);
 
     void clearPixels();

@@ -59,7 +59,7 @@ void SlaveBoard::loop()
     {
         auto command = serialManager->readString();
 
-        if (processCmd(command))
+        if (handleString(command))
         {
             // Serial.println("Command processed: " + command);
         }
@@ -74,7 +74,7 @@ void SlaveBoard::loop()
         JsonDocument doc;
         if (serialManager->readJson(doc))
         {
-            processJson(doc);
+            handleJson(doc);
         }
     }
 #ifdef USE_LEDS
@@ -103,7 +103,7 @@ void SlaveBoard::loop()
 #endif
 }
 
-bool SlaveBoard::processCmd(String command)
+bool SlaveBoard::handleString(String command)
 {
 
     if (command.startsWith("p:"))
@@ -254,7 +254,7 @@ bool SlaveBoard::processCmd(String command)
     return false; // command was not handled
 }
 
-void SlaveBoard::processJson(JsonDocument &doc)
+void SlaveBoard::handleJson(JsonDocument &doc)
 {
     if (doc.isNull())
     {
