@@ -32,6 +32,7 @@ public:
     void setTextHandler(TextHandler handler) { _textHandler = handler; }
     void setSensorHandler(SensorHandler handler) { _sensorHandler = handler; }
     void setParameterHandler(ParameterHandler handler) { _parameterHandler = handler; }
+    std::string getMacAddress();
 
 private:
     ImageHandler _imageHandler = nullptr;
@@ -91,7 +92,7 @@ private:
     static void OnDataRecv(const esp_now_recv_info_t *info, const uint8_t *incomingData, int len)
     {
 
-                uint8_t messageType = *incomingData;
+        uint8_t messageType = *incomingData;
         // Serial.println("got espnow Message type: " + String(messageType));
         if (messageType == MESSAGE_TYPE_IMAGE)
         {

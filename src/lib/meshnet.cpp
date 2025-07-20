@@ -84,6 +84,13 @@ void MeshnetManager::init()
     esp_now_register_recv_cb(MeshnetManager::OnDataRecv);
 };
 
+std::string MeshnetManager::getMacAddress()
+{
+    uint8_t mac[6];
+    WiFi.macAddress(mac);
+
+    return std::string(reinterpret_cast<char *>(mac), 6);
+}
 void MeshnetManager::sendStringToSlaves(String command)
 {
     text_message msg;

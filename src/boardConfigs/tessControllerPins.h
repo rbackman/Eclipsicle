@@ -20,7 +20,10 @@
 #define DISPLAY_DC 14
 #define DISPLAY_CS 13
 #define DISPLAY_BL 4
-
+#define DISPLAY_SDA SDA_PIN
+#define DISPLAY_SCL SCL_PIN
+#define DISPLAY_MOSI DOUT_PIN
+#define DISPLAY_MISO -1 // MISO is not used
 #define BUTTON_1_PIN 1
 #define BUTTON_2_PIN 2
 #define BUTTON_3_PIN 41

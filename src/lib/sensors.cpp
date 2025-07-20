@@ -28,13 +28,13 @@ mpu.setInterruptPinLatch(true); // Keep it latched.  Will turn off when reinitia
 mpu.setInterruptPinPolarity(true);
 mpu.setMotionInterrupt(true);
 #endif
-
+SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
 #ifdef USE_BUTTON_INTERRUPTS
 int button1Pin = -1;
 int button2Pin = -1;
 int button3Pin = -1;
 int button4Pin = -1;
-SPISettings settings(1000000, MSBFIRST, SPI_MODE0);
+
 volatile bool button1Pressed = false;
 volatile bool button2Pressed = false;
 volatile bool button3Pressed = false;
@@ -277,6 +277,10 @@ void SensorManager::updateSensors()
         if (value != sensor->value && !sensor->changed) // only change on button press
         {
 
+            if (isVerbose())
+            {
+                Serial.printf("Button %s pressed: %d\n", getSensorName(sensor->sensorID).c_str(), value);
+            }
             sensor->value = value;
             sensor->changed = true;
 

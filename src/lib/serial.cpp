@@ -26,7 +26,7 @@ SerialManager::SerialManager(int bufferSize)
     _jsonAvailable = false;
     Serial.begin(921600);
 
-    Serial.printf("\n\nStarting serial on device %s  \n \n", getName());
+    Serial.printf("\n\nStarting serial on device %s  \n \n", getName().c_str());
 
     buffer = (char *)malloc(sizeof(char) * bufferSize);
     bufPos = 0; // Initialize bufPos

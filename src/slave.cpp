@@ -6,11 +6,8 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
       serialManager(serialManager)
 {
     this->serialManager = serialManager;
-// Constructor implementation
-#ifdef MESH_NET
-    meshManager = new MeshnetManager();
-    meshManager->init();
-#endif
+    // Constructor implementation
+
 #ifdef USE_LEDS
     ledManager = new LEDManager();
 
@@ -27,7 +24,19 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
     audioManager->playTone(1000, 100, 5); // Play a test tone
 
 #endif
+#ifdef MESH_NET
+    meshManager = new MeshnetManager();
+    meshManager->setImageHandler([this](const image_message &msg)
+                                 { ledManager->setLEDImage(msg); });
+    meshManager->setTextHandler([this](const text_message &msg)
+                                { handleTextMessage(msg.text); });
+    // meshManager->setSensorHandler([this](const sensor_message &msg)
+    //                               { handleSensorMessage(msg); });
+    meshManager->setParameterHandler([this](const parameter_message &msg)
+                                     { handleParameterMessage(msg); });
+    meshManager->init();
 
+#endif
 #ifdef USE_SENSORS
     void setSensorManager(SensorManager * sensorManager)
     {
@@ -50,6 +59,34 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
     {
         sanityCheckParameters();
     }
+}
+
+bool SlaveBoard::handleParameterMessage(parameter_message parameter)
+{
+
+    if (isVerbose())
+    {
+        printParameterMessage(parameter);
+    }
+#ifdef USE_LEDS
+    if (ledManager && ledManager->handleParameterMessage(parameter))
+    {
+        return true;
+    }
+#endif
+#ifdef USE_SENSORS
+    if (sensorManager && sensorManager->handleParameterMessage(parameter))
+    {
+        return true;
+    }
+#endif
+#ifdef USE_MOTOR
+    if (motorManager && motorManager->handleParameterMessage(parameter))
+    {
+        return true;
+    }
+#endif
+    return ParameterManager::handleParameterMessage(parameter);
 }
 
 void SlaveBoard::loop()

@@ -1,6 +1,6 @@
 #ifdef DISPLAY_MANAGER
 #include "displayManager.h"
-
+#include "pins.h"
 #define MISO_PIN -1 // Automatically assigned with ESP8266 if not defined
 // #define MOSI_PIN 25 // Automatically assigned with ESP8266 if not defined
 // #define SCLK_PIN 26 // Automatically assigned with ESP8266 if not defined
@@ -26,31 +26,29 @@ uint8_t DisplayManager::rgbTo332(uint8_t r, uint8_t g, uint8_t b)
     return (r & 0xE0) | ((g & 0xE0) >> 3) | (b >> 6);
 }
 
-void DisplayManager::begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
-                           int RST_PIN, int BL_PIN, SPIClass *spi,
-                           int miso_pin)
-
+void DisplayManager::begin(SPIClass *spi)
 {
+
     Arduino_DataBus *bus = new Arduino_HWSPI(
-        DC_PIN,   // DC
-        CS_PIN,   // CS
-        SCLK_PIN, // SCK
-        MOSI_PIN, // MOSI
-        miso_pin, // MISO pin (optional)
-        spi,      // shared SPI bus
-        true      // is_shared_interface
+        DISPLAY_DC,   // DC
+        DISPLAY_CS,   // CS
+        DISPLAY_SCL,  // SCK
+        DISPLAY_MOSI, // MOSI
+        DISPLAY_MISO, // MISO pin (optional)
+        spi,          // shared SPI bus
+        true          // is_shared_interface
     );
     gfx = new Arduino_ST7796(
-        bus, RST_PIN, 0, true, 320, 480, 0, 0);
+        bus, DISPLAY_RST, 0, true, 320, 480, 0, 0);
     if (!gfx->begin())
     {
         Serial.println("Failed to initialize display");
         return;
     }
     gfx->fillScreen(0x0000); // Clear screen with black color
-    pinMode(BL_PIN, OUTPUT);
-    digitalWrite(BL_PIN, HIGH); // Turn on backlight
-    gfx->setRotation(1);        // landscape
+    pinMode(DISPLAY_BL, OUTPUT);
+    digitalWrite(DISPLAY_BL, HIGH); // Turn on backlight
+    gfx->setRotation(1);            // landscape
     gfx->fillScreen(0x0000);
 #if DISPLAY_USE_DOUBLE_BUFFER
     canvas = new GFXcanvas8(gfx->width(), gfx->height());
@@ -178,7 +176,8 @@ void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalH
 
 #endif
 }
-void DisplayManager::showText(const String &text, int x, int y, int size, uint8_t color)
+
+void DisplayManager::showText(const std::string &text, int x, int y, int size, uint8_t color)
 {
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (!canvas)
@@ -193,7 +192,7 @@ void DisplayManager::showText(const String &text, int x, int y, int size, uint8_
     gfx->setTextSize(size);
     gfx->setTextColor(color332To565(color), color332To565(0xFF));
     gfx->setCursor(x, y);
-    gfx->print(text);
+    gfx->print(text.c_str());
 #endif
 }
 

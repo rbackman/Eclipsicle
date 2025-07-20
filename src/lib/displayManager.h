@@ -3,6 +3,7 @@
 #include <Arduino_GFX_Library.h>
 #include <Adafruit_GFX.h>
 #include <SPI.h>
+#include "shared.h"
 
 // #ifndef DISPLAY_USE_DOUBLE_BUFFER
 // #define DISPLAY_USE_DOUBLE_BUFFER 1
@@ -33,15 +34,21 @@ class DisplayManager
     int _BL_PIN;
 
 public:
-    void showText(const String &text, int x, int y, int size = 2, uint8_t color = 0xFF);
+    void showText(const std::string &text, int x, int y, int size = 2, uint8_t color = 0xFF);
     void showGraph(float *data, int len, int x, int y, int w, int h);
     void showParticles();
     void clear();
-    void begin(int DC_PIN, int CS_PIN, int SCLK_PIN, int MOSI_PIN,
-               int RST_PIN, int BL_PIN, SPIClass *spi = &SPI,
-               int MISO_PIN = -1);
+    void begin(SPIClass *spi = &SPI);
     void showBars(const int *values, int len, int x, int y, int w, int h, uint8_t color = 0xFF);
     void drawBar(int index, int x, int y, int w, float h, int totalHeight, float hue);
+    void displayMenu(const std::vector<std::string> &menuItems)
+    {
+        clear();
+        for (size_t i = 0; i < menuItems.size(); ++i)
+        {
+            showText(menuItems[i], 10, 10 + i * 20);
+        }
+    }
 
 private:
     Arduino_GFX *gfx;

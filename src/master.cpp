@@ -17,7 +17,7 @@ void MasterBoard::init()
 
     serialManager = new SerialManager(512);
     menuManager = new MenuManager();
-
+    menuManager->selectMenu(MENU_MAIN);
     meshManager = new MeshnetManager();
 
     std::vector<MacAddress> slaves = {
@@ -48,6 +48,22 @@ void MasterBoard::init()
                                           SensorState(SLIDER, 0, SLIDER5, MCP_CS),
                                       },
                                       &spiBus);
+
+#ifdef DISPLAY_MANAGER
+    displayManager = new DisplayManager();
+    displayManager->begin(&spiBus);
+    // displayManager = new DisplayManager();
+    //   displayManager->begin(DISPLAY_DC, DISPLAY_CS, SCL_PIN, SDA_PIN,
+    //                         DISPLAY_RST, DISPLAY_BL, &sensorSPI, DOUT_PIN);
+    //   //  turn on the display backlight
+
+    displayManager->showText("Tesseratica Controller", 10, 10, 2, 0xFF);
+    displayManager->showText("Ready!", 10, 30, 2, 0xFF);
+    //   // show macaddress
+    std::string macAddress = meshManager->getMacAddress();
+    std::string text = "MAC: " + macAddress;
+    displayManager->showText(text.c_str(), 10, 50, 2, 0xFF);
+#endif
 
     Serial.println("\n\nMaster initialized\n\n");
 };
@@ -85,6 +101,11 @@ void MasterBoard::update()
     sensorManager->updateSensors();
     serialManager->updateSerial();
 
+    if (menuManager->isMenuChanged())
+    {
+        auto menuItems = menuManager->getMenuItems();
+        displayManager->displayMenu(menuItems);
+    }
     if (menuManager->messageAvailable())
     {
         auto message = menuManager->getMessage();

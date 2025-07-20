@@ -358,6 +358,7 @@ MenuID MenuManager::getParentMenu(MenuID type)
     {
         return it->second.second;
     }
+    Serial.printf("Menu %d not found\n", type);
     return MENU_IDLE;
 }
 

@@ -71,29 +71,7 @@ public:
   void loop();
   bool handleString(String command);
   void handleJson(JsonDocument &doc);
-  bool handleParameterMessage(parameter_message parameter)
-  {
-
-#ifdef USE_LEDS
-    if (ledManager && ledManager->handleParameterMessage(parameter))
-    {
-      return true;
-    }
-#endif
-#ifdef USE_SENSORS
-    if (sensorManager && sensorManager->handleParameterMessage(parameter))
-    {
-      return true;
-    }
-#endif
-#ifdef USE_MOTOR
-    if (motorManager && motorManager->handleParameterMessage(parameter))
-    {
-      return true;
-    }
-#endif
-    return ParameterManager::handleParameterMessage(parameter);
-  }
+  bool handleParameterMessage(parameter_message parameter);
 };
 
 #endif

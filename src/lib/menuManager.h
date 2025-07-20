@@ -25,6 +25,7 @@ private:
     int textOffset = 0;
     bool verticalAlignment = true; // Set this flag to true for vertical alignment, false for horizontal
     bool parameterChanged = false;
+    bool menuChanged = false;
     param_change lastParameter;
 
 public:
@@ -37,6 +38,12 @@ public:
     bool messageAvailable() const
     {
         return parameterChanged;
+    }
+    bool isMenuChanged()
+    {
+        auto changed = menuChanged;
+        menuChanged = false; // Reset after checking
+        return changed;
     }
     param_change getMessage()
     {
@@ -68,6 +75,7 @@ public:
             {
                 currentMenu = MENU_ROOT;
                 selectedMenu = 0; // Reset selected menu
+                menuChanged = true;
                 printMenu();
                 return true;
             }
@@ -75,6 +83,7 @@ public:
             {
                 currentMenu = getParentMenu(currentMenu);
                 selectedMenu = 0; // Reset selected menu
+                menuChanged = true;
                 printMenu();
                 return true;
             }
@@ -94,6 +103,7 @@ public:
             {
                 currentMenu = menuID;
                 selectedMenu = 0; // Reset selected menu
+                menuChanged = true;
                 printMenu();
                 return true;
             }
@@ -103,7 +113,13 @@ public:
     }
     std::vector<MenuID> getChildrenOfMenu(MenuID type);
     std::string getMenuName(MenuID type, int MaxSize = 6);
-
+    void selectMenu(MenuID type)
+    {
+        currentMenu = type;
+        selectedMenu = 0; // Reset selected menu
+        menuChanged = true;
+        Serial.printf("Selected menu: %s\n", getMenuName(type).c_str());
+    }
     std::string getMenuPath(MenuID type, MenuID root);
     MenuID getParentMenu(MenuID type);
     MenuID getMenuByName(const std::string &name)
