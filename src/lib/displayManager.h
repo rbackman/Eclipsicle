@@ -46,6 +46,7 @@ public:
         clear();
         for (size_t i = 0; i < menuItems.size(); ++i)
         {
+            Serial.printf("Menu item %d: %s\n", i, menuItems[i].c_str());
             showText(menuItems[i], 10, 10 + i * 20);
         }
     }

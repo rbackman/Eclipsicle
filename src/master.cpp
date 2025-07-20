@@ -63,6 +63,7 @@ void MasterBoard::init()
     std::string macAddress = meshManager->getMacAddress();
     std::string text = "MAC: " + macAddress;
     displayManager->showText(text.c_str(), 10, 50, 2, 0xFF);
+    delay(2000); // Wait for 2 seconds to show the text
 #endif
 
     Serial.println("\n\nMaster initialized\n\n");
@@ -103,6 +104,7 @@ void MasterBoard::update()
 
     if (menuManager->isMenuChanged())
     {
+
         auto menuItems = menuManager->getMenuItems();
         displayManager->displayMenu(menuItems);
     }

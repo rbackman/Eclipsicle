@@ -274,7 +274,6 @@ bool MenuManager::handleSensorMessage(sensor_message message)
 
             if (used)
             {
-                Serial.printf("Menu Changed: %s\n", getMenuName(currentMenu).c_str());
 
                 return true;
             }
