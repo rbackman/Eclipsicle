@@ -123,7 +123,7 @@ void MeshnetManager::sendParametersToSlaves(ParameterID paramID, int value)
     {
         if (esp_now_send(_slaves[i].data(), (uint8_t *)&data, sizeof(data)) != ESP_OK)
         {
-            Serial.println("Error sending parameter data");
+            // Serial.println("Error sending parameter data");
         }
         else
         {

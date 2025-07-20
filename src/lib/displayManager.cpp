@@ -262,7 +262,7 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
     const int baseX = 100; // previously 20
     const int barWidth = 40;
     const int spacing = 10;
-    const int totalHeight = 100;
+    const int totalHeight = 160;
     const int baseY = gfx->height() - 40;
 
     bool fullRedraw = forceClear || firstDraw || items.size() != lastParams.size() || header != lastHeader;
@@ -308,15 +308,15 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
 #endif
             // draw the bar itself
             drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, totalHeight, items[i].normalized);
-            if (i == selectedIndex)
-            {
-#if DISPLAY_USE_DOUBLE_BUFFER
-                if (canvas)
-                    canvas->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, 0xFF);
-#else
-                gfx->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, color332To565(0xFF));
-#endif
-            }
+            //             if (i == selectedIndex)
+            //             {
+            // #if DISPLAY_USE_DOUBLE_BUFFER
+            //                 if (canvas)
+            //                     canvas->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, 0xFF);
+            // #else
+            //                 gfx->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, color332To565(0xFF));
+            // #endif
+            //             }
             showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
             showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
         }
