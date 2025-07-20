@@ -309,6 +309,7 @@ void SensorManager::updateSensors()
             }
             sensor->value = value;
             sensor->changed = true;
+            return;
         }
     }
     else

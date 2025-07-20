@@ -4,66 +4,83 @@
 #include <ArduinoJson.h>
 bool MenuManager::handleSensorMessage(sensor_message message)
 {
+
     bool used = false;
     if (message.sensorType == SLIDER)
     {
 
-        if (menuMode == MENU_MODE_EDIT_MODE)
+        auto activeparams = getParametersForMenu(currentMenu);
+        // debug for now
+        int pindex = -1;
+        auto name = getSensorName(message.sensorId);
+        if (equalsIgnoreCase(name, "SLIDER1"))
+            pindex = 0;
+        else if (equalsIgnoreCase(name, "SLIDER2"))
+            pindex = 1;
+        else if (equalsIgnoreCase(name, "SLIDER3"))
+            pindex = 2;
+        else if (equalsIgnoreCase(name, "SLIDER4"))
+            pindex = 3;
+        else if (equalsIgnoreCase(name, "SLIDER5"))
+            pindex = 4;
+        if (pindex < 0 || pindex >= activeparams.size())
         {
-
-            auto activeparams = getParametersForMenu(currentMenu);
-            // debug for now
-
-            Serial.printf("Slider Message: %s %d %d\n", getSensorName(message.sensorId), message.sensorId, message.value);
+            Serial.printf("Slider %s not found in active parameters %d of %d\n", name.c_str(), pindex, activeparams.size());
 
             return false; // disable slider for now
-
-            // try
-            // {
-            //     for (int paramIndex = 0; paramIndex < activeparams.size(); paramIndex++)
-            //     {
-
-            //         if ((message.sensorId == SLIDER1 && paramIndex == 0) ||
-            //             (message.sensorId == SLIDER2 && paramIndex == 1) ||
-            //             (message.sensorId == SLIDER3 && paramIndex == 2) ||
-            //             (message.sensorId == SLIDER4 && paramIndex == 3) ||
-            //             (message.sensorId == SLIDER5 && paramIndex == 4))
-            //         {
-
-            //             auto paramID = activeparams[paramIndex];
-            //             auto param = getIntParameter(paramID);
-
-            //             int val = lerp(0, 255, param.min, param.max, message.value);
-            //             // Serial.printf("Param[%d]  Slider: %d %s => %d\n", paramID, message.value, param.name.c_str(), val);
-
-            //             if (val != param.value)
-            //             {
-            //                 if (isBoolParameter(paramID))
-            //                 {
-            //                     setBool(paramID, val != 0);
-            //                 }
-            //                 else
-            //                 {
-            //                     setValue(paramID, val);
-            //                 }
-
-            //                 meshManager->sendParametersToSlaves(paramID, val);
-            //                 used = true;
-            //             }
-            //         }
-
-            //         if (used)
-            //         {
-            //             updateMenu();
-            //             return true;
-            //         }
-            //     }
-            // }
-            // catch (const std::exception &e)
-            // {
-            //     Serial.println("Error in Slider Processing");
-            // }
         }
+        auto paramID = activeparams[pindex];
+        auto paramName = getParameterName(paramID);
+
+        Serial.printf("Slider set : %s %d \n", paramName.c_str(), message.value);
+
+        return false; // disable slider for now
+
+        // try
+        // {
+        //     for (int paramIndex = 0; paramIndex < activeparams.size(); paramIndex++)
+        //     {
+
+        //         if ((message.sensorId == SLIDER1 && paramIndex == 0) ||
+        //             (message.sensorId == SLIDER2 && paramIndex == 1) ||
+        //             (message.sensorId == SLIDER3 && paramIndex == 2) ||
+        //             (message.sensorId == SLIDER4 && paramIndex == 3) ||
+        //             (message.sensorId == SLIDER5 && paramIndex == 4))
+        //         {
+
+        //             auto paramID = activeparams[paramIndex];
+        //             auto param = getIntParameter(paramID);
+
+        //             int val = lerp(0, 255, param.min, param.max, message.value);
+        //             // Serial.printf("Param[%d]  Slider: %d %s => %d\n", paramID, message.value, param.name.c_str(), val);
+
+        //             if (val != param.value)
+        //             {
+        //                 if (isBoolParameter(paramID))
+        //                 {
+        //                     setBool(paramID, val != 0);
+        //                 }
+        //                 else
+        //                 {
+        //                     setValue(paramID, val);
+        //                 }
+
+        //                 meshManager->sendParametersToSlaves(paramID, val);
+        //                 used = true;
+        //             }
+        //         }
+
+        //         if (used)
+        //         {
+        //             updateMenu();
+        //             return true;
+        //         }
+        //     }
+        // }
+        // catch (const std::exception &e)
+        // {
+        //     Serial.println("Error in Slider Processing");
+        // }
     }
     else if (message.sensorType == DIAL)
     {
@@ -375,41 +392,38 @@ std::vector<std::string> MenuManager::getMenuItems()
         menuText.push_back(".");
         return menuText;
     }
-    if (menuMode == MENU_MODE_MENU_CHOOSER)
+
+    auto availableMenus = getChildrenOfMenu(currentMenu);
+    for (const auto &amenu : availableMenus)
     {
-        auto availableMenus = getChildrenOfMenu(currentMenu);
-        for (const auto &amenu : availableMenus)
+        std::string name = getMenuName(amenu, 8);
+        menuText.push_back(name);
+    }
+
+    auto activeParams = getParametersForMenu(currentMenu);
+    for (const auto &param : activeParams)
+    {
+        auto name = getParameterName(param);
+        if (name.size() > 6)
         {
-            std::string name = getMenuName(amenu, 8);
-            menuText.push_back(name);
+            name = name.substr(0, 6);
+        }
+        else if (name.size() < 6)
+        {
+            name = name + std::string(6 - name.size(), ' ');
+        }
+        if (isBoolParameter(param)) // TODO:: figure how to get the value
+        {
+            auto menuName = "p:" + name;
+            menuText.push_back(menuName);
+        }
+        else
+        {
+            auto menuName = "p:" + name; // TODO:: figure how to get the value
+            menuText.push_back(menuName);
         }
     }
-    else if (menuMode == MENU_MODE_EDIT_MODE)
-    {
-        auto activeParams = getParametersForMenu(currentMenu);
-        for (const auto &param : activeParams)
-        {
-            auto name = getParameterName(param);
-            if (name.size() > 6)
-            {
-                name = name.substr(0, 6);
-            }
-            else if (name.size() < 6)
-            {
-                name = name + std::string(6 - name.size(), ' ');
-            }
-            if (isBoolParameter(param)) // TODO:: figure how to get the value
-            {
-                auto menuName = name;
-                menuText.push_back(menuName);
-            }
-            else
-            {
-                auto menuName = name; // TODO:: figure how to get the value
-                menuText.push_back(menuName);
-            }
-        }
-    }
+
     return menuText;
 
     // TODO: Implement the menu update logic
