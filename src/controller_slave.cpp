@@ -7,10 +7,24 @@
 SlaveBoard *slaveBoard;
 
 SerialManager *serialManager;
+MeshnetManager *meshManager;
+
 void setup()
 {
   serialManager = new SerialManager(512);
   slaveBoard = new SlaveBoard(serialManager);
+  meshManager = new MeshnetManager();
+
+  meshManager->setImageHandler([](const image_message &msg)
+                               { slaveBoard->getLEDManager()->setLEDImage(msg); });
+  meshManager->setTextHandler([](const text_message &msg)
+                              { slaveBoard->handleTextMessage(msg.text); });
+  // meshManager->setSensorHandler([](const sensor_message &msg)
+  //                               { slaveBoard->handleSensorMessage(msg); });
+  meshManager->setParameterHandler([](const parameter_message &msg)
+                                   { slaveBoard->handleParameterMessage(msg); });
+
+  meshManager->init();
 
   slaveBoard->getLEDManager()->addStrip(0, 122, LED_STATE_MULTI_ANIMATION,
                                         {{ANIMATION_TYPE_PARTICLES, -1, -1, {{PARAM_HUE, 100}, {PARAM_HUE_END, 300}, {PARAM_TIME_SCALE, 50}}}},

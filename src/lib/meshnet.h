@@ -86,10 +86,12 @@ private:
         //     Serial.println("Message failed to send");
         // }
     }
+
+private:
     static void OnDataRecv(const esp_now_recv_info_t *info, const uint8_t *incomingData, int len)
     {
 
-        uint8_t messageType = *incomingData;
+                uint8_t messageType = *incomingData;
         // Serial.println("got espnow Message type: " + String(messageType));
         if (messageType == MESSAGE_TYPE_IMAGE)
         {

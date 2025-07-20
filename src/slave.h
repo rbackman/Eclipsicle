@@ -73,10 +73,7 @@ public:
   void handleJson(JsonDocument &doc);
   bool handleParameterMessage(parameter_message parameter)
   {
-    if (isVerbose())
-    {
-      printParameterMessage(parameter);
-    }
+
 #ifdef USE_LEDS
     if (ledManager && ledManager->handleParameterMessage(parameter))
     {

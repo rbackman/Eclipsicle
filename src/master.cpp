@@ -20,10 +20,12 @@ void MasterBoard::init()
 
     meshManager = new MeshnetManager();
 
-    // std::vector<MacAddress> slaves = {
-    //     {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, // Broadcast address
-    // };
-    // meshManager->connectSlaves(slaves);
+    std::vector<MacAddress> slaves = {
+
+        {0x98, 0x88, 0xE0, 0x03, 0xFF, 0x58}, // Slave1 98:88:E0:03:FF:58
+
+    };
+    meshManager->connectSlaves(slaves);
 
 #ifdef USE_AUDIO
     audioManager = new AudioManager();

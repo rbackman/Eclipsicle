@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 60,
+    "value": 51,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 120,
+    "value": 140,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -80,7 +80,7 @@
   "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 5,
+    "value": 9,
     "name": "Width",
     "min": 1,
     "max": 60
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 255,
+    "value": 21,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -128,7 +128,7 @@
   "PARAM_LIFE": {
     "id": 16,
     "type": "int",
-    "value": -1,
+    "value": 17,
     "name": "Life",
     "min": -1,
     "max": 100
@@ -216,7 +216,7 @@
   "PARAM_CURRENT_LED": {
     "id": 34,
     "type": "int",
-    "value": 1,
+    "value": 0,
     "name": "CurrentLED",
     "min": 0,
     "max": 255
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 3.175,
+    "value": 10.039,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -312,7 +312,7 @@
   "PARAM_VELOCITY": {
     "id": 7,
     "type": "float",
-    "value": 20,
+    "value": -9.02,
     "name": "Vel",
     "min": -100,
     "max": 100
@@ -320,7 +320,7 @@
   "PARAM_ACCELERATION": {
     "id": 9,
     "type": "float",
-    "value": 0,
+    "value": -2.355,
     "name": "Accel",
     "min": -10,
     "max": 100

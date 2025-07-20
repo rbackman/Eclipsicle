@@ -932,6 +932,7 @@ bool StripState::handleParameterMessage(parameter_message parameter)
         {
             if (animations[i]->handleParameterMessage(parameter))
             {
+
                 animationTookParam = true;
             }
         }

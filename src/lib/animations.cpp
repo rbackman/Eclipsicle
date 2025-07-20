@@ -173,8 +173,6 @@ void ParticleAnimation::updateParticles()
 
     if (animCount++ > 1000)
     {
-        if (isVerbose())
-            LOG_PRINTF("Particle animation time scale: %f cycle: %d hueStart: %d hueEnd: %d brightness: %d fade: %d width: %d life: %d randomDrift: %d acceleration: %f maxSpeed: %f\n", timeScale, cycle, hueStart, hueEnd, brightness, fade, width, life, randomDrift, acceleration, maxSpeed);
         animCount = 0;
     }
     for (int i = 0; i < NUM_PARTICLES; i++)
