@@ -32,7 +32,11 @@ bool MenuManager::handleSensorMessage(sensor_message message)
         auto paramID = activeparams[pindex];
         auto paramName = getParameterName(paramID);
 
-        Serial.printf("Slider set : %s %d \n", paramName.c_str(), message.value);
+        Serial.printf("Set param %s %d from slider %s\n", paramName.c_str(), message.value, name.c_str());
+        lastParameter.paramID = paramID;
+        lastParameter.value = message.value;
+
+        parameterChanged = true;
 
         return false; // disable slider for now
 

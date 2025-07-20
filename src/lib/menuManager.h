@@ -11,6 +11,11 @@ enum MenuMode
     MENU_MODE_EDIT_MODE,
 };
 
+typedef struct param_change
+{
+    ParameterID paramID;
+    int value;
+} param_change;
 class MenuManager
 {
 private:
@@ -19,13 +24,24 @@ private:
     int selectedMenu;
     int textOffset = 0;
     bool verticalAlignment = true; // Set this flag to true for vertical alignment, false for horizontal
+    bool parameterChanged = false;
+    param_change lastParameter;
+
 public:
     MenuManager()
+        : currentMenu(MENU_ROOT), menuMode(MENU_MODE_MENU_CHOOSER), selectedMenu(0)
     {
-        currentMenu = MENU_ROOT;
-        menuMode = MENU_MODE_MENU_CHOOSER;
-        selectedMenu = 0;
+
         Serial.println("MenuManager initialized");
+    }
+    bool messageAvailable() const
+    {
+        return parameterChanged;
+    }
+    param_change getMessage()
+    {
+        parameterChanged = false;
+        return lastParameter;
     }
     bool handleSensorMessage(sensor_message message);
     bool handleTextMessage(std::string message)
@@ -47,6 +63,31 @@ public:
 
             std::string menuName = message.substr(5);
             trim(menuName);
+
+            if (equalsIgnoreCase(menuName, "root"))
+            {
+                currentMenu = MENU_ROOT;
+                selectedMenu = 0; // Reset selected menu
+                printMenu();
+                return true;
+            }
+            if (equalsIgnoreCase(menuName, "up"))
+            {
+                currentMenu = getParentMenu(currentMenu);
+                selectedMenu = 0; // Reset selected menu
+                printMenu();
+                return true;
+            }
+            if (equalsIgnoreCase(menuName, "all"))
+            {
+                for (const auto &menu : menuTypeMap)
+                {
+                    Serial.println(menu.second.first.c_str());
+                }
+
+                return true;
+            }
+
             auto menuID = getMenuByName(menuName);
             //  find in the list of menus
             if (menuID != MENU_IDLE)

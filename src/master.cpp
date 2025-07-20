@@ -17,7 +17,9 @@ void MasterBoard::init()
 
     serialManager = new SerialManager(512);
     menuManager = new MenuManager();
+
     meshManager = new MeshnetManager();
+
     // std::vector<MacAddress> slaves = {
     //     {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}, // Broadcast address
     // };
@@ -61,7 +63,10 @@ bool MasterBoard::processSensorMessage(sensor_message message)
 };
 bool MasterBoard::handleTextMessage(std::string command)
 {
-    menuManager->handleTextMessage(command);
+    if (menuManager->handleTextMessage(command))
+    {
+        return true;
+    }
     return ParameterManager::handleTextMessage(command);
 }
 void MasterBoard::update()
@@ -78,6 +83,12 @@ void MasterBoard::update()
     sensorManager->updateSensors();
     serialManager->updateSerial();
 
+    if (menuManager->messageAvailable())
+    {
+        auto message = menuManager->getMessage();
+        Serial.println("sending to slaves  : " + String(message.paramID) + " " + String(message.value));
+        meshManager->sendParametersToSlaves(message.paramID, message.value);
+    }
     if (sensorManager->messageAvailable())
     {
 
@@ -164,7 +175,8 @@ bool MasterBoard::handleParameterMessage(parameter_message parameter)
 
     if (!ParameterManager::handleParameterMessage(parameter))
     {
-// Handle the case where no manager processed the message
+        Serial.println("sending to slaves");
+        // Handle the case where no manager processed the message
 #ifdef MESH_NET
         meshManager->sendParametersToSlaves(parameter.paramID, parameter.value);
 #endif

@@ -81,6 +81,7 @@ public:
     bool handleTextMessage(std::string command);
     void handleJson(JsonDocument &doc);
     bool handleParameterMessage(parameter_message parameter);
+    void menuChangedParameters(parameter_message listener);
 };
 
 #endif
