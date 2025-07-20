@@ -258,7 +258,8 @@ void DisplayManager::showParticles()
 void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem> &items,
                                           int selectedIndex, const std::string &header, bool forceClear)
 {
-    const int baseX = 20;
+    // shift bars to the right so they align above the physical sliders
+    const int baseX = 100; // previously 20
     const int barWidth = 40;
     const int spacing = 10;
     const int totalHeight = 100;
@@ -299,12 +300,14 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
 #if DISPLAY_USE_DOUBLE_BUFFER
             if (canvas)
             {
-                canvas->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 28, 0x00);
+                // clear a larger area so the value text is fully erased
+                canvas->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 40, 0x00);
             }
 #else
-            gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 28, color332To565(0x00));
+            gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 40, color332To565(0x00));
 #endif
-            drawBar(i, baseX + i * spacing, baseY, barWidth, items[i].normalized, totalHeight, items[i].normalized);
+            // draw the bar itself
+            drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, totalHeight, items[i].normalized);
             if (i == selectedIndex)
             {
 #if DISPLAY_USE_DOUBLE_BUFFER
