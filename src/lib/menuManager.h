@@ -47,6 +47,7 @@ public:
     }
     int getSelectedIndex() const { return selectedMenu; }
     MenuMode getMenuMode() const { return menuMode; }
+    MenuID getCurrentMenu() const { return currentMenu; }
     param_change getMessage()
     {
         parameterChanged = false;

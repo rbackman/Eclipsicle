@@ -405,32 +405,14 @@ std::vector<std::string> MenuManager::getMenuItems()
     auto availableMenus = getChildrenOfMenu(currentMenu);
     for (const auto &amenu : availableMenus)
     {
-        std::string name = getMenuName(amenu, 8);
-        menuText.push_back(name);
+        menuText.push_back(getMenuName(amenu, 32));
     }
 
     auto activeParams = getParametersForMenu(currentMenu);
     for (const auto &param : activeParams)
     {
         auto name = getParameterName(param);
-        if (name.size() > 6)
-        {
-            name = name.substr(0, 6);
-        }
-        else if (name.size() < 6)
-        {
-            name = name + std::string(6 - name.size(), ' ');
-        }
-        if (isBoolParameter(param)) // TODO:: figure how to get the value
-        {
-            auto menuName = "p:" + name;
-            menuText.push_back(menuName);
-        }
-        else
-        {
-            auto menuName = "p:" + name; // TODO:: figure how to get the value
-            menuText.push_back(menuName);
-        }
+        menuText.push_back("p:" + name);
     }
 
     return menuText;

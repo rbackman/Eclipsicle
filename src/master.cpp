@@ -104,9 +104,45 @@ void MasterBoard::update()
 
     if (menuManager->isMenuChanged())
     {
-        auto menuItems = menuManager->getMenuItems();
         int selected = menuManager->getSelectedIndex();
-        displayManager->displayMenu(menuItems, selected);
+        if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
+        {
+            auto paramIDs = menuManager->getParametersForMenu(menuManager->getCurrentMenu());
+            std::vector<ParameterDisplayItem> params;
+            params.reserve(paramIDs.size());
+            for (auto id : paramIDs)
+            {
+                ParameterDisplayItem item;
+                item.name = getParameterName(id);
+                if (isIntParameter(id))
+                {
+                    auto p = getIntParameter(id);
+                    item.normalized = (float)(p.value - p.min) / (float)(p.max - p.min);
+                    item.valueText = std::to_string(p.value);
+                }
+                else if (isFloatParameter(id))
+                {
+                    auto p = getFloatParameter(id);
+                    item.normalized = (p.value - p.min) / (p.max - p.min);
+                    char buf[8];
+                    snprintf(buf, sizeof(buf), "%.2f", p.value);
+                    item.valueText = buf;
+                }
+                else if (isBoolParameter(id))
+                {
+                    auto p = getBoolParameter(id);
+                    item.normalized = p.value ? 1.0f : 0.0f;
+                    item.valueText = p.value ? "ON" : "OFF";
+                }
+                params.push_back(item);
+            }
+            displayManager->displayParameterBars(params, selected);
+        }
+        else
+        {
+            auto menuItems = menuManager->getMenuItems();
+            displayManager->displayMenu(menuItems, selected);
+        }
     }
     if (menuManager->messageAvailable())
     {

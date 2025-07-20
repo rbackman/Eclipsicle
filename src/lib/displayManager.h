@@ -5,6 +5,13 @@
 #include <SPI.h>
 #include "shared.h"
 
+struct ParameterDisplayItem
+{
+    std::string name;       // parameter label
+    float normalized;       // value from 0.0 to 1.0
+    std::string valueText;  // value string for display
+};
+
 // #ifndef DISPLAY_USE_DOUBLE_BUFFER
 // #define DISPLAY_USE_DOUBLE_BUFFER 1
 // #endif
@@ -63,6 +70,7 @@ public:
             showText(menuItems[i], 10, y, 2, textColor);
         }
     }
+    void displayParameterBars(const std::vector<ParameterDisplayItem> &items, int selectedIndex = -1);
 
 private:
     Arduino_GFX *gfx;
