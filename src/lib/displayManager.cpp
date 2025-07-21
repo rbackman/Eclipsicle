@@ -191,7 +191,7 @@ void DisplayManager::showText(const std::string &text, int x, int y, int size, u
     canvas->setTextSize(size);
     canvas->setTextColor(color, 0xFF);
     canvas->setCursor(x, y);
-    canvas->print(text);
+    canvas->println(text.c_str());
     flush();
 #else
     gfx->setTextSize(size);
