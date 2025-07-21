@@ -1,7 +1,8 @@
 
 #ifdef USE_AUDIO
 #include "audio.h"
-#include <driver/i2s.h>
+#include <driver/i2s_std.h>
+#include <math.h>
 
 #define USE_SPEAKER 1
 #define USE_MIC 1
@@ -9,6 +10,10 @@
 #define I2S_PORT I2S_NUM_0
 
 bool sdCardMounted = false;
+
+// handles for the new I2S driver
+i2s_chan_handle_t mic_chan;
+i2s_chan_handle_t spk_chan;
 
 #define I2S_SAMPLE_BIT_COUNT 16
 #define SOUND_SAMPLE_RATE 16000
@@ -79,71 +84,62 @@ bool micConnected = false;
 
 void i2s_mic_setup()
 {
-    const i2s_config_t i2s_config = {
-        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
-        .sample_rate = 16000,
-        .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-        .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-        .dma_buf_count = 8,
-        .dma_buf_len = 64,
-        .use_apll = false,
-        .tx_desc_auto_clear = true,
-        .fixed_mclk = 0};
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
+    i2s_new_channel(&chan_cfg, &mic_chan, NULL);
 
-    const i2s_pin_config_t pin_config = {
-        .bck_io_num = AUDIO_BCLK_PIN,
-        .ws_io_num = AUDIO_LRC_PIN,
-        .data_out_num = I2S_PIN_NO_CHANGE,
-        .data_in_num = AUDIO_DIN_PIN};
+    i2s_std_config_t std_cfg = {
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
+        .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
+        .gpio_cfg = {
+            .mclk = I2S_PIN_NO_CHANGE,
+            .bclk = AUDIO_BCLK_PIN,
+            .ws = AUDIO_LRC_PIN,
+            .dout = I2S_PIN_NO_CHANGE,
+            .din = AUDIO_DIN_PIN,
+        },
+    };
 
-    try
+    if (i2s_channel_init_std_mode(mic_chan, &std_cfg) == ESP_OK &&
+        i2s_channel_enable(mic_chan) == ESP_OK)
     {
-        i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
-        i2s_set_pin(I2S_NUM_0, &pin_config);
+        micConnected = true;
         Serial.println("Microphone I2S setup complete");
     }
-    catch (const std::exception &e)
+    else
     {
-        Serial.println(e.what());
         micConnected = false;
+        Serial.println("Failed to init microphone I2S");
     }
 }
 
 // I2S configuration for playback
 void i2s_playback_setup()
 {
-    const i2s_config_t i2s_config = {
-        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
-        .sample_rate = 16000,
-        .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-        .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
-        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-        .dma_buf_count = 8,
-        .dma_buf_len = 64,
-        .use_apll = false,
-        .tx_desc_auto_clear = true,
-        .fixed_mclk = 0};
+    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_1, I2S_ROLE_MASTER);
+    i2s_new_channel(&chan_cfg, NULL, &spk_chan);
 
-    const i2s_pin_config_t pin_config = {
-        .bck_io_num = AUDIO_BCLK_PIN,
-        .ws_io_num = AUDIO_LRC_PIN,
-        .data_out_num = AUDIO_SDA_PIN,
-        .data_in_num = AUDIO_DIN_PIN};
+    i2s_std_config_t std_cfg = {
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
+        .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO),
+        .gpio_cfg = {
+            .mclk = I2S_PIN_NO_CHANGE,
+            .bclk = AUDIO_BCLK_PIN,
+            .ws = AUDIO_LRC_PIN,
+            .dout = AUDIO_SDA_PIN,
+            .din = I2S_PIN_NO_CHANGE,
+        },
+    };
 
-    try
+    if (i2s_channel_init_std_mode(spk_chan, &std_cfg) == ESP_OK &&
+        i2s_channel_enable(spk_chan) == ESP_OK)
     {
-        i2s_driver_install(I2S_NUM_1, &i2s_config, 0, NULL);
-        i2s_set_pin(I2S_NUM_1, &pin_config);
+        micConnected = true; // Setup succeeded
         Serial.println("Speaker I2S setup complete");
-        micConnected = true; // Assuming the speaker setup is successful
     }
-    catch (const std::exception &e)
+    else
     {
-        Serial.println(e.what());
         micConnected = false;
+        Serial.println("Failed to init speaker I2S");
     }
 }
 
@@ -184,12 +180,12 @@ void AudioManager::playTone(int freq, int duration, float volume)
     }
 
     size_t bytesWritten = 0;
-    // use the playback I2S bus when writing samples. The microphone is
-    // connected to I2S_NUM_0 for RX only, so attempting to write to that port
-    // results in "TX mode is not enabled" errors. The speaker output is
-    // configured on I2S_NUM_1 which is in TX mode.
-    esp_err_t result = i2s_write(I2S_NUM_1, buffer, samples * sizeof(int16_t),
-                                 &bytesWritten, portMAX_DELAY);
+    // use the playback I2S channel when writing samples. The microphone uses
+    // a separate RX channel so writing to it would fail with "TX mode is not
+    // enabled".  The speaker output is handled via `spk_chan`.
+    esp_err_t result = i2s_channel_write(spk_chan, buffer,
+                                         samples * sizeof(int16_t), &bytesWritten,
+                                         portMAX_DELAY);
 
     if (result != ESP_OK)
     {
@@ -204,8 +200,8 @@ void AudioManager::playTone(int freq, int duration, float volume)
     // Play a short period of silence to stop the tone
     int16_t silence[100] = {0};
     // flush the output on the speaker I2S port
-    i2s_write(I2S_NUM_1, silence, sizeof(silence), &bytesWritten,
-              portMAX_DELAY);
+    i2s_channel_write(spk_chan, silence, sizeof(silence), &bytesWritten,
+                      portMAX_DELAY);
 }
 
 void AudioManager::init()
@@ -234,11 +230,28 @@ int AudioManager::getDecibel()
         Serial.println("Mic not connected.");
         return 0;
     }
+
     int32_t buffer32[64] = {0};
-    size_t bytes_read;
-    i2s_read(I2S_NUM_0, &buffer32, sizeof(buffer32), &bytes_read, portMAX_DELAY);
-    Serial.println("Decibels: " + String(buffer32[0]));
-    return buffer32[0];
+    size_t bytes_read = 0;
+    if (i2s_channel_read(mic_chan, buffer32, sizeof(buffer32), &bytes_read,
+                         portMAX_DELAY) != ESP_OK || bytes_read == 0)
+    {
+        Serial.println("Failed to read audio data");
+        return 0;
+    }
+
+    int samples = bytes_read / sizeof(int32_t);
+    double sum_sq = 0;
+    for (int i = 0; i < samples; ++i)
+    {
+        float sample = buffer32[i] / 32768.0f;
+        sum_sq += sample * sample;
+    }
+    float rms = sqrtf(sum_sq / samples);
+    int db = (int)(20.0f * log10f(rms + 1e-12f));
+
+    Serial.println("Decibels: " + String(db));
+    return db;
 }
 
 int frameCount = 0;
@@ -279,7 +292,9 @@ void AudioManager::update()
     {
         size_t bytesRead = 0;
         uint8_t buffer[512];
-        esp_err_t result = i2s_read(I2S_NUM_0, buffer, sizeof(buffer), &bytesRead, portMAX_DELAY);
+        esp_err_t result =
+            i2s_channel_read(mic_chan, buffer, sizeof(buffer), &bytesRead,
+                              portMAX_DELAY);
 
         if (result == ESP_OK && bytesRead > 0)
         {
@@ -355,7 +370,8 @@ void AudioManager::checkMic()
     size_t bytes_read;
     while (millis() - startTime < 1000) // Run for 5 seconds
     {
-        i2s_read(I2S_NUM_0, &Buffer, sizeof(Buffer), &bytes_read, portMAX_DELAY);
+        i2s_channel_read(mic_chan, &Buffer, sizeof(Buffer), &bytes_read,
+                         portMAX_DELAY);
         if (bytes_read > 0)
         {
             for (int i = 0; i < bytes_read / 4; i++)
