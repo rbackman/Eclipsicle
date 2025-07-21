@@ -12,8 +12,9 @@
 bool sdCardMounted = false;
 
 // handles for the new I2S driver
-i2s_chan_handle_t mic_chan;
-i2s_chan_handle_t spk_chan;
+i2s_chan_handle_t mic_chan; // RX channel for microphone
+i2s_chan_handle_t spk_chan; // TX channel for speaker
+bool speakerConnected = false;
 
 #define I2S_SAMPLE_BIT_COUNT 16
 #define SOUND_SAMPLE_RATE 16000
@@ -85,7 +86,15 @@ bool micConnected = false;
 void i2s_mic_setup()
 {
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
-    i2s_new_channel(&chan_cfg, &mic_chan, NULL);
+    // create both RX and TX channels on the same port so that mic_chan is
+    // guaranteed to be an RX channel. spk_chan will be configured later for
+    // playback.
+    if (i2s_new_channel(&chan_cfg, &mic_chan, &spk_chan) != ESP_OK)
+    {
+        Serial.println("Failed to allocate I2S channels");
+        micConnected = false;
+        return;
+    }
 
     i2s_std_config_t std_cfg = {
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
@@ -115,8 +124,12 @@ void i2s_mic_setup()
 // I2S configuration for playback
 void i2s_playback_setup()
 {
-    i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_1, I2S_ROLE_MASTER);
-    i2s_new_channel(&chan_cfg, NULL, &spk_chan);
+    // spk_chan was allocated alongside mic_chan in i2s_mic_setup()
+    if (spk_chan == NULL)
+    {
+        Serial.println("Speaker channel handle not initialized");
+        return;
+    }
 
     i2s_std_config_t std_cfg = {
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
@@ -133,12 +146,12 @@ void i2s_playback_setup()
     if (i2s_channel_init_std_mode(spk_chan, &std_cfg) == ESP_OK &&
         i2s_channel_enable(spk_chan) == ESP_OK)
     {
-        micConnected = true; // Setup succeeded
+        speakerConnected = true;
         Serial.println("Speaker I2S setup complete");
     }
     else
     {
-        micConnected = false;
+        speakerConnected = false;
         Serial.println("Failed to init speaker I2S");
     }
 }
