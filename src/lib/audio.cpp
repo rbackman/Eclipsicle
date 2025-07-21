@@ -86,10 +86,11 @@ bool micConnected = false;
 void i2s_mic_setup()
 {
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
-    // create both RX and TX channels on the same port so that mic_chan is
-    // guaranteed to be an RX channel. spk_chan will be configured later for
-    // playback.
-    if (i2s_new_channel(&chan_cfg, &mic_chan, &spk_chan) != ESP_OK)
+    // create both TX and RX channels on the same port. The first handle
+    // returned by i2s_new_channel is the TX channel, so pass spk_chan first
+    // and mic_chan second to ensure spk_chan is used for playback and
+    // mic_chan is used for recording.
+    if (i2s_new_channel(&chan_cfg, &spk_chan, &mic_chan) != ESP_OK)
     {
         Serial.println("Failed to allocate I2S channels");
         micConnected = false;
