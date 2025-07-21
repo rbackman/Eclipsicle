@@ -348,25 +348,19 @@ void DisplayManager::flush()
     {
         uint16_t w = canvas->width();
         uint16_t h = canvas->height();
-        static uint16_t *line = nullptr;
-        static uint16_t line_w = 0;
-        if (line_w < w)
+        static bool palette_init = false;
+        static uint16_t palette[256];
+        if (!palette_init)
         {
-            if (line)
-                free(line);
-            line = (uint16_t *)malloc(sizeof(uint16_t) * w);
-            line_w = w;
-        }
-        uint8_t *buf = canvas->getBuffer();
-        for (uint16_t y = 0; y < h; y++)
-        {
-            for (uint16_t x = 0; x < w; x++)
+            for (int i = 0; i < 256; ++i)
             {
-                uint8_t c = buf[y * w + x];
-                line[x] = color332To565(c);
+                palette[i] = color332To565(i);
             }
-            gfx->draw16bitBeRGBBitmap(0, y, line, w, 1);
+            palette_init = true;
         }
+
+        uint8_t *buf = canvas->getBuffer();
+        gfx->drawIndexedBitmap(0, 0, buf, palette, w, h);
     }
 #endif
 }
