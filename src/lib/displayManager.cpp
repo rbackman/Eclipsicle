@@ -357,13 +357,24 @@ void DisplayManager::flush()
             line = (uint16_t *)malloc(sizeof(uint16_t) * w);
             line_w = w;
         }
+        static bool lookup_init = false;
+        static uint16_t color_lut[256];
+        if (!lookup_init)
+        {
+            for (int i = 0; i < 256; ++i)
+            {
+                color_lut[i] = color332To565(i);
+            }
+            lookup_init = true;
+        }
+
         uint8_t *buf = canvas->getBuffer();
         for (uint16_t y = 0; y < h; y++)
         {
+            uint8_t *row = buf + y * w;
             for (uint16_t x = 0; x < w; x++)
             {
-                uint8_t c = buf[y * w + x];
-                line[x] = color332To565(c);
+                line[x] = color_lut[row[x]];
             }
             gfx->draw16bitBeRGBBitmap(0, y, line, w, 1);
         }
