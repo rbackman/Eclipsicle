@@ -3,29 +3,12 @@
 #include "audio.h"
 #include <driver/i2s.h>
 
-// #define USE_SPEAKER 1
+#define USE_SPEAKER 1
 #define USE_MIC 1
-// #define USE_SD 1
 
-// #define AUDIO_OUT_PIN 25 // DAC output pin
-
-// SPIClass spi(VSPI); // Create a new SPI instance
-
-#define SD_CS_PIN 15 // SD Card Chip Select
-#define SD_MOSI 23   // SD Card MOSI
-#define SD_MISO 19   // SD Card MISO
-#define SD_SCK 2     // SD Card SCK
 #define I2S_PORT I2S_NUM_0
 
 bool sdCardMounted = false;
-
-// I2S configuratio
-#define I2S_WS 18
-#define I2S_SCK 5
-// Mic
-#define I2S_MIC_SD 26
-// Speaker
-#define I2S_SPEAKER_SD 25
 
 #define I2S_SAMPLE_BIT_COUNT 16
 #define SOUND_SAMPLE_RATE 16000
@@ -110,15 +93,16 @@ void i2s_mic_setup()
         .fixed_mclk = 0};
 
     const i2s_pin_config_t pin_config = {
-        .bck_io_num = I2S_BCLK,
-        .ws_io_num = I2S_LRC,
+        .bck_io_num = AUDIO_BCLK_PIN,
+        .ws_io_num = AUDIO_LRC_PIN,
         .data_out_num = I2S_PIN_NO_CHANGE,
-        .data_in_num = I2S_MIC_SD};
+        .data_in_num = AUDIO_DIN_PIN};
 
     try
     {
         i2s_driver_install(I2S_NUM_0, &i2s_config, 0, NULL);
         i2s_set_pin(I2S_NUM_0, &pin_config);
+        Serial.println("Microphone I2S setup complete");
     }
     catch (const std::exception &e)
     {
@@ -144,13 +128,23 @@ void i2s_playback_setup()
         .fixed_mclk = 0};
 
     const i2s_pin_config_t pin_config = {
-        .bck_io_num = I2S_BCLK,
-        .ws_io_num = I2S_LRC,
-        .data_out_num = I2S_SPEAKER_SD,
-        .data_in_num = I2S_PIN_NO_CHANGE};
+        .bck_io_num = AUDIO_BCLK_PIN,
+        .ws_io_num = AUDIO_LRC_PIN,
+        .data_out_num = AUDIO_SDA_PIN,
+        .data_in_num = AUDIO_DIN_PIN};
 
-    i2s_driver_install(I2S_NUM_1, &i2s_config, 0, NULL);
-    i2s_set_pin(I2S_NUM_1, &pin_config);
+    try
+    {
+        i2s_driver_install(I2S_NUM_1, &i2s_config, 0, NULL);
+        i2s_set_pin(I2S_NUM_1, &pin_config);
+        Serial.println("Speaker I2S setup complete");
+        micConnected = true; // Assuming the speaker setup is successful
+    }
+    catch (const std::exception &e)
+    {
+        Serial.println(e.what());
+        micConnected = false;
+    }
 }
 
 AudioManager::AudioManager()
@@ -158,22 +152,22 @@ AudioManager::AudioManager()
 
     init();
 }
-void AudioManager::debugAudio()
-{
-    // size_t bytesRead = 0;
-    // esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, 0);
+// void AudioManager::debugAudio()
+// {
+//     size_t bytesRead = 0;
+//     esp_err_t result = i2s_read(I2S_PORT, &Buffer, BufferNumBytes, &bytesRead, 0);
 
-    // if (result == ESP_OK && bytesRead > 0)
-    // {
-    //     int16_t samplesRead = bytesRead / 2;
-    //     int amplitude = getAmplitude(Buffer, samplesRead);
-    //     printAmplitude(amplitude);
-    // }
-    // else
-    // {
-    //     Serial.println("Failed to read audio data");
-    // }
-}
+//     if (result == ESP_OK && bytesRead > 0)
+//     {
+//         int16_t samplesRead = bytesRead / 2;
+//         int amplitude = getAmplitude(Buffer, samplesRead);
+//         printAmplitude(amplitude);
+//     }
+//     else
+//     {
+//         Serial.println("Failed to read audio data");
+//     }
+// }
 
 void AudioManager::playTone(int freq, int duration, float volume)
 {
@@ -227,9 +221,16 @@ void AudioManager::init()
 }
 int AudioManager::getDecibel()
 {
+    Serial.println("Getting decibel level...");
+    if (!micConnected)
+    {
+        Serial.println("Mic not connected.");
+        return 0;
+    }
     int32_t buffer32[64] = {0};
     size_t bytes_read;
     i2s_read(I2S_NUM_0, &buffer32, sizeof(buffer32), &bytes_read, portMAX_DELAY);
+    Serial.println("Decibels: " + String(buffer32[0]));
     return buffer32[0];
 }
 

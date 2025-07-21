@@ -96,32 +96,6 @@ bool MenuManager::handleSensorMessage(sensor_message message)
     {
         int nummenus = numMenus();
 
-#ifdef USE_AUDIO
-
-        if (message.sensorId == BUTTON_TRIGGER)
-        {
-            audioManager->playTone(1000, 100, 5);
-            meshManager->sendParametersToSlaves(PARAM_BEAT, 255);
-            Serial.println("Trigger Button");
-        }
-        if (message.sensorId == BUTTON_LEFT)
-        {
-            audioManager->playTone(800, 100, 5);
-        }
-        if (message.sensorId == BUTTON_RIGHT)
-        {
-            audioManager->playTone(600, 100, 5);
-        }
-        if (message.sensorId == BUTTON_UP)
-        {
-            audioManager->playTone(400, 100, 5);
-        }
-        if (message.sensorId == BUTTON_DOWN)
-        {
-            audioManager->playTone(200, 100, 5);
-        }
-
-#endif
         if (message.value == 1)
         {
 
@@ -143,34 +117,6 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                     _menuChanged = true;
                     // used = true;
                 }
-
-#ifdef USE_AUDIO
-                if (message.sensorId == BUTTON_TRIGGER)
-                {
-
-                    if (currentMenu == MENU_AUDIO)
-                    {
-                        if (!audioManager->isRecordingAudio())
-                        {
-                            Serial.println("Recording Audio");
-                            audioManager->record();
-                        }
-                        else
-                        {
-                            Serial.println("Playing Audio");
-                            audioManager->stop();
-                        }
-                    }
-                }
-                if (message.sensorId == BUTTON_RIGHT)
-                {
-                    audioManager->play();
-                }
-                else if (message.sensorId == BUTTON_UP)
-                {
-                    audioManager->debugAudio();
-                }
-#endif
             }
             else if (menuMode == MENU_MODE_MENU_CHOOSER)
             {

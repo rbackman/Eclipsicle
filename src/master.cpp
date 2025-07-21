@@ -2,10 +2,6 @@
 
 #include <Arduino.h>
 
-#ifdef USE_AUDIO
-#include "audio.h"
-#endif
-
 #include <SPI.h>
 
 #include <ArduinoJson.h>
@@ -26,11 +22,6 @@ void MasterBoard::init()
 
     };
     meshManager->connectSlaves(slaves);
-
-#ifdef USE_AUDIO
-    audioManager = new AudioManager();
-    // audioManager->playTone(1500, 100, 5);
-#endif
 
     spiBus.begin(SCL_PIN, DOUT_PIN, SDA_PIN, MCP_CS);
     pinMode(MCP_CS, OUTPUT);
@@ -66,6 +57,11 @@ void MasterBoard::init()
     delay(2000); // Wait for 2 seconds to show the text
 #endif
 
+#ifdef USE_AUDIO
+    audioManager = new AudioManager();
+    // audioManager->playTone(1500, 100, 5);
+#endif
+
     Serial.println("\n\nMaster initialized\n\n");
 };
 
@@ -77,6 +73,59 @@ bool MasterBoard::processSensorMessage(sensor_message message)
         Serial.println("Eror Not a sensor message");
         return false;
     }
+
+#ifdef USE_AUDIO
+
+    // if (message.sensorId == BUTTON_TRIGGER)
+    // {
+
+    //     if (currentMenu == MENU_AUDIO)
+    //     {
+    //         if (!audioManager->isRecordingAudio())
+    //         {
+    //             Serial.println("Recording Audio");
+    //             audioManager->record();
+    //         }
+    //         else
+    //         {
+    //             Serial.println("Playing Audio");
+    //             audioManager->stop();
+    //         }
+    //     }
+    // }
+    // if (message.sensorId == BUTTON_RIGHT)
+    // {
+    //     audioManager->play();
+    // }
+    // else if (message.sensorId == BUTTON_UP)
+    // {
+    //     audioManager->debugAudio();
+    // }
+
+    if (message.sensorId == BUTTON_TRIGGER)
+    {
+        audioManager->playTone(1000, 100, 5);
+        meshManager->sendParametersToSlaves(PARAM_BEAT, 255);
+        Serial.println("Trigger Button");
+    }
+    if (message.sensorId == BUTTON_LEFT)
+    {
+        audioManager->playTone(800, 100, 5);
+    }
+    if (message.sensorId == BUTTON_RIGHT)
+    {
+        audioManager->playTone(600, 100, 5);
+    }
+    if (message.sensorId == BUTTON_UP)
+    {
+        audioManager->playTone(400, 100, 5);
+    }
+    if (message.sensorId == BUTTON_DOWN)
+    {
+        audioManager->playTone(200, 100, 5);
+    }
+
+#endif
 
     return menuManager->handleSensorMessage(message);
 };
@@ -91,7 +140,7 @@ bool MasterBoard::handleTextMessage(std::string command)
 void MasterBoard::update()
 {
 #ifdef USE_AUDIO
-    audioManager->update();
+    // audioManager->update();
 
     auto decibels = audioManager->getDecibel();
     if (decibels > 0)

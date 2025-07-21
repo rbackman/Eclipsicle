@@ -11,6 +11,9 @@
 #include "lib/displayManager.h"
 #endif
 
+#ifdef USE_AUDIO
+#include "lib/audio.h"
+#endif
 #ifdef USE_SENSORS
 
 #include "lib/sensors.h"
@@ -49,6 +52,9 @@ private:
 #endif
 #ifdef DISPLAY_MANAGER
     DisplayManager *displayManager = nullptr;
+#endif
+#ifdef USE_AUDIO
+    AudioManager *audioManager = nullptr;
 #endif
 
 #ifdef USE_SENSORS
