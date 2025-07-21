@@ -142,11 +142,11 @@ void MasterBoard::update()
 #ifdef USE_AUDIO
     // audioManager->update();
 
-    auto decibels = audioManager->getDecibel();
-    if (decibels > 0)
-    {
-        Serial.println("Decibels: " + String(decibels));
-    }
+    // auto decibels = audioManager->getDecibel();
+    // if (decibels > 0)
+    // {
+    //     Serial.println("Decibels: " + String(decibels));
+    // }
 #endif
     sensorManager->updateSensors();
     serialManager->updateSerial();
