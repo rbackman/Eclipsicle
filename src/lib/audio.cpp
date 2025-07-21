@@ -100,11 +100,11 @@ void i2s_mic_setup()
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
         .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
         .gpio_cfg = {
-            .mclk = I2S_PIN_NO_CHANGE,
-            .bclk = AUDIO_BCLK_PIN,
-            .ws = AUDIO_LRC_PIN,
-            .dout = I2S_PIN_NO_CHANGE,
-            .din = AUDIO_DIN_PIN,
+            .mclk = GPIO_NUM_NC,
+            .bclk = (gpio_num_t)AUDIO_BCLK_PIN,
+            .ws = (gpio_num_t)AUDIO_LRC_PIN,
+            .dout = GPIO_NUM_NC,
+            .din = (gpio_num_t)AUDIO_DIN_PIN,
         },
     };
 
@@ -130,16 +130,20 @@ void i2s_playback_setup()
         Serial.println("Speaker channel handle not initialized");
         return;
     }
-
+    //  .mclk = GPIO_NUM_NC,
+    //             .bclk = (gpio_num_t)AUDIO_BCLK_PIN,
+    //             .ws = (gpio_num_t)AUDIO_LRC_PIN,
+    //             .dout = GPIO_NUM_NC,
+    //             .din = (gpio_num_t)AUDIO_DIN_PIN,
     i2s_std_config_t std_cfg = {
         .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
         .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_STEREO),
         .gpio_cfg = {
-            .mclk = I2S_PIN_NO_CHANGE,
-            .bclk = AUDIO_BCLK_PIN,
-            .ws = AUDIO_LRC_PIN,
-            .dout = AUDIO_SDA_PIN,
-            .din = I2S_PIN_NO_CHANGE,
+            .mclk = GPIO_NUM_NC,
+            .bclk = (gpio_num_t)AUDIO_BCLK_PIN,
+            .ws = (gpio_num_t)AUDIO_LRC_PIN,
+            .dout = GPIO_NUM_NC,
+            .din = (gpio_num_t)AUDIO_DIN_PIN,
         },
     };
 
@@ -247,7 +251,8 @@ int AudioManager::getDecibel()
     int32_t buffer32[64] = {0};
     size_t bytes_read = 0;
     if (i2s_channel_read(mic_chan, buffer32, sizeof(buffer32), &bytes_read,
-                         portMAX_DELAY) != ESP_OK || bytes_read == 0)
+                         portMAX_DELAY) != ESP_OK ||
+        bytes_read == 0)
     {
         Serial.println("Failed to read audio data");
         return 0;
@@ -307,7 +312,7 @@ void AudioManager::update()
         uint8_t buffer[512];
         esp_err_t result =
             i2s_channel_read(mic_chan, buffer, sizeof(buffer), &bytesRead,
-                              portMAX_DELAY);
+                             portMAX_DELAY);
 
         if (result == ESP_OK && bytesRead > 0)
         {
