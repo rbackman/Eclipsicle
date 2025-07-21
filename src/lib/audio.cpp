@@ -184,7 +184,12 @@ void AudioManager::playTone(int freq, int duration, float volume)
     }
 
     size_t bytesWritten = 0;
-    esp_err_t result = i2s_write(I2S_NUM_0, buffer, samples * sizeof(int16_t), &bytesWritten, portMAX_DELAY);
+    // use the playback I2S bus when writing samples. The microphone is
+    // connected to I2S_NUM_0 for RX only, so attempting to write to that port
+    // results in "TX mode is not enabled" errors. The speaker output is
+    // configured on I2S_NUM_1 which is in TX mode.
+    esp_err_t result = i2s_write(I2S_NUM_1, buffer, samples * sizeof(int16_t),
+                                 &bytesWritten, portMAX_DELAY);
 
     if (result != ESP_OK)
     {
@@ -198,7 +203,9 @@ void AudioManager::playTone(int freq, int duration, float volume)
 
     // Play a short period of silence to stop the tone
     int16_t silence[100] = {0};
-    i2s_write(I2S_NUM_0, silence, sizeof(silence), &bytesWritten, portMAX_DELAY);
+    // flush the output on the speaker I2S port
+    i2s_write(I2S_NUM_1, silence, sizeof(silence), &bytesWritten,
+              portMAX_DELAY);
 }
 
 void AudioManager::init()
