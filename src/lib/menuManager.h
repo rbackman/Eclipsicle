@@ -4,6 +4,31 @@
 #include "menus.h"
 #include <Arduino.h>
 #include "string_utils.h"
+
+#ifndef TESS_MENU
+enum MenuID
+{
+    MENU_IDLE,
+    MENU_ROOT,
+    MENU_MAIN,
+    MENU_SETTINGS,
+    MENU_INFO,
+    MENU_MAX
+};
+const std::map<MenuID, std::pair<std::string, MenuID>> menuTypeMap = {
+    {MENU_IDLE, {"Idle", MENU_ROOT}},
+    {MENU_ROOT, {"Root", MENU_IDLE}},
+    {MENU_SETTINGS, {"Settings", MENU_ROOT}},
+    {MENU_INFO, {"Info", MENU_ROOT}},
+};
+
+const std::map<MenuID, std::vector<ParameterID>> menuParameters = {
+
+    {MENU_IDLE, {PARAM_REPEAT, PARAM_OFFSET, PARAM_TIME_SCALE, PARAM_SCROLL_SPEED, PARAM_BRIGHTNESS}},
+
+};
+#endif
+
 enum MenuMode
 {
 
@@ -131,7 +156,7 @@ public:
         currentMenu = type;
         selectedMenu = 0; // Reset selected menu
         _menuChanged = true;
-        }
+    }
     std::string getMenuPath(MenuID type, MenuID root);
     std::string getCurrentMenuPath()
     {
