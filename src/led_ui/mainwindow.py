@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QColor
 
+from make_strips import makeTess
 from parameter_menu import ParameterMenuWidget
 from serial_console import SerialConsole, DEFAULT_BAUD
 from device_selector import DeviceSelector
@@ -20,7 +21,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, port):
         super().__init__()
-
+        makeTess()
         self.console = SerialConsole(port, baud=DEFAULT_BAUD)
 
         self.parameter_menu = ParameterMenuWidget(self.console)

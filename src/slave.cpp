@@ -1,5 +1,6 @@
 #ifdef SLAVE_BOARD
 #include "slave.h"
+#include "boardConfigs/ledNodes.h"
 
 SlaveBoard::SlaveBoard(SerialManager *serialManager)
     : ParameterManager(SLAVE_NAME, {PARAM_SHOW_FPS}),
@@ -8,6 +9,15 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
     this->serialManager = serialManager;
     // Constructor implementation
 
+#ifdef TESSERATICA_SEGMENT
+
+    const auto &structure = generateFullTesseratica();
+    // serializeStructure(structure);
+    Serial.println("Structure: ");
+    serializeJson(structure, Serial);
+    Serial.println();
+
+#endif
 #ifdef USE_LEDS
     ledManager = new LEDManager();
 
@@ -128,11 +138,6 @@ void SlaveBoard::loop()
     {
         motorManager->update();
     }
-#endif
-
-#ifdef DISPLAY_MANAGER
-
-    displayManager.update();
 #endif
 
 #ifdef USE_PROFILER
