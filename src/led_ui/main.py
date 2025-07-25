@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
 
 from device_selector import DeviceSelector
 
+
 from mainwindow import MainWindow
 
 
@@ -28,5 +29,6 @@ def start_app():
 
 
 if __name__ == '__main__':
+
     print("Starting ESP32 LED Controller UI...")
     start_app()

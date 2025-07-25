@@ -216,6 +216,29 @@ class LED3DWidget(QWidget):
                 self._update_camera()
                 self.save_nodes()
                 return True
+
+        if string.startswith("segments:"):
+            parts = string.split(":")
+            if len(parts) >= 3:
+                segmentName = parts[1]
+                rest = parts[2:]
+
+                strip = self.strips.setdefault(strip_index, {
+                    "nodes": [],
+                    "led_count": 0,
+                    "led_colors": [],
+                })
+                strip["nodes"] = []
+                strip["led_count"] = 0
+                strip["led_colors"] = []
+                for name in segment_names:
+                    if name in ParameterIDMap.SEGMENT_MAP:
+                        strip["nodes"].append(
+                            (ParameterIDMap.SEGMENT_MAP[name], 0.0, 0.0, 0.0))
+                self._rebuild_positions()
+                self._update_scatter()
+                self._update_camera()
+                return True
         return False
 
     def parse_rle(self, data):

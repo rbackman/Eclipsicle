@@ -1,4 +1,4 @@
-#ifdef TESSERATICA_FRAGMENT
+#ifdef TESSERATICA_FRAGMENT_SMALL
 
 #include "shared.h"
 makeRig("Tesseratica", {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC});
