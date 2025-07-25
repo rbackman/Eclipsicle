@@ -5,9 +5,9 @@
 #define DOUT_PIN 8
 #define MCP_CS 12
 #define AUDIO_BCLK_PIN 37
-#define AUDIO_LRC_PIN 38
-#define AUDIO_DIN_PIN 42
-#define AUDIO_SDA_PIN 39
+#define AUDIO_WS_PIN 38
+#define AUDIO_DIN_PIN 39
+#define AUDIO_DOUT_PIN 42
 
 #define LED_PIN_1 17
 #define LED_PIN_2 16
