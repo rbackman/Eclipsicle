@@ -1,22 +1,58 @@
 #ifdef TESSERATICA_SEGMENT
+#pragma once
 #include "../lib/shared.h"
-const StructureDef tesseraticaStrip = {
-    "Tesseratica",
-    {{"A", {{-85.182, -90.626, 90.98}, {85.182, -90.626, 90.98}, {33.4, -39.42, 39.1}, {-33.4, -39, 39.4}, {-85.182, -90.626, 90.98}}},
-     {"B", {}}},
-    {{"C", {}}},
-    {{"D", {}}},
-    {"E", {{-90.5, -84.9, 90.8}, {-90.5, 84.9, 90.87}, {-39, 33.4, 39.4}, {-39, -33.4, 39.4}, {-90.5, -84.9, 90.8}}},
-    {{"F", {}}},
-    {{"G", {}}},
-    {{"H", {}}},
-    {"I", {{-85.182, 90.6, 91}, {85.182, 91, 90.6}, {33.4, 39, 39.421}, {-33.4, 39.42, 39.1}, {-85.182, 90.6, 91}}},
-    {"J", {}},
-    {"K", {}},
-    {"L", {}}};
 
-// fill in the additional segments by rotating around the y axis 90 degrees  each
+Vec3D rotateY(const Vec3D &p, int times90)
+{
+    // times90: 1 = 90°, 2 = 180°, 3 = 270°
+    int t = times90 % 4;
+    switch (t)
+    {
+    case 1:
+        return {p.z, p.y, -p.x};
+    case 2:
+        return {-p.x, p.y, -p.z};
+    case 3:
+        return {-p.z, p.y, p.x};
+    default:
+        return p; // 0° rotation
+    }
+}
 
+Vec3D rotateZ(const Vec3D &p, int times90)
+{
+    int t = times90 % 4;
+    switch (t)
+    {
+    case 1:
+        return {-p.y, p.x, p.z};
+    case 2:
+        return {-p.x, -p.y, p.z};
+    case 3:
+        return {p.y, -p.x, p.z};
+    default:
+        return p; // 0° rotation
+    }
+}
+
+std::vector<Vec3D> rotateSegmentZ(const Segment &segment, int times90)
+{
+    std::vector<Vec3D> points = segment.points;
+    for (auto &point : points)
+    {
+        point = rotateZ(point, times90);
+    }
+    return points;
+}
+std::vector<Vec3D> rotateSegmentY(const Segment &segment, int times90)
+{
+    std::vector<Vec3D> points = segment.points;
+    for (auto &point : points)
+    {
+        point = rotateY(point, times90);
+    }
+    return points;
+}
 // Create
 const std::vector<Vec3D> bigPoints = {
     {{-85.182, -90.626, 90.98}, {85.182, -90.626, 90.98}, {33.4, -39.42, 39.1}, {-33.4, -39, 39.4}, {-85.182, -90.626, 90.98}}};

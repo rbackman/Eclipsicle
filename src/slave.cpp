@@ -13,9 +13,9 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 
     const auto &structure = generateFullTesseratica();
     // serializeStructure(structure);
-    Serial.println("Structure: ");
-    serializeJson(structure, Serial);
-    Serial.println();
+    // Serial.println("Structure: ");
+    // serializeJson(structure, Serial);
+    // Serial.println();
 
 #endif
 #ifdef USE_LEDS
