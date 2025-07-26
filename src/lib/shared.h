@@ -415,6 +415,7 @@ struct AnimationParams
 struct Node3D
 {
     int index = 0; // index of the led in the strip
+    int index = 0; // index of the led in the strip
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;

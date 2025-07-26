@@ -1,6 +1,7 @@
 #ifdef SLAVE_BOARD
 #include "slave.h"
 #include "boardConfigs/ledNodes.h"
+#include "boardConfigs/ledNodes.h"
 
 SlaveBoard::SlaveBoard(SerialManager *serialManager)
     : ParameterManager(SLAVE_NAME, {PARAM_SHOW_FPS}),
