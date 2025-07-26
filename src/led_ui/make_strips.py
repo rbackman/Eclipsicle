@@ -114,7 +114,7 @@ def generate_node_file(structure: StructureDef, segment_names: List[str], leds_p
             continue
 
         seg = segment_map[name]
-        led_line = f"nodes:{name}:"
+        led_line = f"segments:{name}:"
         cumulative = 0.0
 
         for i in range(len(seg.points)):
@@ -123,7 +123,12 @@ def generate_node_file(structure: StructureDef, segment_names: List[str], leds_p
 
             led_index = round(cumulative * leds_per_inch)
             p = seg.points[i]
-            led_line += f"{led_index},{p.x},{p.y},{p.z}:"
+            if i == len(seg.points) - 1:
+                # Last point, no trailing colon
+                led_line += f"{led_index},{p.x},{p.y},{p.z}"
+            else:
+                # Intermediate points, add trailing colon
+                led_line += f"{led_index},{p.x},{p.y},{p.z}:"
 
         lines.append(led_line)
 

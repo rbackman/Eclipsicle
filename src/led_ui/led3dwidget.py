@@ -48,7 +48,7 @@ class LED3DWidget(QWidget):
         self._update_scatter()
         self._update_camera()
         self._sim_state_changed(self.simulate_checkbox.checkState())
-        self.load_nodes("led_nodes.txt")
+        self.load_nodes("led_nodes_tess.txt")
 
     def request_nodes(self):
         # request nodes for all strips; device will broadcast
@@ -74,6 +74,9 @@ class LED3DWidget(QWidget):
                     first = nodes[0]
                     nodes.append((led_count, first[1], first[2], first[3]))
             else:
+                # Even if there are no nodes, ensure the strip has a properly shaped positions array
+                strip["positions"] = np.zeros((0, 3), dtype=float)
+                all_pos.append(strip["positions"])
                 continue
 
             pos = []
@@ -92,7 +95,12 @@ class LED3DWidget(QWidget):
                     t = j / max(1, count)
                     p = start_p + t * (end_p - start_p)
                     pos.append(p)
-            strip["positions"] = np.array(pos, dtype=float)
+
+            # Ensure positions array is always 2D with proper shape
+            if pos:
+                strip["positions"] = np.array(pos, dtype=float)
+            else:
+                strip["positions"] = np.zeros((0, 3), dtype=float)
             all_pos.append(strip["positions"])
 
         if all_pos:
@@ -130,7 +138,13 @@ class LED3DWidget(QWidget):
                 else:
                     disp = QColor(r, g, b)
                 display.append(disp.getRgbF())
-            color_arrays.append(np.array(display, dtype=float))
+
+            # Ensure color array is always 2D with proper shape
+            if display:
+                color_arrays.append(np.array(display, dtype=float))
+            else:
+                color_arrays.append(np.zeros((0, 4), dtype=float))
+
         if color_arrays:
             colors = np.concatenate(color_arrays, axis=0)
         else:
@@ -143,13 +157,22 @@ class LED3DWidget(QWidget):
             for strip_index, strip in self.strips.items():
                 nodes = strip.get("nodes", [])
                 led_count = strip.get("led_count", 0)
-                f.write(f"nodes:{strip_index}:{led_count}:{len(nodes)}:")
+                f.write(f"segments:{strip_index}:{led_count}:{len(nodes)}:")
                 for idx, x, y, z in nodes:
-                    f.write(f"{idx},{x},{y},{z}:")
+                    if (idx == len(nodes)-2):
+                        f.write(f"{idx},{x},{y},{z}")
+                    else:
+                        f.write(f"{idx},{x},{y},{z}:")
                 f.write("\n")
 
     def load_nodes(self, filename):
         """Load nodes from a file."""
+        # clear existing strips
+        self.strips.clear()
+        self.strips[0] = {"nodes": [], "led_count": 0, "led_colors": []}
+        self.positions = np.zeros((0, 3))
+        self.scatter.setData(pos=self.positions, size=5, color=[])
+        self.shape_item = None
         try:
             with open(filename,
                       "r") as f:
@@ -165,22 +188,22 @@ class LED3DWidget(QWidget):
 
     def process_string(self, string):
         if string.startswith("sim:"):
-            data = string.split("sim:", 1)[1].strip()
-            strip_index = 0
-            if ':' in data and data.split(':', 1)[0].isdigit():
-                prefix, data = data.split(':', 1)
-                strip_index = int(prefix)
-            colors = self.parse_rle(data)
-            strip = self.strips.setdefault(strip_index, {
-                "nodes": [],
-                "led_count": len(colors),
-                "led_colors": colors,
-            })
-            strip["led_colors"] = colors
-            strip["led_count"] = len(colors)
-            self._rebuild_positions()
-            self._update_scatter()
-            self._update_camera()
+            # data = string.split("sim:", 1)[1].strip()
+            # strip_index = 0
+            # if ':' in data and data.split(':', 1)[0].isdigit():
+            #     prefix, data = data.split(':', 1)
+            #     strip_index = int(prefix)
+            # colors = self.parse_rle(data)
+            # strip = self.strips.setdefault(strip_index, {
+            #     "nodes": [],
+            #     "led_count": len(colors),
+            #     "led_colors": colors,
+            # })
+            # strip["led_colors"] = colors
+            # strip["led_count"] = len(colors)
+            # self._rebuild_positions()
+            # self._update_scatter()
+            # self._update_camera()
             return True
         if string.startswith("nodes:"):
             parts = string.split(":")
@@ -219,22 +242,39 @@ class LED3DWidget(QWidget):
 
         if string.startswith("segments:"):
             parts = string.split(":")
+
             if len(parts) >= 3:
                 segmentName = parts[1]
                 rest = parts[2:]
+                nodes = []
+                led_count = 0
+                print(f"Processing segment: {segmentName} with data: {rest}")
+                if len(rest) < 1:
+                    print("No nodes found in segment data.")
+                    return False
+                for node_str in rest:
+                    if node_str and len(node_str) > 3:
+                        n_parts = node_str.split(",")
+                        print(f"Processing node: {n_parts}")
+                        if len(n_parts) >= 4:
+                            idx = int(n_parts[0])
+                            coords = tuple(float(x) for x in n_parts[1:4])
+                            nodes.append((idx, *coords))
+                            led_count = max(led_count, idx + 1)
 
-                strip = self.strips.setdefault(strip_index, {
-                    "nodes": [],
-                    "led_count": 0,
-                    "led_colors": [],
+                strip = self.strips.setdefault(len(self.strips), {
+                    "nodes": nodes,
+                    "led_count": led_count,
+                    "led_colors": [(255, 0, 0)] * led_count,
                 })
-                strip["nodes"] = []
-                strip["led_count"] = 0
-                strip["led_colors"] = []
-                for name in segment_names:
-                    if name in ParameterIDMap.SEGMENT_MAP:
-                        strip["nodes"].append(
-                            (ParameterIDMap.SEGMENT_MAP[name], 0.0, 0.0, 0.0))
+                strip["nodes"] = nodes
+                # strip["led_count"] = led_count
+                if len(strip["led_colors"]) < led_count:
+                    strip["led_colors"].extend(
+                        [(255, 0, 0)] * (led_count - len(strip["led_colors"]))
+                    )
+                elif len(strip["led_colors"]) > led_count:
+                    strip["led_colors"] = strip["led_colors"][:led_count]
                 self._rebuild_positions()
                 self._update_scatter()
                 self._update_camera()
