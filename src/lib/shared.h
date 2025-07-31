@@ -290,7 +290,7 @@ bool isFloatParameter(ParameterID id);
 bool isIntParameter(ParameterID id);
 
 std::vector<std::string> splitString(const std::string &path, char delimiter);
-std::vector<std::string> splitString(const std::string &path, char delimiter);
+
 // Maximum sizes
 #define MAX_TEXT_SIZE 144
 #define MAX_PIXLE_BYTES_SIZE 144
@@ -415,7 +415,7 @@ struct AnimationParams
 struct Node3D
 {
     int index = 0; // index of the led in the strip
-    int index = 0; // index of the led in the strip
+
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
