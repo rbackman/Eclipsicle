@@ -4,7 +4,7 @@
 #include <driver/i2s_std.h>
 #include <math.h>
 
-#define USE_SPEAKER 1
+// #define USE_SPEAKER 1
 #define USE_MIC 1
 
 #define I2S_PORT I2S_NUM_0
@@ -82,14 +82,11 @@ bool micConnected = false;
 //         .data_in_num = I2S_SD};
 //     i2s_set_pin(I2S_PORT, &pin_config);
 // }
-
 void i2s_mic_setup()
 {
     i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_0, I2S_ROLE_MASTER);
-    // create both RX and TX channels on the same port so that mic_chan is
-    // guaranteed to be an RX channel. spk_chan will be configured later for
-    // playback.
-    if (i2s_new_channel(&chan_cfg, &mic_chan, &spk_chan) != ESP_OK)
+
+    if (i2s_new_channel(&chan_cfg, &spk_chan, &mic_chan) != ESP_OK)
     {
         Serial.println("Failed to allocate I2S channels");
         micConnected = false;
@@ -97,15 +94,24 @@ void i2s_mic_setup()
     }
 
     i2s_std_config_t std_cfg = {
-        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(16000),
-        .slot_cfg = I2S_STD_PHILIPS_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_16BIT, I2S_SLOT_MODE_MONO),
-        .gpio_cfg = {
-            .mclk = GPIO_NUM_NC,
-            .bclk = (gpio_num_t)AUDIO_BCLK_PIN,
-            .ws = (gpio_num_t)AUDIO_LRC_PIN,
-            .dout = GPIO_NUM_NC,
-            .din = (gpio_num_t)AUDIO_DIN_PIN,
+        .clk_cfg = I2S_STD_CLK_DEFAULT_CONFIG(SOUND_SAMPLE_RATE),
+        .slot_cfg = {
+            .data_bit_width = I2S_DATA_BIT_WIDTH_16BIT,
+            .slot_mode = I2S_SLOT_MODE_STEREO,
+            .slot_mask = I2S_STD_SLOT_LEFT,
+            .ws_width = I2S_DATA_BIT_WIDTH_16BIT,
+            .ws_pol = false,
+            .bit_shift = true,
+            .left_align = false,
+            .big_endian = false,
+            .bit_order_lsb = false,
+
         },
+        .gpio_cfg = {.mclk = GPIO_NUM_NC, .bclk = (gpio_num_t)AUDIO_BCLK_PIN, .ws = (gpio_num_t)AUDIO_WS_PIN, .dout = GPIO_NUM_NC, .din = (gpio_num_t)AUDIO_DIN_PIN, .invert_flags = {
+                                                                                                                                                                         .mclk_inv = false,
+                                                                                                                                                                         .bclk_inv = false,
+                                                                                                                                                                         .ws_inv = false,
+                                                                                                                                                                     }},
     };
 
     if (i2s_channel_init_std_mode(mic_chan, &std_cfg) == ESP_OK &&
@@ -141,7 +147,7 @@ void i2s_playback_setup()
         .gpio_cfg = {
             .mclk = GPIO_NUM_NC,
             .bclk = (gpio_num_t)AUDIO_BCLK_PIN,
-            .ws = (gpio_num_t)AUDIO_LRC_PIN,
+            .ws = (gpio_num_t)AUDIO_WS_PIN,
             .dout = GPIO_NUM_NC,
             .din = (gpio_num_t)AUDIO_DIN_PIN,
         },
@@ -386,10 +392,10 @@ void AudioManager::checkMic()
     int totalSamples = 0;
 
     size_t bytes_read;
-    while (millis() - startTime < 1000) // Run for 5 seconds
+    while (millis() - startTime < 5000) // Run for 5 seconds
     {
         i2s_channel_read(mic_chan, &Buffer, sizeof(Buffer), &bytes_read,
-                         portMAX_DELAY);
+                         300);
         if (bytes_read > 0)
         {
             for (int i = 0; i < bytes_read / 4; i++)
@@ -402,6 +408,10 @@ void AudioManager::checkMic()
                 // totalSamples++;
                 Serial.printf("%d,", Buffer[i]);
             }
+        }
+        else
+        {
+            Serial.printf("No data read from mic\n");
         }
     }
     Serial.printf("Mic check complete. Non-zero samples: %d/%d\n", nonZeroCount, totalSamples);

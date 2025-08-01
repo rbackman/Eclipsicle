@@ -13,3 +13,9 @@ addStripToRig("Tesseratica", 2, 122, LED_STATE_MULTI_ANIMATION,
               {{0, -54.5, -54.5, -49.5}, {49, -54.5, -54.5, 49.5}, {73, -26.5, -26.5, 21}, {94, -26.5, -26.5, -21}, {122, -54.5, -54.5, -49.5}});
 
 #endif
+
+#ifdef TESSERATICA_FRAGMENT
+#include "shared.h"
+makeRig("Tesseratica", {0x40, 0x91, 0x51, 0xFB, 0xF7, 0xBC});
+
+#endif
