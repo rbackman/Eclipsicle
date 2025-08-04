@@ -410,6 +410,9 @@ struct AnimationParams
     int end = -1; // -1 means all LEDs
 
     std::map<ParameterID, float> params = {};
+    AnimationParams() = default;
+    AnimationParams(ANIMATION_TYPE t, int s, int e, std::map<ParameterID, float> p = {})
+        : type(t), start(s), end(e), params(p) {}
 };
 
 struct Node3D
@@ -419,6 +422,8 @@ struct Node3D
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
+    Node3D() = default;
+    Node3D( int index,float x, float y, float z) : index(index), x(x), y(y), z(z) {}
 };
 
 struct Vec3D

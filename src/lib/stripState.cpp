@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cctype>
 #include <sstream>
+#include <memory>
 #include "log.h"
 #include "string_utils.h"
 
@@ -122,27 +123,27 @@ std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_
     switch (animType)
     {
     case ANIMATION_TYPE_PARTICLES:
-        return std::make_unique<ParticleAnimation>(stripState, false, start, end, params);
+        return std::unique_ptr<ParticleAnimation>(new ParticleAnimation(stripState, false, start, end, params));
     case ANIMATION_TYPE_RAINBOW:
-        return std::make_unique<RainbowAnimation>(stripState, start, end, params);
+        return std::unique_ptr<RainbowAnimation>(new RainbowAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_DOUBLE_RAINBOW:
-        return std::make_unique<DoubleRainbowAnimation>(stripState, start, end, params);
+        return std::unique_ptr<DoubleRainbowAnimation>(new DoubleRainbowAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_SLIDER:
-        return std::make_unique<SliderAnimation>(stripState, start, end, params);
+        return std::unique_ptr<SliderAnimation>(new SliderAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_RANDOM:
-        return std::make_unique<RandomAnimation>(stripState, start, end, params);
+        return std::unique_ptr<RandomAnimation>(new RandomAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_BRICKS:
-        return std::make_unique<FallingBricksAnimation>(stripState, start, end, params);
+        return std::unique_ptr<FallingBricksAnimation>(new FallingBricksAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_NEBULA:
-        return std::make_unique<NebulaAnimation>(stripState, start, end, params);
+        return std::unique_ptr<NebulaAnimation>(new NebulaAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_RANDOM_PARTICLES:
-        return std::make_unique<ParticleAnimation>(stripState, true, start, end, params);
+        return std::unique_ptr<ParticleAnimation>(new ParticleAnimation(stripState, true, start, end, params));
     case ANIMATION_TYPE_SINGLE_COLOR:
-        return std::make_unique<SingleColorAnimation>(stripState, start, end, params);
+        return std::unique_ptr<SingleColorAnimation>(new SingleColorAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_SPHERE:
-        return std::make_unique<SphereAnimation>(stripState, start, end, params);
+        return std::unique_ptr<SphereAnimation>(new SphereAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_PLANE:
-        return std::make_unique<PlaneAnimation>(stripState, start, end, params);
+        return std::unique_ptr<PlaneAnimation>(new PlaneAnimation(stripState, start, end, params));
     default:
         throw std::invalid_argument("Unknown animation type");
     }

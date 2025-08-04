@@ -89,7 +89,7 @@ private:
     }
 
 private:
-    static void OnDataRecv(const esp_now_recv_info_t *info, const uint8_t *incomingData, int len)
+    static void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
     {
 
         uint8_t messageType = *incomingData;
