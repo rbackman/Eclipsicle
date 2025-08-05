@@ -1,5 +1,6 @@
 
 #pragma once
+#ifdef TESS_MENU
 #include "shared.h"
 #include "menus.h"
 #include <Arduino.h>
@@ -131,7 +132,7 @@ public:
         currentMenu = type;
         selectedMenu = 0; // Reset selected menu
         _menuChanged = true;
-        }
+    }
     std::string getMenuPath(MenuID type, MenuID root);
     std::string getCurrentMenuPath()
     {
@@ -173,3 +174,5 @@ public:
     void confirmMenus();
     std::vector<std::string> getMenuItems();
 };
+
+#endif
