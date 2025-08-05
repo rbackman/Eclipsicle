@@ -615,4 +615,45 @@ void PlaneAnimation::update()
     }
 }
 
+#ifdef LED_BASIC
+BasicScriptAnimation::BasicScriptAnimation(StripState *state, int start, int end, const std::string &script,
+                                           std::map<ParameterID, float> paramOverrides)
+    : StripAnimation(state, start, end, ANIMATION_TYPE_BASIC_SCRIPT, {}, paramOverrides)
+{
+    controller = state->getCachedBasicProgram(script, start, end);
+}
+
+void BasicScriptAnimation::update()
+{
+    if (!controller)
+    {
+        return;
+    }
+    for (const auto &p : getIntParameters())
+    {
+        controller->setParameterValue(getParameterName(p.id).c_str(), Value((double)p.value));
+    }
+    for (const auto &p : getFloatParameters())
+    {
+        controller->setParameterValue(getParameterName(p.id).c_str(), Value((double)p.value));
+    }
+    for (const auto &p : getBoolParameters())
+    {
+        controller->setParameterValue(getParameterName(p.id).c_str(), Value(p.value ? 1.0 : 0.0));
+    }
+    controller->runLoop(millis());
+}
+#else
+BasicScriptAnimation::BasicScriptAnimation(StripState *state, int start, int end, const std::string &script,
+                                           std::map<ParameterID, float> paramOverrides)
+    : StripAnimation(state, start, end, ANIMATION_TYPE_BASIC_SCRIPT, {}, paramOverrides)
+{
+    (void)script;
+}
+
+void BasicScriptAnimation::update()
+{
+}
+#endif
+
 #endif

@@ -4,6 +4,9 @@
 #include "shared.h"
 #include "parameterManager.h"
 #include <string>
+#ifdef LED_BASIC
+#include "ledBasic/BasicInterpreter.h"
+#endif
 
 class StripState;
 struct Particle
@@ -218,6 +221,18 @@ public:
                          paramOverrides)
     {
     }
+};
+
+class BasicScriptAnimation : public StripAnimation
+{
+#ifdef LED_BASIC
+    std::shared_ptr<BasicLEDController> controller;
+#endif
+
+public:
+    void update();
+    BasicScriptAnimation(StripState *state, int start, int end, const std::string &script,
+                         std::map<ParameterID, float> paramOverrides = {});
 };
 
 #endif
