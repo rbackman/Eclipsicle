@@ -30,6 +30,9 @@ private:
 
     float scrollPos = 0;
 
+    // last received LED Basic script
+    std::string basicScript;
+
     // nodes with LED indices and 3D positions
     std::vector<Node3D> nodes;
 
@@ -95,6 +98,8 @@ public:
     void setAll(led color);
     bool handleTextMessage(std::string command);
     bool parseAnimationScript(std::string script);
+    bool parseBasicScript(std::string script);
+    const std::string &getBasicScript() const { return basicScript; }
 
     void clearPixels();
     void clearPixel(int index);
