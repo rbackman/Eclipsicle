@@ -1,4 +1,5 @@
 
+#ifdef TESS_MENU
 
 #include "menuManager.h"
 #include <ArduinoJson.h>
@@ -482,3 +483,5 @@ std::vector<std::string> MenuManager::getMenuItems()
     // }
     // display.display();
 };
+
+#endif

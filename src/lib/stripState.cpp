@@ -12,6 +12,10 @@
 #include "log.h"
 #include "string_utils.h"
 
+#ifdef LED_BASIC
+static constexpr size_t BASIC_CACHE_LIMIT = 3;
+#endif
+
 int val = 0;
 int minr = 0;
 int maxr = 0;
@@ -144,6 +148,11 @@ std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_
         return std::unique_ptr<SphereAnimation>(new SphereAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_PLANE:
         return std::unique_ptr<PlaneAnimation>(new PlaneAnimation(stripState, start, end, params));
+#ifdef LED_BASIC
+    case ANIMATION_TYPE_BASIC_SCRIPT:
+        return std::unique_ptr<BasicScriptAnimation>(
+            new BasicScriptAnimation(stripState, start, end, stripState->getBasicScript(), params));
+#endif
     default:
         throw std::invalid_argument("Unknown animation type");
     }
@@ -676,6 +685,50 @@ bool StripState::parseAnimationScript(std::string script)
     }
     return true;
 }
+
+#ifdef LED_BASIC
+std::shared_ptr<BasicLEDController> StripState::getCachedBasicProgram(const std::string &script, int start, int end)
+{
+    int length = (end < 0) ? numLEDS - start : end - start + 1;
+    for (auto it = basicProgramCache.begin(); it != basicProgramCache.end(); ++it)
+    {
+        if (it->script == script && it->start == start && it->length == length)
+        {
+            auto controller = it->controller;
+            basicProgramCache.splice(basicProgramCache.begin(), basicProgramCache, it);
+            return controller;
+        }
+    }
+
+    auto controller = std::make_shared<BasicLEDController>(leds + start, length);
+    if (!controller->loadProgram(String(script.c_str())))
+    {
+        return nullptr;
+    }
+    controller->runSetup();
+    basicProgramCache.push_front({script, start, length, controller});
+    if (basicProgramCache.size() > BASIC_CACHE_LIMIT)
+    {
+        basicProgramCache.pop_back();
+    }
+    return controller;
+}
+#endif
+
+bool StripState::parseBasicScript(std::string script)
+{
+#ifdef LED_BASIC
+    replace(script, "|", "\n");
+    basicScript = script;
+    ledState = LED_STATE_SINGLE_ANIMATION;
+    animations.clear();
+    addAnimation(ANIMATION_TYPE_BASIC_SCRIPT, 0, numLEDS - 1);
+    return true;
+#else
+    (void)script;
+    return false;
+#endif
+}
 void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params)
 {
     if (index < 0 || index >= animations.size())
@@ -698,6 +751,11 @@ bool StripState::handleTextMessage(std::string command)
 {
 
     bool verbose = isVerbose();
+    if (startsWith(command, "basic:"))
+    {
+        std::string script = substring(command, 6);
+        return parseBasicScript(script);
+    }
     if (startsWith(command, "script:"))
     {
         std::string script = substring(command, 7);
