@@ -392,6 +392,7 @@ enum LED_STATE
     X(ANIMATION_TYPE_SINGLE_COLOR)     \
     X(ANIMATION_TYPE_SPHERE)           \
     X(ANIMATION_TYPE_PLANE)            \
+    X(ANIMATION_TYPE_BASIC_SCRIPT)     \
     X(ANIMATION_TYPE_IDLE)
 
 enum ANIMATION_TYPE
@@ -423,7 +424,7 @@ struct Node3D
     float y = 0.0f;
     float z = 0.0f;
     Node3D() = default;
-    Node3D( int index,float x, float y, float z) : index(index), x(x), y(y), z(z) {}
+    Node3D(int index, float x, float y, float z) : index(index), x(x), y(y), z(z) {}
 };
 
 struct Vec3D
@@ -472,7 +473,8 @@ static const std::map<ANIMATION_TYPE, std::string> ANIMATION_TYPE_NAMES = {
     {ANIMATION_TYPE_RANDOM_PARTICLES, "RANDOMPARTICLES"},
     {ANIMATION_TYPE_SINGLE_COLOR, "SINGLECOLOR"},
     {ANIMATION_TYPE_SPHERE, "SPHERE"},
-    {ANIMATION_TYPE_PLANE, "PLANE"}};
+    {ANIMATION_TYPE_PLANE, "PLANE"},
+    {ANIMATION_TYPE_BASIC_SCRIPT, "BASIC"}};
 
 const int LED_STATE_COUNT = LED_STATE_NAMES.size();
 

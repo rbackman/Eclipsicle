@@ -1,4 +1,4 @@
-#ifdef LED_BASIC
+#ifdef LED_BASIC_MAIN
 
 #include <Arduino.h>
 #include <FastLED.h>

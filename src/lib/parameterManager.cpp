@@ -32,12 +32,12 @@ ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> fi
     boolParams.reserve(boolParameterList.size());
     floatParams.reserve(floatParameterList.size());
 
-    if (filterParams.empty())
-    {
+    // if (filterParams.empty())
+    // {
 
-        Serial.printf("No filter params provided for %s\n", name.c_str());
-        return;
-    }
+    //     Serial.printf("No filter params provided for %s\n", name.c_str());
+    //     return;
+    // }
 
     // Set initial parameters based on filterParams
     for (const auto &param : intParameterList)

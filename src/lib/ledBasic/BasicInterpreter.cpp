@@ -1606,7 +1606,7 @@ Value BasicInterpreter::getVariable(const String &name)
 // Parameter Management Implementation
 // =============================================================================
 
-void BasicInterpreter::addParameter(const Parameter &param)
+void BasicInterpreter::addParameter(const BasicParameter &param)
 {
     parameters[param.name] = param;
     // Also set the parameter as a variable so BASIC programs can access it
@@ -1623,7 +1623,7 @@ void BasicInterpreter::setParameterValue(const String &name, const Value &value)
     }
 }
 
-Parameter *BasicInterpreter::getParameter(const String &name)
+BasicParameter *BasicInterpreter::getParameter(const String &name)
 {
     if (parameters.find(name) != parameters.end())
     {
@@ -1632,9 +1632,9 @@ Parameter *BasicInterpreter::getParameter(const String &name)
     return nullptr;
 }
 
-std::vector<Parameter> BasicInterpreter::getAllParameters() const
+std::vector<BasicParameter> BasicInterpreter::getAllParameters() const
 {
-    std::vector<Parameter> result;
+    std::vector<BasicParameter> result;
     for (const auto &pair : parameters)
     {
         result.push_back(pair.second);
@@ -1748,7 +1748,7 @@ String BasicLEDController::getStringVariable(const String &name)
 // Parameter Management for BasicLEDController
 // =============================================================================
 
-void BasicLEDController::addParameter(const Parameter &param)
+void BasicLEDController::addParameter(const BasicParameter &param)
 {
     if (interpreter)
     {
@@ -1764,7 +1764,7 @@ void BasicLEDController::setParameterValue(const String &name, const Value &valu
     }
 }
 
-Parameter *BasicLEDController::getParameter(const String &name)
+BasicParameter *BasicLEDController::getParameter(const String &name)
 {
     if (interpreter)
     {
@@ -1773,13 +1773,13 @@ Parameter *BasicLEDController::getParameter(const String &name)
     return nullptr;
 }
 
-std::vector<Parameter> BasicLEDController::getAllParameters() const
+std::vector<BasicParameter> BasicLEDController::getAllParameters() const
 {
     if (interpreter)
     {
         return interpreter->getAllParameters();
     }
-    return std::vector<Parameter>();
+    return std::vector<BasicParameter>();
 }
 
 void BasicLEDController::clearParameters()
