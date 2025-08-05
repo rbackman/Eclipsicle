@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
 )
 from data_tab_widget import DataTabWidget
 from animation_tab_widget import AnimationTabWidget
+from ledbasic_tab_widget import LEDBasicTabWidget
 
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QColor
@@ -26,6 +27,7 @@ ParameterDefaults: dict[str, dict] = {}
 
 CONFIG_DIR = os.path.join("data", "configurations")
 ANIM_DIR = os.path.join("data", "animations")
+BASIC_DIR = os.path.join("data", "ledbasic")
 
 
 def _load_anim_names() -> set:
@@ -361,6 +363,7 @@ class ParameterMenuWidget(QWidget):
         self.current_profile = ""
         os.makedirs(CONFIG_DIR, exist_ok=True)
         os.makedirs(ANIM_DIR, exist_ok=True)
+        os.makedirs(BASIC_DIR, exist_ok=True)
 
         # Parameter tab ---------------------------------------------------
         paramTab = QWidget()
@@ -388,6 +391,10 @@ class ParameterMenuWidget(QWidget):
         self.animation_tab = AnimationTabWidget(ANIM_DIR, console)
         self.tabs.addTab(self.animation_tab, "Animations")
         self.console.add_json_listener(self.animation_tab.json_received)
+
+        # LED Basic tab -------------------------------------------------
+        self.basic_tab = LEDBasicTabWidget(BASIC_DIR, console)
+        self.tabs.addTab(self.basic_tab, "LED Basic")
         self.setWindowTitle("ESP32 Pattern Controller")
         self.resize(760, 500)
         loadParameters()
@@ -652,6 +659,11 @@ class ParameterMenuWidget(QWidget):
             anims = [f for f in sorted(
                 os.listdir(ANIM_DIR)) if f.endswith('.led')]
             self.animation_tab.refresh_files(anims)
+        if hasattr(self, 'basic_tab'):
+            os.makedirs(BASIC_DIR, exist_ok=True)
+            basics = [f for f in sorted(
+                os.listdir(BASIC_DIR)) if f.endswith('.bas')]
+            self.basic_tab.refresh_files(basics)
 
     def apply_parameter_values(self):
         for prm in ParameterMap.values():

@@ -676,6 +676,14 @@ bool StripState::parseAnimationScript(std::string script)
     }
     return true;
 }
+
+bool StripState::parseBasicScript(std::string script)
+{
+    replace(script, "|", "\n");
+    basicScript = script;
+    // Integration with LED Basic interpreter would occur here
+    return true;
+}
 void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params)
 {
     if (index < 0 || index >= animations.size())
@@ -698,6 +706,11 @@ bool StripState::handleTextMessage(std::string command)
 {
 
     bool verbose = isVerbose();
+    if (startsWith(command, "basic:"))
+    {
+        std::string script = substring(command, 6);
+        return parseBasicScript(script);
+    }
     if (startsWith(command, "script:"))
     {
         std::string script = substring(command, 7);
