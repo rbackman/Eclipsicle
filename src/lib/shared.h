@@ -424,7 +424,7 @@ struct Node3D
     float y = 0.0f;
     float z = 0.0f;
     Node3D() = default;
-    Node3D( int index,float x, float y, float z) : index(index), x(x), y(y), z(z) {}
+    Node3D(int index, float x, float y, float z) : index(index), x(x), y(y), z(z) {}
 };
 
 struct Vec3D

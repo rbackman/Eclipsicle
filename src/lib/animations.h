@@ -4,6 +4,7 @@
 #include "shared.h"
 #include "parameterManager.h"
 #include <string>
+#include <memory>
 #ifdef LED_BASIC
 #include "ledBasic/BasicInterpreter.h"
 #endif

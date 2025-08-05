@@ -138,7 +138,7 @@ struct Value
 };
 
 // Parameter types for program customization
-enum ParameterType
+enum BasicParameterType
 {
     PARAM_BOOLEAN,
     PARAM_NUMBER,
@@ -146,10 +146,10 @@ enum ParameterType
 };
 
 // Parameter definition structure
-struct Parameter
+struct BasicParameter
 {
     String name;
-    ParameterType type;
+    BasicParameterType type;
     Value defaultValue;
     Value currentValue;
 
@@ -162,18 +162,18 @@ struct Parameter
     std::vector<String> enumValues;
 
     // Default constructor
-    Parameter() : name(""), type(PARAM_BOOLEAN), defaultValue(0.0), currentValue(0.0),
-                  minValue(0), maxValue(1), stepValue(1) {}
+    BasicParameter() : name(""), type(PARAM_BOOLEAN), defaultValue(0.0), currentValue(0.0),
+                       minValue(0), maxValue(1), stepValue(1) {}
 
-    Parameter(const String &n, bool defaultVal)
+    BasicParameter(const String &n, bool defaultVal)
         : name(n), type(PARAM_BOOLEAN), defaultValue(defaultVal ? 1.0 : 0.0),
           currentValue(defaultVal ? 1.0 : 0.0), minValue(0), maxValue(1), stepValue(1) {}
 
-    Parameter(const String &n, double defaultVal, double minVal, double maxVal, double step = 1.0)
+    BasicParameter(const String &n, double defaultVal, double minVal, double maxVal, double step = 1.0)
         : name(n), type(PARAM_NUMBER), defaultValue(defaultVal), currentValue(defaultVal),
           minValue(minVal), maxValue(maxVal), stepValue(step) {}
 
-    Parameter(const String &n, const std::vector<String> &values, int defaultIndex = 0)
+    BasicParameter(const String &n, const std::vector<String> &values, int defaultIndex = 0)
         : name(n), type(PARAM_ENUM), defaultValue((double)defaultIndex), currentValue((double)defaultIndex),
           minValue(0), maxValue(values.size() - 1), stepValue(1), enumValues(values) {}
 
@@ -339,7 +339,7 @@ class BasicInterpreter
 private:
     std::map<String, Value> variables;
     std::map<String, ASTNode *> functions;
-    std::map<String, Parameter> parameters;
+    std::map<String, BasicParameter> parameters;
     CRGB *leds;
     int numLeds;
     bool showCalled;
@@ -361,10 +361,10 @@ public:
     Value getVariable(const String &name);
 
     // Parameter management
-    void addParameter(const Parameter &param);
+    void addParameter(const BasicParameter &param);
     void setParameterValue(const String &name, const Value &value);
-    Parameter *getParameter(const String &name);
-    std::vector<Parameter> getAllParameters() const;
+    BasicParameter *getParameter(const String &name);
+    std::vector<BasicParameter> getAllParameters() const;
     void clearParameters();
 };
 
@@ -469,10 +469,10 @@ public:
     String getStringVariable(const String &name);
 
     // Parameter management
-    void addParameter(const Parameter &param);
+    void addParameter(const BasicParameter &param);
     void setParameterValue(const String &name, const Value &value);
-    Parameter *getParameter(const String &name);
-    std::vector<Parameter> getAllParameters() const;
+    BasicParameter *getParameter(const String &name);
+    std::vector<BasicParameter> getAllParameters() const;
     void clearParameters();
 };
 
