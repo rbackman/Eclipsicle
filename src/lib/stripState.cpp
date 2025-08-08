@@ -703,6 +703,7 @@ std::shared_ptr<BasicLEDController> StripState::getCachedBasicProgram(const std:
     auto controller = std::make_shared<BasicLEDController>(leds + start, length);
     if (!controller->loadProgram(String(script.c_str())))
     {
+        LOG_PRINTF("Failed to load BASIC program: %s\n", script.c_str());
         return nullptr;
     }
     controller->runSetup();

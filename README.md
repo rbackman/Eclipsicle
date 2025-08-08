@@ -31,9 +31,22 @@ the firmware, often solving size errors from `checkprogsize`.
   * `master.cpp` / `slave.cpp` – entry points for the two board roles
   * `ledManager.*` and `stripState.*` – LED strip state machine and animations
   * `sensors.*` – abstraction for buttons, sliders and other inputs
-  * `meshnet.*` – simple ESP‑Now based communication
+* `meshnet.*` – simple ESP‑Now based communication
 * `src/led_ui` – Python desktop tools for testing animations
 The UI environment setup is described in `src/led_ui/README.md`.
+
+### BASIC LED scripts
+
+The firmware contains a small BASIC interpreter that can drive LEDs from
+scripts sent over serial.  This feature is only compiled when the
+`LED_BASIC` flag is enabled in the build environment.  The provided
+`controller_slave` and `led_basic` environments in `platformio.ini`
+include this flag.  If the firmware is built without it, commands
+prefixed with `basic:` are ignored and no pattern updates occur.
+
+Send scripts by prefixing them with `basic:` and replacing newlines with
+`|`.  Example programs are provided as individual `.bas` files under
+`src/led_ui/data/ledbasic/`.
 
 There are two major components:
 1. Firmware written in C++ for the ESP32 (master and slave roles).
