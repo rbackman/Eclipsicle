@@ -1,6 +1,6 @@
 # Eclipsicle
 
-Eclipsicle is an ESP32 based light control project. The code is organized as a PlatformIO project with multiple build environments for different boards (master, slaves, tests).  A small Python UI for development lives under `src/led_ui`.
+Eclipsicle is an ESP32-S3 based light control project. The code is organized as a PlatformIO project with multiple build environments for different boards (master, slaves, tests).  A small Python UI for development lives under `src/led_ui`.
 
 ## Building
 
@@ -12,7 +12,7 @@ Install [PlatformIO](https://platformio.org/) and run for the desired environmen
 pio run -e master
 ```
 
-The `platformio.ini` file lists additional environments such as `slave_with_motor` or `master_with_audio` which enable optional features like audio playback or motor control. The file lists multiple "env" sections for different boards and options.
+The `platformio.ini` file lists numerous environments such as `master`, `controller_slave`, `tesseratica_controller`, `lightsword`, `led_basic`, `rgbw_test`, and `master_with_audio` which enable features like audio playback, sensors, or display control. Each environment appears in its own `[env:<name>]` section.
 
 If the firmware image exceeds the default 1.3 MB limit you can enlarge the
 application partition by disabling OTA support. Add the following line to the
