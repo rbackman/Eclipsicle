@@ -32,11 +32,11 @@ void MasterBoard::init()
                                           SensorState(BUTTON, BUTTON_6_PIN, BUTTON_DOWN),
                                           SensorState(BUTTON, BUTTON_5_PIN, BUTTON_LEFT),
                                           SensorState(BUTTON, BUTTON_4_PIN, BUTTON_RIGHT),
-                                          SensorState(SLIDER, 3, SLIDER1, MCP_CS),
-                                          SensorState(SLIDER, 2, SLIDER2, MCP_CS),
-                                          SensorState(SLIDER, 1, SLIDER3, MCP_CS),
-                                          SensorState(SLIDER, 4, SLIDER4, MCP_CS),
-                                          SensorState(SLIDER, 0, SLIDER5, MCP_CS),
+                                          SensorState(SLIDER, 3, SLIDER1, MCP_CS, 2),
+                                          SensorState(SLIDER, 2, SLIDER2, MCP_CS, 2),
+                                          SensorState(SLIDER, 1, SLIDER3, MCP_CS, 2),
+                                          SensorState(SLIDER, 4, SLIDER4, MCP_CS, 2),
+                                          SensorState(SLIDER, 0, SLIDER5, MCP_CS, 2),
                                       },
                                       &spiBus);
 

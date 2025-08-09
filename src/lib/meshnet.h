@@ -89,10 +89,10 @@ private:
     }
 
 private:
-    static void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
+    static void OnDataRecv(const esp_now_recv_info *recv_info, const uint8_t *data, int len)
     {
 
-        uint8_t messageType = *incomingData;
+        uint8_t messageType = *data;
         // Serial.println("got espnow Message type: " + String(messageType));
         if (messageType == MESSAGE_TYPE_IMAGE)
         {
@@ -106,7 +106,7 @@ private:
             // Serial.println("got image: " + String(msg.size));
             // Serial.println("Memory size before " + String(ESP.getFreeHeap()));
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             instance->handleImageMessage(msg);
         }
@@ -119,7 +119,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             instance->handleTextMessage(msg);
         }
@@ -132,7 +132,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             instance->handleSensorMessage(msg);
         }
@@ -145,7 +145,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             if (instance->_parameterHandler)
             {
@@ -165,7 +165,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             instance->handleTextMessage(msg);
         }
@@ -178,7 +178,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             instance->handleSensorMessage(msg);
         }
@@ -191,7 +191,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             if (instance->_parameterHandler)
             {
@@ -211,7 +211,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             instance->handleTextMessage(msg);
         }
@@ -224,7 +224,7 @@ private:
                 return;
             }
 
-            memcpy(&msg, incomingData, sizeof(msg));
+            memcpy(&msg, data, sizeof(msg));
 
             instance->handleSensorMessage(msg);
         }

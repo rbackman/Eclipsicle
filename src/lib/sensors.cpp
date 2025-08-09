@@ -72,10 +72,7 @@ SensorManager::SensorManager(SensorGrid sensors, SPIClass *spi) : sensorGrid(sen
             pinMode(sensors[i].csPin, OUTPUT);
             digitalWrite(sensors[i].csPin, HIGH); // Deselect the sensor
         }
-        if (sensors[i].type == DIAL || sensors[i].type == SLIDER)
-        {
-            sensors[i].tolerance = 5; // Set tolerance for DIAL and SLIDER sensors
-        }
+
 #ifdef USE_BUTTON_INTERRUPTS
         if (sensors[i].type == BUTTON)
         {
@@ -342,16 +339,14 @@ void SensorManager::updateSensors()
         }
         sensor->lastValues[4] = value;
 
-        int average = 0;
-        for (int i = 0; i < 5; i++)
-        {
-            average += sensor->lastValues[i];
-        }
-        average = average / 5;
+        int median = 0;
+        std::vector<int> temp(sensor->lastValues, sensor->lastValues + 5);
+        std::sort(temp.begin(), temp.end());
+        median = temp[2]; // Get the median value (3rd element in sorted array)
 
-        if (abs(average - sensor->value) > sensor->tolerance)
+        if (abs(median - sensor->value) > sensor->tolerance)
         {
-            sensor->value = average;
+            sensor->value = median;
             sensor->changed = true;
             if (isVerbose() || printSensor == currentSensor || printSensor == -2)
             {

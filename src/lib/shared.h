@@ -346,9 +346,9 @@ struct SensorState
     int lastValues[5] = {0, 0, 0, 0, 0};
     int lastButtonState = 1;
     unsigned long lastDebounceTime = 0;
-    int tolerance = 1;
+    int tolerance = 0;
     SensorState(SensorType t, int p, SensorID n) : type(t), pin(p), sensorID(n) {}
-    SensorState(SensorType t, int p, SensorID n, int cs) : type(t), pin(p), sensorID(n), csPin(cs) {}
+    SensorState(SensorType t, int p, SensorID n, int cs, int tol = 0) : type(t), pin(p), sensorID(n), csPin(cs), tolerance(tol) {}
 };
 struct led
 {
