@@ -136,22 +136,16 @@ void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b)
         break;
     }
 }
-void DisplayManager::drawBar(int index, int x, int y, int w, float newNorm, float oldNorm, int totalHeight)
+void DisplayManager::drawBar(int x, int y, int barWidth, float newNorm, float oldNorm, int totalHeight)
 {
-    if (index < 0 || index >= 5)
-    {
-        Serial.println("Index out of bounds for drawBar");
-        return;
-    }
+    const int topMargin = 4;
+    const int bottomMargin = 4;
+    int usableHeight = totalHeight - topMargin - bottomMargin;
+    int bottomY = y - bottomMargin;
+    int topY = bottomY - usableHeight;
 
-    int barWidth = w;
-    int newHeight = totalHeight * newNorm;
-    int oldHeight = totalHeight * oldNorm;
-
-    uint8_t color = 0xFF;
-
-    int barX = x + index * barWidth;
-    int bottomY = y;
+    int newHeight = usableHeight * newNorm;
+    int oldHeight = usableHeight * oldNorm;
 
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (!canvas)
@@ -159,42 +153,52 @@ void DisplayManager::drawBar(int index, int x, int y, int w, float newNorm, floa
 
     if (oldNorm == 0.0f)
     {
-        canvas->drawRect(barX, bottomY - totalHeight, barWidth, totalHeight, 0xFF);
+        canvas->drawRect(x, topY, barWidth, usableHeight, 0xFF);
     }
 
     if (newHeight > oldHeight)
     {
         for (int yy = bottomY - newHeight; yy < bottomY - oldHeight; ++yy)
         {
-            canvas->fillRect(barX + 1, yy, barWidth - 2, 1, color);
+            float level = (float)(bottomY - yy) / usableHeight;
+            float brightness = 1.0f - 0.5f * level;
+            uint8_t r, g, b;
+            hsvToRgb(2.0f / 3.0f, 1.0f, brightness, r, g, b);
+            uint8_t color = rgbTo332(r, g, b);
+            canvas->fillRect(x + 1, yy, barWidth - 2, 1, color);
         }
     }
     else if (newHeight < oldHeight)
     {
         for (int yy = bottomY - oldHeight; yy < bottomY - newHeight; ++yy)
         {
-            canvas->fillRect(barX + 1, yy, barWidth - 2, 1, 0x00);
+            canvas->fillRect(x + 1, yy, barWidth - 2, 1, 0x00);
         }
     }
     flush();
 #else
     if (oldNorm == 0.0f)
     {
-        gfx->drawRect(barX, bottomY - totalHeight, barWidth, totalHeight, color332To565(0xFF));
+        gfx->drawRect(x, topY, barWidth, usableHeight, color332To565(0xFF));
     }
 
     if (newHeight > oldHeight)
     {
         for (int yy = bottomY - newHeight; yy < bottomY - oldHeight; ++yy)
         {
-            gfx->fillRect(barX + 1, yy, barWidth - 2, 1, color332To565(color));
+            float level = (float)(bottomY - yy) / usableHeight;
+            float brightness = 1.0f - 0.5f * level;
+            uint8_t r, g, b;
+            hsvToRgb(2.0f / 3.0f, 1.0f, brightness, r, g, b);
+            uint8_t color = rgbTo332(r, g, b);
+            gfx->fillRect(x + 1, yy, barWidth - 2, 1, color332To565(color));
         }
     }
     else if (newHeight < oldHeight)
     {
         for (int yy = bottomY - oldHeight; yy < bottomY - newHeight; ++yy)
         {
-            gfx->fillRect(barX + 1, yy, barWidth - 2, 1, color332To565(0x00));
+            gfx->fillRect(x + 1, yy, barWidth - 2, 1, color332To565(0x00));
         }
     }
 #endif
@@ -280,6 +284,7 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
     const int baseX = 30; // previously 20
     const int barWidth = 70;
     const int spacing = 10;
+    const int slotWidth = barWidth + spacing;
     const int totalHeight = 220;
     const int baseY = gfx->height() - 40;
 
@@ -313,20 +318,20 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
         }
         if (changed || selectedIndex != lastSelected || (i == lastSelected) || (i == selectedIndex))
         {
-            int x = baseX + i * (barWidth + spacing);
+            int barX = baseX + i * slotWidth + spacing / 2;
             float prevNorm = (fullRedraw || i >= (int)lastParams.size()) ? 0.0f : lastParams[i].normalized;
 #if DISPLAY_USE_DOUBLE_BUFFER
             if (canvas)
             {
-                canvas->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, 20, 0x00);
-                canvas->fillRect(x - 2, baseY + 2, barWidth + 4, 20, 0x00);
+                canvas->fillRect(barX - 2, baseY - totalHeight - 22, barWidth + 4, 20, 0x00);
+                canvas->fillRect(barX - 2, baseY + 2, barWidth + 4, 20, 0x00);
             }
 #else
-            gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, 20, color332To565(0x00));
-            gfx->fillRect(x - 2, baseY + 2, barWidth + 4, 20, color332To565(0x00));
+            gfx->fillRect(barX - 2, baseY - totalHeight - 22, barWidth + 4, 20, color332To565(0x00));
+            gfx->fillRect(barX - 2, baseY + 2, barWidth + 4, 20, color332To565(0x00));
 #endif
-            drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, prevNorm, totalHeight);
-            showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
+            drawBar(barX, baseY, barWidth, items[i].normalized, prevNorm, totalHeight);
+            showText(items[i].name, barX, baseY - totalHeight - 20, 1, 0xFF);
             std::string nameLower = items[i].name;
             std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), [](unsigned char c) { return std::tolower(c); });
             bool isHue = nameLower.find("hue") != std::string::npos;
@@ -336,7 +341,7 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
                 hsvToRgb(items[i].normalized, 1.0f, 1.0f, r, g, b);
                 uint8_t swatchColor = rgbTo332(r, g, b);
                 int squareSize = 14;
-                int squareX = x + (barWidth - squareSize) / 2;
+                int squareX = barX + (barWidth - squareSize) / 2;
                 int squareY = baseY + 3;
 #if DISPLAY_USE_DOUBLE_BUFFER
                 if (canvas)
@@ -350,7 +355,7 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
             }
             else
             {
-                showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
+                showText(items[i].valueText, barX, baseY + 6, 1, 0xFF);
             }
         }
     }
