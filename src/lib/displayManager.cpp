@@ -1,6 +1,8 @@
 #ifdef DISPLAY_MANAGER
 #include "displayManager.h"
 #include "pins.h"
+#include <algorithm>
+#include <cctype>
 #define MISO_PIN -1 // Automatically assigned with ESP8266 if not defined
 // #define MOSI_PIN 25 // Automatically assigned with ESP8266 if not defined
 // #define SCLK_PIN 26 // Automatically assigned with ESP8266 if not defined
@@ -134,7 +136,7 @@ void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b)
         break;
     }
 }
-void DisplayManager::drawBar(int index, int x, int y, int w, float newNorm, float oldNorm, int totalHeight, float hue)
+void DisplayManager::drawBar(int index, int x, int y, int w, float newNorm, float oldNorm, int totalHeight)
 {
     if (index < 0 || index >= 5)
     {
@@ -146,9 +148,7 @@ void DisplayManager::drawBar(int index, int x, int y, int w, float newNorm, floa
     int newHeight = totalHeight * newNorm;
     int oldHeight = totalHeight * oldNorm;
 
-    uint8_t r, g, b;
-    hsvToRgb(hue, 1.0, 1.0, r, g, b);
-    uint8_t color = rgbTo332(r, g, b);
+    uint8_t color = 0xFF;
 
     int barX = x + index * barWidth;
     int bottomY = y;
@@ -325,9 +325,33 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
             gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, 20, color332To565(0x00));
             gfx->fillRect(x - 2, baseY + 2, barWidth + 4, 20, color332To565(0x00));
 #endif
-            drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, prevNorm, totalHeight, items[i].normalized);
+            drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, prevNorm, totalHeight);
             showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
-            showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
+            std::string nameLower = items[i].name;
+            std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), [](unsigned char c) { return std::tolower(c); });
+            bool isHue = nameLower.find("hue") != std::string::npos;
+            if (isHue)
+            {
+                uint8_t r, g, b;
+                hsvToRgb(items[i].normalized, 1.0f, 1.0f, r, g, b);
+                uint8_t swatchColor = rgbTo332(r, g, b);
+                int squareSize = 14;
+                int squareX = x + (barWidth - squareSize) / 2;
+                int squareY = baseY + 3;
+#if DISPLAY_USE_DOUBLE_BUFFER
+                if (canvas)
+                {
+                    canvas->fillRect(squareX, squareY, squareSize, squareSize, swatchColor);
+                    flush();
+                }
+#else
+                gfx->fillRect(squareX, squareY, squareSize, squareSize, color332To565(swatchColor));
+#endif
+            }
+            else
+            {
+                showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
+            }
         }
     }
 
