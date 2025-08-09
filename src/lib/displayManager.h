@@ -47,7 +47,7 @@ public:
     void clear();
     void begin(SPIClass *spi = &SPI);
     void showBars(const int *values, int len, int x, int y, int w, int h, uint8_t color = 0xFF);
-    void drawBar(int index, int x, int y, int w, float h, int totalHeight, float hue);
+    void drawBar(int x, int y, int barWidth, float newNorm, float oldNorm, int totalHeight);
     void displayMenu(const std::vector<std::string> &menuItems, int selectedIndex = -1)
     {
         clear();

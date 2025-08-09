@@ -1,6 +1,8 @@
 #ifdef DISPLAY_MANAGER
 #include "displayManager.h"
 #include "pins.h"
+#include <algorithm>
+#include <cctype>
 #define MISO_PIN -1 // Automatically assigned with ESP8266 if not defined
 // #define MOSI_PIN 25 // Automatically assigned with ESP8266 if not defined
 // #define SCLK_PIN 26 // Automatically assigned with ESP8266 if not defined
@@ -134,51 +136,71 @@ void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b)
         break;
     }
 }
-void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalHeight, float hue)
+void DisplayManager::drawBar(int x, int y, int barWidth, float newNorm, float oldNorm, int totalHeight)
 {
-    if (index < 0 || index >= 5)
-    {
-        Serial.println("Index out of bounds for drawBar");
-        return;
-    }
+    const int topMargin = 4;
+    const int bottomMargin = 4;
+    int usableHeight = totalHeight - topMargin - bottomMargin;
+    int bottomY = y - bottomMargin;
+    int topY = bottomY - usableHeight;
+
+    int newHeight = usableHeight * newNorm;
+    int oldHeight = usableHeight * oldNorm;
+
 #if DISPLAY_USE_DOUBLE_BUFFER
     if (!canvas)
         return;
 
-    int barWidth = w;
-    int barHeight = totalHeight * h; // height from 0 to totalHeight
-    uint8_t r, g, b;
-    hsvToRgb(hue, 1.0, 1.0, r, g, b); // hue: 0.0–1.0, full saturation and value
-    uint8_t color = rgbTo332(r, g, b);
+    if (oldNorm == 0.0f)
+    {
+        canvas->drawRect(x, topY, barWidth, usableHeight, 0xFF);
+    }
 
-    int barX = x + index * barWidth;
-    int barY = y - barHeight; // top of the bar
-
-    canvas->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x00);
-    canvas->fillRoundRect(barX + 1, barY, barWidth - 2, barHeight, 3, color);
-    // simple 3d effect
-    canvas->drawLine(barX + 1, barY, barX + barWidth - 2, barY, 0xFF);
-    canvas->drawLine(barX + 1, barY, barX + 1, barY + barHeight - 1, 0xFF);
-    canvas->drawLine(barX + 1, barY + barHeight - 1, barX + barWidth - 2, barY + barHeight - 1, 0x00);
-    canvas->drawLine(barX + barWidth - 2, barY, barX + barWidth - 2, barY + barHeight - 1, 0x00);
+    if (newHeight > oldHeight)
+    {
+        for (int yy = bottomY - newHeight; yy < bottomY - oldHeight; ++yy)
+        {
+            float level = (float)(bottomY - yy) / usableHeight;
+            float brightness = 1.0f - 0.5f * level;
+            uint8_t r, g, b;
+            hsvToRgb(2.0f / 3.0f, 1.0f, brightness, r, g, b);
+            uint8_t color = rgbTo332(r, g, b);
+            canvas->fillRect(x + 1, yy, barWidth - 2, 1, color);
+        }
+    }
+    else if (newHeight < oldHeight)
+    {
+        for (int yy = bottomY - oldHeight; yy < bottomY - newHeight; ++yy)
+        {
+            canvas->fillRect(x + 1, yy, barWidth - 2, 1, 0x00);
+        }
+    }
     flush();
 #else
-    int barWidth = w;
-    int barHeight = totalHeight * h;
-    uint8_t r, g, b;
-    hsvToRgb(hue, 1.0, 1.0, r, g, b);
-    uint8_t color = rgbTo332(r, g, b);
+    if (oldNorm == 0.0f)
+    {
+        gfx->drawRect(x, topY, barWidth, usableHeight, color332To565(0xFF));
+    }
 
-    int barX = x + index * barWidth;
-    int barY = y - barHeight;
-
-    gfx->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x0000);
-    gfx->fillRoundRect(barX + 1, barY, barWidth - 2, barHeight, 3, color332To565(color));
-    gfx->drawLine(barX + 1, barY, barX + barWidth - 2, barY, color332To565(0xFF));
-    gfx->drawLine(barX + 1, barY, barX + 1, barY + barHeight - 1, color332To565(0xFF));
-    gfx->drawLine(barX + 1, barY + barHeight - 1, barX + barWidth - 2, barY + barHeight - 1, color332To565(0x0000));
-    gfx->drawLine(barX + barWidth - 2, barY, barX + barWidth - 2, barY + barHeight - 1, color332To565(0x0000));
-
+    if (newHeight > oldHeight)
+    {
+        for (int yy = bottomY - newHeight; yy < bottomY - oldHeight; ++yy)
+        {
+            float level = (float)(bottomY - yy) / usableHeight;
+            float brightness = 1.0f - 0.5f * level;
+            uint8_t r, g, b;
+            hsvToRgb(2.0f / 3.0f, 1.0f, brightness, r, g, b);
+            uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+            gfx->fillRect(x + 1, yy, barWidth - 2, 1, color);
+        }
+    }
+    else if (newHeight < oldHeight)
+    {
+        for (int yy = bottomY - oldHeight; yy < bottomY - newHeight; ++yy)
+        {
+            gfx->fillRect(x + 1, yy, barWidth - 2, 1, 0x0000);
+        }
+    }
 #endif
 }
 
@@ -262,6 +284,7 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
     const int baseX = 30; // previously 20
     const int barWidth = 70;
     const int spacing = 10;
+    const int slotWidth = barWidth + spacing;
     const int totalHeight = 220;
     const int baseY = gfx->height() - 40;
 
@@ -283,42 +306,73 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
     int maxBars = std::min((int)items.size(), 5);
     for (int i = 0; i < maxBars; ++i)
     {
-        bool changed = fullRedraw;
-        if (!fullRedraw && i < (int)lastParams.size())
+        int barX = baseX + i * slotWidth + spacing / 2;
+        float prevNorm = (fullRedraw || i >= (int)lastParams.size()) ? 0.0f : lastParams[i].normalized;
+
+        bool nameChanged = fullRedraw || i >= (int)lastParams.size() ||
+                            items[i].name != lastParams[i].name;
+        bool valueChanged = fullRedraw || i >= (int)lastParams.size() ||
+                             items[i].valueText != lastParams[i].valueText;
+        bool barChanged = fullRedraw || i >= (int)lastParams.size() ||
+                           fabs(items[i].normalized - prevNorm) > 0.001f;
+        bool selectionChanged = (i == selectedIndex) != (i == lastSelected);
+
+        if (barChanged || selectionChanged)
         {
-            if (fabs(items[i].normalized - lastParams[i].normalized) > 0.001f ||
-                items[i].valueText != lastParams[i].valueText ||
-                items[i].name != lastParams[i].name)
-            {
-                changed = true;
-            }
+            drawBar(barX, baseY, barWidth, items[i].normalized, prevNorm, totalHeight);
         }
-        if (changed || selectedIndex != lastSelected || (i == lastSelected) || (i == selectedIndex))
+
+        if (nameChanged)
         {
-            int x = baseX + i * (barWidth + spacing);
-            // Clear area for bar and texts
 #if DISPLAY_USE_DOUBLE_BUFFER
             if (canvas)
             {
-                // clear a larger area so the value text is fully erased
-                canvas->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 40, 0x00);
+                canvas->fillRect(barX - 2, baseY - totalHeight - 22, barWidth + 4, 20, 0x00);
             }
 #else
-            gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 40, color332To565(0x00));
+            gfx->fillRect(barX - 2, baseY - totalHeight - 22, barWidth + 4, 20, 0x0000);
 #endif
-            // draw the bar itself
-            drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, totalHeight, items[i].normalized);
-            //             if (i == selectedIndex)
-            //             {
-            // #if DISPLAY_USE_DOUBLE_BUFFER
-            //                 if (canvas)
-            //                     canvas->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, 0xFF);
-            // #else
-            //                 gfx->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, color332To565(0xFF));
-            // #endif
-            //             }
-            showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
-            showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
+            showText(items[i].name, barX, baseY - totalHeight - 20, 1, 0xFF);
+        }
+
+        std::string nameLower = items[i].name;
+        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), [](unsigned char c) { return std::tolower(c); });
+        bool isHue = nameLower.find("hue") != std::string::npos;
+
+        bool bottomNeeds = valueChanged || selectionChanged || (isHue && barChanged);
+        if (bottomNeeds)
+        {
+#if DISPLAY_USE_DOUBLE_BUFFER
+            if (canvas)
+            {
+                canvas->fillRect(barX - 2, baseY + 2, barWidth + 4, 20, 0x00);
+            }
+#else
+            gfx->fillRect(barX - 2, baseY + 2, barWidth + 4, 20, 0x0000);
+#endif
+            if (isHue)
+            {
+                uint8_t r, g, b;
+                hsvToRgb(items[i].normalized, 1.0f, 1.0f, r, g, b);
+                uint8_t swatchColor = rgbTo332(r, g, b);
+                int squareSize = 14;
+                int squareX = barX + (barWidth - squareSize) / 2;
+                int squareY = baseY + 3;
+#if DISPLAY_USE_DOUBLE_BUFFER
+                if (canvas)
+                {
+                    canvas->fillRect(squareX, squareY, squareSize, squareSize, swatchColor);
+                    flush();
+                }
+#else
+                uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                gfx->fillRect(squareX, squareY, squareSize, squareSize, color);
+#endif
+            }
+            else
+            {
+                showText(items[i].valueText, barX, baseY + 6, 1, 0xFF);
+            }
         }
     }
 
