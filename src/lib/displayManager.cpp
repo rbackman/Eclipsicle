@@ -134,51 +134,69 @@ void hsvToRgb(float h, float s, float v, uint8_t &r, uint8_t &g, uint8_t &b)
         break;
     }
 }
-void DisplayManager::drawBar(int index, int x, int y, int w, float h, int totalHeight, float hue)
+void DisplayManager::drawBar(int index, int x, int y, int w, float newNorm, float oldNorm, int totalHeight, float hue)
 {
     if (index < 0 || index >= 5)
     {
         Serial.println("Index out of bounds for drawBar");
         return;
     }
-#if DISPLAY_USE_DOUBLE_BUFFER
-    if (!canvas)
-        return;
 
     int barWidth = w;
-    int barHeight = totalHeight * h; // height from 0 to totalHeight
-    uint8_t r, g, b;
-    hsvToRgb(hue, 1.0, 1.0, r, g, b); // hue: 0.0–1.0, full saturation and value
-    uint8_t color = rgbTo332(r, g, b);
+    int newHeight = totalHeight * newNorm;
+    int oldHeight = totalHeight * oldNorm;
 
-    int barX = x + index * barWidth;
-    int barY = y - barHeight; // top of the bar
-
-    canvas->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x00);
-    canvas->fillRoundRect(barX + 1, barY, barWidth - 2, barHeight, 3, color);
-    // simple 3d effect
-    canvas->drawLine(barX + 1, barY, barX + barWidth - 2, barY, 0xFF);
-    canvas->drawLine(barX + 1, barY, barX + 1, barY + barHeight - 1, 0xFF);
-    canvas->drawLine(barX + 1, barY + barHeight - 1, barX + barWidth - 2, barY + barHeight - 1, 0x00);
-    canvas->drawLine(barX + barWidth - 2, barY, barX + barWidth - 2, barY + barHeight - 1, 0x00);
-    flush();
-#else
-    int barWidth = w;
-    int barHeight = totalHeight * h;
     uint8_t r, g, b;
     hsvToRgb(hue, 1.0, 1.0, r, g, b);
     uint8_t color = rgbTo332(r, g, b);
 
     int barX = x + index * barWidth;
-    int barY = y - barHeight;
+    int bottomY = y;
 
-    gfx->fillRect(barX, y - totalHeight, barWidth, totalHeight, 0x0000);
-    gfx->fillRoundRect(barX + 1, barY, barWidth - 2, barHeight, 3, color332To565(color));
-    gfx->drawLine(barX + 1, barY, barX + barWidth - 2, barY, color332To565(0xFF));
-    gfx->drawLine(barX + 1, barY, barX + 1, barY + barHeight - 1, color332To565(0xFF));
-    gfx->drawLine(barX + 1, barY + barHeight - 1, barX + barWidth - 2, barY + barHeight - 1, color332To565(0x0000));
-    gfx->drawLine(barX + barWidth - 2, barY, barX + barWidth - 2, barY + barHeight - 1, color332To565(0x0000));
+#if DISPLAY_USE_DOUBLE_BUFFER
+    if (!canvas)
+        return;
 
+    if (oldNorm == 0.0f)
+    {
+        canvas->drawRect(barX, bottomY - totalHeight, barWidth, totalHeight, 0xFF);
+    }
+
+    if (newHeight > oldHeight)
+    {
+        for (int yy = bottomY - newHeight; yy < bottomY - oldHeight; ++yy)
+        {
+            canvas->fillRect(barX + 1, yy, barWidth - 2, 1, color);
+        }
+    }
+    else if (newHeight < oldHeight)
+    {
+        for (int yy = bottomY - oldHeight; yy < bottomY - newHeight; ++yy)
+        {
+            canvas->fillRect(barX + 1, yy, barWidth - 2, 1, 0x00);
+        }
+    }
+    flush();
+#else
+    if (oldNorm == 0.0f)
+    {
+        gfx->drawRect(barX, bottomY - totalHeight, barWidth, totalHeight, color332To565(0xFF));
+    }
+
+    if (newHeight > oldHeight)
+    {
+        for (int yy = bottomY - newHeight; yy < bottomY - oldHeight; ++yy)
+        {
+            gfx->fillRect(barX + 1, yy, barWidth - 2, 1, color332To565(color));
+        }
+    }
+    else if (newHeight < oldHeight)
+    {
+        for (int yy = bottomY - oldHeight; yy < bottomY - newHeight; ++yy)
+        {
+            gfx->fillRect(barX + 1, yy, barWidth - 2, 1, color332To565(0x00));
+        }
+    }
 #endif
 }
 
@@ -296,27 +314,18 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
         if (changed || selectedIndex != lastSelected || (i == lastSelected) || (i == selectedIndex))
         {
             int x = baseX + i * (barWidth + spacing);
-            // Clear area for bar and texts
+            float prevNorm = (fullRedraw || i >= (int)lastParams.size()) ? 0.0f : lastParams[i].normalized;
 #if DISPLAY_USE_DOUBLE_BUFFER
             if (canvas)
             {
-                // clear a larger area so the value text is fully erased
-                canvas->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 40, 0x00);
+                canvas->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, 20, 0x00);
+                canvas->fillRect(x - 2, baseY + 2, barWidth + 4, 20, 0x00);
             }
 #else
-            gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, totalHeight + 40, color332To565(0x00));
+            gfx->fillRect(x - 2, baseY - totalHeight - 22, barWidth + 4, 20, color332To565(0x00));
+            gfx->fillRect(x - 2, baseY + 2, barWidth + 4, 20, color332To565(0x00));
 #endif
-            // draw the bar itself
-            drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, totalHeight, items[i].normalized);
-            //             if (i == selectedIndex)
-            //             {
-            // #if DISPLAY_USE_DOUBLE_BUFFER
-            //                 if (canvas)
-            //                     canvas->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, 0xFF);
-            // #else
-            //                 gfx->drawRect(x - 2, baseY - totalHeight - 2, barWidth + 4, totalHeight + 14, color332To565(0xFF));
-            // #endif
-            //             }
+            drawBar(i, baseX, baseY, barWidth + spacing, items[i].normalized, prevNorm, totalHeight, items[i].normalized);
             showText(items[i].name, x, baseY - totalHeight - 20, 1, 0xFF);
             showText(items[i].valueText, x, baseY + 6, 1, 0xFF);
         }
