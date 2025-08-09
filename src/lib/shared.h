@@ -206,11 +206,11 @@ static const std::vector<IntParameter> getDefaultIntParameters()
         {PARAM_HUE, "Hue", 60, 0, 360},
         {PARAM_HUE_END, "HueEnd", 120, 0, 360},
         {PARAM_HUE_VARIANCE, "HueVar", 0, 0, 180},
-        {PARAM_WIDTH, "Width", 5, 1, 60},
+        {PARAM_WIDTH, "Width", 10, 1, 60},
 
         {PARAM_RANDOM_DRIFT, "Drift", 0, 0, 255},
         {PARAM_ANIMATION_TYPE, "AnimType", 0, 0, 255},
-        {PARAM_SPAWN_RATE, "Spawn", 4, 1, 40},
+        {PARAM_SPAWN_RATE, "Spawn",50, 1, 200},
         {PARAM_BRIGHTNESS, "Brightness", 255, 0, 255},
         {PARAM_FADE, "Fade", 100, 0, 255},
         {PARAM_LIFE, "Life", -1, -1, 100},
@@ -228,7 +228,7 @@ static const std::vector<IntParameter> getDefaultIntParameters()
 
         {PARAM_MULTIPLIER, "Mult", 0, 0, 1},
         {PARAM_CURRENT_STRIP, "CurrentStrip", -1, -1, 4},
-        {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 255},
+        {PARAM_CURRENT_LED, "CurrentLED", 1, 0, 500},
         {PARAM_MASTER_LED_HUE, "Hue", 60, 0, 360},
         {PARAM_MASTER_LED_BRIGHTNESS, "Brightness", 50, 0, 255},
         {PARAM_MASTER_LED_SATURATION, "Saturation", 255, 0, 255},
@@ -268,11 +268,11 @@ static const std::vector<FloatParameter> getDefaultFloatParameters()
         {PARAM_SCROLL_SPEED, "Speed", 1.0, 0.0, 100.0},
         {PARAM_SOUND_SCALE, "Sound", 1.0, 0.0, 1.0},
         {PARAM_TIME_SCALE, "Time", 1.0, 0, 200.0},
-        {PARAM_REPEAT, "Repeat", 0.9, 0.1, 10.0},
+        {PARAM_REPEAT, "Repeat", 0.1, 0.1, 10.0},
         {PARAM_VELOCITY, "Vel", 20.0, -100, 100.0},
         {PARAM_ACCELERATION, "Accel", 0.0, -10.0, 100.0},
         {PARAM_MAX_SPEED, "MaxSpd", 1.0, 1.0, 10.0},
-        {PARAM_REPEAT, "Repeat", 1.0, 1.0, 10.0},
+
 
         {PARAM_NOISE_SCALE, "NScl", 0.2, 0.01, 2.0},
         {PARAM_NOISE_SPEED, "NSpd", 0.1, 0.0, 5.0},

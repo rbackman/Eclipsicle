@@ -391,7 +391,7 @@ void SliderAnimation::update()
     //  slider animation is just a gradient that positioned in the middle of the strip with a width and hue and repeat factor
     const int count = numLEDs();
     int position = count / 2 + getInt(PARAM_POSITION);
-    int width = getInt(PARAM_WIDTH) * count;
+    int width = getInt(PARAM_WIDTH) ;
     float repeat = getFloat(PARAM_REPEAT);
     int brightness = getInt(PARAM_BRIGHTNESS);
     int hue = getInt(PARAM_HUE);

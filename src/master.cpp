@@ -17,9 +17,11 @@ void MasterBoard::init()
     meshManager = new MeshnetManager();
 
     std::vector<MacAddress> slaves = {
-
-        {0x98, 0x88, 0xE0, 0x03, 0xFF, 0x58}, // Slave1 98:88:E0:03:FF:58
-
+   
+        {0xD8, 0x3B, 0xDA, 0x77, 0xD9, 0x34}, // Slave0 D8:3B:DA:77:D9:34
+        // {0x98, 0x88, 0xE0, 0x03, 0xFF, 0x58}, // Slave1 98:88:E0:03:FF:58
+//98:88:E0:04:23:74
+        {0x98, 0x88, 0xE0, 0x04, 0x23, 0x74}, // Slave1 98:88:E0:04:23:74
     };
     meshManager->connectSlaves(slaves);
 
