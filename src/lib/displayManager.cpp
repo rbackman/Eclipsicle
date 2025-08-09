@@ -190,15 +190,15 @@ void DisplayManager::drawBar(int x, int y, int barWidth, float newNorm, float ol
             float brightness = 1.0f - 0.5f * level;
             uint8_t r, g, b;
             hsvToRgb(2.0f / 3.0f, 1.0f, brightness, r, g, b);
-            uint8_t color = rgbTo332(r, g, b);
-            gfx->fillRect(x + 1, yy, barWidth - 2, 1, color332To565(color));
+            uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+            gfx->fillRect(x + 1, yy, barWidth - 2, 1, color);
         }
     }
     else if (newHeight < oldHeight)
     {
         for (int yy = bottomY - oldHeight; yy < bottomY - newHeight; ++yy)
         {
-            gfx->fillRect(x + 1, yy, barWidth - 2, 1, color332To565(0x00));
+            gfx->fillRect(x + 1, yy, barWidth - 2, 1, 0x0000);
         }
     }
 #endif
@@ -306,35 +306,50 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
     int maxBars = std::min((int)items.size(), 5);
     for (int i = 0; i < maxBars; ++i)
     {
-        bool changed = fullRedraw;
-        if (!fullRedraw && i < (int)lastParams.size())
+        int barX = baseX + i * slotWidth + spacing / 2;
+        float prevNorm = (fullRedraw || i >= (int)lastParams.size()) ? 0.0f : lastParams[i].normalized;
+
+        bool nameChanged = fullRedraw || i >= (int)lastParams.size() ||
+                            items[i].name != lastParams[i].name;
+        bool valueChanged = fullRedraw || i >= (int)lastParams.size() ||
+                             items[i].valueText != lastParams[i].valueText;
+        bool barChanged = fullRedraw || i >= (int)lastParams.size() ||
+                           fabs(items[i].normalized - prevNorm) > 0.001f;
+        bool selectionChanged = (i == selectedIndex) != (i == lastSelected);
+
+        if (barChanged || selectionChanged)
         {
-            if (fabs(items[i].normalized - lastParams[i].normalized) > 0.001f ||
-                items[i].valueText != lastParams[i].valueText ||
-                items[i].name != lastParams[i].name)
-            {
-                changed = true;
-            }
+            drawBar(barX, baseY, barWidth, items[i].normalized, prevNorm, totalHeight);
         }
-        if (changed || selectedIndex != lastSelected || (i == lastSelected) || (i == selectedIndex))
+
+        if (nameChanged)
         {
-            int barX = baseX + i * slotWidth + spacing / 2;
-            float prevNorm = (fullRedraw || i >= (int)lastParams.size()) ? 0.0f : lastParams[i].normalized;
 #if DISPLAY_USE_DOUBLE_BUFFER
             if (canvas)
             {
                 canvas->fillRect(barX - 2, baseY - totalHeight - 22, barWidth + 4, 20, 0x00);
+            }
+#else
+            gfx->fillRect(barX - 2, baseY - totalHeight - 22, barWidth + 4, 20, 0x0000);
+#endif
+            showText(items[i].name, barX, baseY - totalHeight - 20, 1, 0xFF);
+        }
+
+        std::string nameLower = items[i].name;
+        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), [](unsigned char c) { return std::tolower(c); });
+        bool isHue = nameLower.find("hue") != std::string::npos;
+
+        bool bottomNeeds = valueChanged || selectionChanged || (isHue && barChanged);
+        if (bottomNeeds)
+        {
+#if DISPLAY_USE_DOUBLE_BUFFER
+            if (canvas)
+            {
                 canvas->fillRect(barX - 2, baseY + 2, barWidth + 4, 20, 0x00);
             }
 #else
-            gfx->fillRect(barX - 2, baseY - totalHeight - 22, barWidth + 4, 20, color332To565(0x00));
-            gfx->fillRect(barX - 2, baseY + 2, barWidth + 4, 20, color332To565(0x00));
+            gfx->fillRect(barX - 2, baseY + 2, barWidth + 4, 20, 0x0000);
 #endif
-            drawBar(barX, baseY, barWidth, items[i].normalized, prevNorm, totalHeight);
-            showText(items[i].name, barX, baseY - totalHeight - 20, 1, 0xFF);
-            std::string nameLower = items[i].name;
-            std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), [](unsigned char c) { return std::tolower(c); });
-            bool isHue = nameLower.find("hue") != std::string::npos;
             if (isHue)
             {
                 uint8_t r, g, b;
@@ -350,7 +365,8 @@ void DisplayManager::displayParameterBars(const std::vector<ParameterDisplayItem
                     flush();
                 }
 #else
-                gfx->fillRect(squareX, squareY, squareSize, squareSize, color332To565(swatchColor));
+                uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+                gfx->fillRect(squareX, squareY, squareSize, squareSize, color);
 #endif
             }
             else
