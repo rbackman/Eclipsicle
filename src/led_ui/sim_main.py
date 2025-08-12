@@ -1,49 +1,6 @@
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QTimer
 from led3dwidget import LED3DWidget
-from strip_sim import StripSim
-
-class FakeConsole:
-    def __init__(self):
-        self.string_listeners = []
-        self.json_listeners = []
-        self.timer = QTimer()
-        self.timer.timeout.connect(self._tick)
-        self.running = False
-        self.led_count = 40
-        self.sim = StripSim(self.led_count)
-        # default to rainbow animation
-        self.sim.set_animation(2)
-
-    def add_string_listener(self, cb):
-        self.string_listeners.append(cb)
-
-    def add_json_listener(self, cb):
-        self.json_listeners.append(cb)
-
-    def send_cmd(self, cmd):
-        if cmd.startswith("simulate:"):
-            n = int(cmd.split(":")[1])
-            if n >= 0:
-                self.running = True
-                self.timer.start(100)
-            else:
-                self.running = False
-                self.timer.stop()
-        # print to console so user sees the command
-        print(f"fake send: {cmd}")
-
-    def send_json(self, data):
-        print(f"fake json: {data}")
-
-    def _tick(self):
-        if not self.running:
-            return
-        self.sim.update()
-        rle = self.sim.get_rle()
-        msg = f"sim:{rle}"
-        for cb in self.string_listeners:
-            cb(msg)
+from fake_console import FakeConsole
 
 
 def main():

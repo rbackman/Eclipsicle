@@ -53,5 +53,12 @@ const char *stripsim_get_rle(StripState *s)
     return rle.c_str();
 }
 
+bool stripsim_command(StripState *s, const char *cmd)
+{
+    if (!s || !cmd)
+        return false;
+    return s->handleTextMessage(std::string(cmd));
+}
+
 }
 

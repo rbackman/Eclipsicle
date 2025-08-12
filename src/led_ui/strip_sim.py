@@ -51,3 +51,12 @@ class StripSim:
         _LIB.stripsim_get_rle.restype = ctypes.c_char_p
         return _LIB.stripsim_get_rle(ctypes.c_void_p(self._obj)).decode("utf-8")
 
+    def handle_cmd(self, cmd: str) -> bool:
+        _LIB.stripsim_command.restype = ctypes.c_bool
+        return bool(
+            _LIB.stripsim_command(
+                ctypes.c_void_p(self._obj),
+                ctypes.c_char_p(cmd.encode("utf-8")),
+            )
+        )
+

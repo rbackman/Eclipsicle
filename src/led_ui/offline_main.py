@@ -1,20 +1,14 @@
 # main.py
+from PyQt5.QtWidgets import QApplication
 
-import sys
-from PyQt5.QtWidgets import (
-    QApplication
-)
-
-from device_selector import DeviceSelector
-
+from fake_console import FakeConsole
 from mainwindow import MainWindow
 
 
- 
-
 def start_app():
     app = QApplication([])
-    win = MainWindow(None)
+    console = FakeConsole()
+    win = MainWindow(None, console=console)
     win.show()
     app.win = win
     app.exec_()
