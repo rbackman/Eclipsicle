@@ -130,6 +130,7 @@ public:
     std::string getStripState(bool verbose = false);
     std::string getStripStateJson(bool verbose = false);
     std::string getStripStateCompact();
+    std::string getCompressedLEDs() const;
 
     int getMidLed() const { return numLEDS / 2; }
     int getNode(int idx) const

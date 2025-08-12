@@ -168,3 +168,20 @@ cd tools
 make
 ```
 
+### LED simulation library
+
+The UI can drive the animation engine directly via a small C++ library
+located in `tools/led_sim`.  Build it with CMake to generate a shared
+library that `strip_sim.py` loads through `ctypes`:
+
+```bash
+cd tools/led_sim
+cmake -S . -B build
+cmake --build build --config Release
+```
+
+On Windows open the `tools/led_sim` folder in VSCode and use the CMake
+Tools extension or `cmake --build` to produce `led_sim.dll`.  Copy the
+resulting library next to the Python sources (the build script places it
+under `tools/led_sim`) and the simulator UI will load it automatically.
+

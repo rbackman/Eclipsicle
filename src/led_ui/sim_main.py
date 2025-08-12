@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QTimer
 from led3dwidget import LED3DWidget
+from strip_sim import StripSim
 
 class FakeConsole:
     def __init__(self):
@@ -8,9 +9,11 @@ class FakeConsole:
         self.json_listeners = []
         self.timer = QTimer()
         self.timer.timeout.connect(self._tick)
-        self.hue = 0
         self.running = False
         self.led_count = 40
+        self.sim = StripSim(self.led_count)
+        # default to rainbow animation
+        self.sim.set_animation(2)
 
     def add_string_listener(self, cb):
         self.string_listeners.append(cb)
@@ -36,11 +39,11 @@ class FakeConsole:
     def _tick(self):
         if not self.running:
             return
-        rle = f"{self.hue},255:{self.led_count};"
+        self.sim.update()
+        rle = self.sim.get_rle()
         msg = f"sim:{rle}"
         for cb in self.string_listeners:
             cb(msg)
-        self.hue = (self.hue + 5) % 256
 
 
 def main():

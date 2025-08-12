@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import subprocess
 import shutil
+import os
 import sys
+import shutil
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -30,16 +33,39 @@ def build_simulate_bricks(compiler):
 def build_simulate_strip(compiler):
     cmd = [
         compiler, '-std=c++17',
-        '-I'+str(SRC),
+        '-I'+str(SRC / 'lib'),
         '-I'+str(STUB),
         '-DUSE_LEDS',
-        str(ROOT/'simulate_strip.cpp'),
-        str(SRC/'stripState.cpp'),
-        str(SRC/'animations.cpp'),
-        str(SRC/'shared.cpp'),
-        str(SRC/'parameterManager.cpp'),
-        '-o', str(ROOT/'simulate_strip')
+        str(ROOT / 'simulate_strip.cpp'),
+        str(SRC / 'lib' / 'stripState.cpp'),
+        str(SRC / 'lib' / 'animations.cpp'),
+        str(SRC / 'lib' / 'shared.cpp'),
+        str(SRC / 'lib' / 'parameterManager.cpp'),
+        '-o', str(ROOT / 'simulate_strip')
     ]
+    run(cmd)
+
+
+def build_led_sim_library(compiler):
+    lib_name = {
+        'win32': 'led_sim.dll',
+        'darwin': 'libled_sim.dylib'
+    }.get(sys.platform, 'libled_sim.so')
+    out_path = ROOT / 'led_sim' / lib_name
+    cmd = [
+        compiler, '-std=c++17', '-shared',
+        '-I' + str(SRC / 'lib'),
+        '-I' + str(STUB),
+        '-DUSE_LEDS',
+        str(ROOT / 'led_sim' / 'strip_sim.cpp'),
+        str(SRC / 'lib' / 'animations.cpp'),
+        str(SRC / 'lib' / 'stripState.cpp'),
+        str(SRC / 'lib' / 'parameterManager.cpp'),
+        str(SRC / 'lib' / 'shared.cpp'),
+        '-o', str(out_path)
+    ]
+    if os.name != 'nt':
+        cmd.insert(2, '-fPIC')
     run(cmd)
 
 
@@ -51,6 +77,7 @@ def main():
         sys.exit(1)
     build_simulate_bricks(compiler)
     build_simulate_strip(compiler)
+    build_led_sim_library(compiler)
 
 
 if __name__ == '__main__':

@@ -122,6 +122,11 @@ std::string StripState::getStripStateCompact()
     return out;
 }
 
+std::string StripState::getCompressedLEDs() const
+{
+    return rleCompresssCRGB(leds, numLEDS);
+}
+
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
 {
     switch (animType)

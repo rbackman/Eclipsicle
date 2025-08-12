@@ -1,18 +1,24 @@
 #include "arduino_stub/Arduino.h"
-#include "../src/shared.h"
+#include "../src/lib/shared.h"
+#include "../src/lib/stripState.h"
+#include "../src/lib/animations.h"
+#include <string>
 
-String getLedStateName(LED_STATE state) {
-    switch(state) {
-        case LED_STATE_IDLE: return String("IDLE");
-        case LED_STATE_SINGLE_ANIMATION: return String("SINGLEANIMATION");
-        case LED_STATE_MULTI_ANIMATION: return String("MULTIANIMATION");
-        case LED_STATE_POINT_CONTROL: return String("POINTCONTROL");
+std::string getLedStateName(LED_STATE state)
+{
+    switch (state)
+    {
+    case LED_STATE_IDLE:
+        return "IDLE";
+    case LED_STATE_SINGLE_ANIMATION:
+        return "SINGLEANIMATION";
+    case LED_STATE_MULTI_ANIMATION:
+        return "MULTIANIMATION";
+    case LED_STATE_POINT_CONTROL:
+        return "POINTCONTROL";
     }
-    return String("UNKNOWN");
+    return "UNKNOWN";
 }
-
-#include "../src/stripState.h"
-#include "../src/animations.h"
 #include <FastLED.h>
 #include <iostream>
 #include <thread>
