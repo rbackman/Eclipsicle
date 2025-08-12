@@ -93,5 +93,5 @@
         "ranges": "cpp",
         "valarray": "cpp"
     },
-    "cmake.sourceDirectory": "${workspaceFolder}"
+    "cmake.sourceDirectory": "C:/Users/rback/Code/Eclipsicle/.pio/libdeps/controller_slave/Adafruit BusIO"
 }

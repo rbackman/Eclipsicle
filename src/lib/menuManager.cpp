@@ -170,7 +170,7 @@ bool MenuManager::handleSensorMessage(sensor_message message)
                         selectedMenu = 0;
                     }
                     auto menu = smenus[selectedMenu];
-                    Serial.printf("Selected Menu %d  %d %s\n", selectedMenu, menu, getMenuName(menu));
+                    Serial.printf("Selected Menu     %s\n", getMenuName(menu).c_str());
 
                     _selectionChanged = true;
                     used = true;

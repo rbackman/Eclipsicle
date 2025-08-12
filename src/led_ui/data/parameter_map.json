@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 305,
+    "value": 116,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 0,
+    "value": 203,
     "name": "HueEnd",
     "min": 0,
     "max": 360
@@ -80,7 +80,7 @@
   "PARAM_WIDTH": {
     "id": 3,
     "type": "int",
-    "value": 11,
+    "value": 23,
     "name": "Width",
     "min": 1,
     "max": 300
@@ -112,7 +112,7 @@
   "PARAM_BRIGHTNESS": {
     "id": 2,
     "type": "int",
-    "value": 166,
+    "value": 76,
     "name": "Brightness",
     "min": 0,
     "max": 255
@@ -120,7 +120,7 @@
   "PARAM_FADE": {
     "id": 4,
     "type": "int",
-    "value": 28,
+    "value": 171,
     "name": "Fade",
     "min": 0,
     "max": 255
@@ -136,7 +136,7 @@
   "PARAM_POSITION": {
     "id": 14,
     "type": "int",
-    "value": -67,
+    "value": -83,
     "name": "Pos",
     "min": -255,
     "max": 255
@@ -144,7 +144,7 @@
   "PARAM_RANDOM_ON": {
     "id": 20,
     "type": "int",
-    "value": 113,
+    "value": 49,
     "name": "On",
     "min": 0,
     "max": 255
@@ -152,7 +152,7 @@
   "PARAM_RANDOM_OFF": {
     "id": 21,
     "type": "int",
-    "value": 92,
+    "value": 89,
     "name": "Off",
     "min": 0,
     "max": 255
@@ -288,7 +288,7 @@
   "PARAM_SCROLL_SPEED": {
     "id": 18,
     "type": "float",
-    "value": 18.182,
+    "value": 26.407,
     "name": "Speed",
     "min": 0,
     "max": 100
@@ -296,7 +296,7 @@
   "PARAM_TIME_SCALE": {
     "id": 11,
     "type": "float",
-    "value": 6.926,
+    "value": 62.2,
     "name": "Time",
     "min": 0,
     "max": 200
@@ -304,7 +304,7 @@
   "PARAM_REPEAT": {
     "id": 12,
     "type": "float",
-    "value": 0.974,
+    "value": 0.981,
     "name": "Repeat",
     "min": 0.1,
     "max": 10
@@ -312,7 +312,7 @@
   "PARAM_VELOCITY": {
     "id": 7,
     "type": "float",
-    "value": -82.301,
+    "value": -73.537,
     "name": "Vel",
     "min": -100,
     "max": 100
@@ -336,7 +336,7 @@
   "PARAM_NOISE_SCALE": {
     "id": 43,
     "type": "float",
-    "value": 0.449,
+    "value": 0.871,
     "name": "NScl",
     "min": 0.01,
     "max": 2
@@ -344,7 +344,7 @@
   "PARAM_NOISE_SPEED": {
     "id": 44,
     "type": "float",
-    "value": 0.571,
+    "value": 2.449,
     "name": "NSpd",
     "min": 0,
     "max": 5
@@ -358,7 +358,7 @@
   "PARAM_HUE_VARIANCE": {
     "id": 47,
     "type": "int",
-    "value": 134,
+    "value": 162,
     "name": "HueVar",
     "min": 0,
     "max": 180
@@ -390,7 +390,7 @@
   "PARAM_RADIUS": {
     "id": 51,
     "type": "float",
-    "value": 61.694,
+    "value": 92.994,
     "name": "Radius",
     "min": 0,
     "max": 200

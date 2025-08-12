@@ -9,7 +9,7 @@
 #define AUDIO_DIN_PIN 42
 #define AUDIO_SDA_PIN 39
 
-#define LED_PIN_1 5
+#define LED_PIN_1 17
 #define LED_PIN_2 16
 #define LED_PIN_3 35
 #define LED_PIN_4 48
