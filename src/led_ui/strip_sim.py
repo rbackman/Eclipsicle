@@ -14,8 +14,10 @@ def _load_lib() -> ctypes.CDLL:
     alt_name = "led_sim.so" if sys.platform not in ("win32", "darwin") else lib_name
 
     base_paths = [
-        Path(__file__).resolve().parent,
+        # Prefer the freshly built library under tools/led_sim. A stale
+        # copy alongside this file can be missing newer symbols.
         Path(__file__).resolve().parents[2] / "tools" / "led_sim",
+        Path(__file__).resolve().parent,
     ]
 
     for folder in base_paths:
@@ -28,12 +30,22 @@ def _load_lib() -> ctypes.CDLL:
 
 _LIB = _load_lib()
 
+# Set up function prototypes up front so a missing symbol fails fast and we
+# avoid re-specifying types on each call.
+_LIB.stripsim_create.restype = ctypes.c_void_p
+_LIB.stripsim_destroy.argtypes = [ctypes.c_void_p]
+_LIB.stripsim_set_animation.argtypes = [ctypes.c_void_p, ctypes.c_int]
+_LIB.stripsim_update.argtypes = [ctypes.c_void_p]
+_LIB.stripsim_get_rle.argtypes = [ctypes.c_void_p]
+_LIB.stripsim_get_rle.restype = ctypes.c_char_p
+_LIB.stripsim_command.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+_LIB.stripsim_command.restype = ctypes.c_bool
+
 
 class StripSim:
     """Wrapper class exposing the minimal API used by the Python UI."""
 
     def __init__(self, led_count: int):
-        _LIB.stripsim_create.restype = ctypes.c_void_p
         self._obj = _LIB.stripsim_create(ctypes.c_int(led_count))
 
     def __del__(self):
@@ -48,11 +60,9 @@ class StripSim:
         _LIB.stripsim_update(ctypes.c_void_p(self._obj))
 
     def get_rle(self) -> str:
-        _LIB.stripsim_get_rle.restype = ctypes.c_char_p
         return _LIB.stripsim_get_rle(ctypes.c_void_p(self._obj)).decode("utf-8")
 
     def handle_cmd(self, cmd: str) -> bool:
-        _LIB.stripsim_command.restype = ctypes.c_bool
         return bool(
             _LIB.stripsim_command(
                 ctypes.c_void_p(self._obj),
