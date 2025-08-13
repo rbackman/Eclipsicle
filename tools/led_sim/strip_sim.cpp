@@ -60,5 +60,12 @@ bool stripsim_command(StripState *s, const char *cmd)
     return s->handleTextMessage(std::string(cmd));
 }
 
+bool stripsim_parameter(StripState *s, const parameter_message *param)
+{
+    if (!s || !param)
+        return false;
+    return s->handleParameterMessage(*param);
+}
+
 }
 

@@ -14,12 +14,12 @@ class FakeConsole:
         self.timer.timeout.connect(self._tick)
         self.running = False
         self.sim = StripSim(led_count)
-        self.param_id_map = self._load_param_map()
+        self.param_name_to_id = self._load_param_map()
 
     @staticmethod
     def _load_param_map():
         data = load_json(PARAM_MAP_FILE)
-        return {info["id"]: name for name, info in data.items()}
+        return {name: info["id"] for name, info in data.items()}
 
     def add_string_listener(self, cb):
         self.string_listeners.append(cb)
@@ -36,33 +36,21 @@ class FakeConsole:
             else:
                 self.running = False
                 self.timer.stop()
-        elif cmd.startswith("p:"):
-            parts = cmd.split(":")
-            if len(parts) >= 3:
-                pid = int(parts[1])
-                val = parts[2]
-                name = self.param_id_map.get(pid)
-                if name:
-                    self.sim.handle_cmd(f"{name}:{val}")
-                    return
         self.sim.handle_cmd(cmd)
 
     def send_json(self, data: dict):
         param = data.get("param")
         value = data.get("value")
         if param is not None and value is not None:
-            name = None
+            pid = None
             try:
                 pid = int(param)
             except (TypeError, ValueError):
-                if isinstance(param, str):
-                    name = param
+                pid = self.param_name_to_id.get(str(param))
+            if pid is not None:
+                self.sim.handle_cmd(f"p:{pid}:{value}")
             else:
-                name = self.param_id_map.get(pid)
-            if name:
-                self.sim.handle_cmd(f"{name}:{value}")
-                return
-            self.sim.handle_cmd(f"{param}:{value}")
+                self.sim.handle_cmd(f"{param}:{value}")
 
     def _tick(self):
         if not self.running:

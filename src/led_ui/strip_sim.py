@@ -30,6 +30,22 @@ def _load_lib() -> ctypes.CDLL:
 
 _LIB = _load_lib()
 
+
+class ParameterMessage(ctypes.Structure):
+    """Mirror of the C++ parameter_message struct."""
+
+    _fields_ = [
+        ("type", ctypes.c_int),
+        ("value", ctypes.c_int),
+        ("boolValue", ctypes.c_bool),
+        ("floatValue", ctypes.c_float),
+        ("paramID", ctypes.c_int),
+    ]
+
+
+MESSAGE_TYPE_PARAMETER = 3
+MESSAGE_TYPE_BOOL_PARAMETER = 4
+
 # Set up function prototypes up front so a missing symbol fails fast and we
 # avoid re-specifying types on each call.
 _LIB.stripsim_create.restype = ctypes.c_void_p
@@ -40,6 +56,11 @@ _LIB.stripsim_get_rle.argtypes = [ctypes.c_void_p]
 _LIB.stripsim_get_rle.restype = ctypes.c_char_p
 _LIB.stripsim_command.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
 _LIB.stripsim_command.restype = ctypes.c_bool
+_LIB.stripsim_parameter.argtypes = [
+    ctypes.c_void_p,
+    ctypes.POINTER(ParameterMessage),
+]
+_LIB.stripsim_parameter.restype = ctypes.c_bool
 
 
 class StripSim:
@@ -63,6 +84,38 @@ class StripSim:
         return _LIB.stripsim_get_rle(ctypes.c_void_p(self._obj)).decode("utf-8")
 
     def handle_cmd(self, cmd: str) -> bool:
+        if cmd.startswith("p:"):
+            parts = cmd.split(":", 2)
+            if len(parts) >= 3:
+                try:
+                    pid = int(parts[1])
+                except ValueError:
+                    return False
+                raw = parts[2]
+                msg = ParameterMessage()
+                msg.paramID = pid
+                raw_lc = raw.lower()
+                if raw_lc in {"true", "false"}:
+                    msg.type = MESSAGE_TYPE_BOOL_PARAMETER
+                    msg.boolValue = raw_lc == "true" or raw == "1"
+                    msg.value = int(msg.boolValue)
+                    msg.floatValue = float(msg.boolValue)
+                else:
+                    try:
+                        val = float(raw)
+                    except ValueError:
+                        return False
+                    msg.type = MESSAGE_TYPE_PARAMETER
+                    msg.floatValue = val
+                    msg.value = int(val)
+                    msg.boolValue = bool(msg.value)
+                return bool(
+                    _LIB.stripsim_parameter(
+                        ctypes.c_void_p(self._obj),
+                        ctypes.byref(msg),
+                    )
+                )
+            return False
         return bool(
             _LIB.stripsim_command(
                 ctypes.c_void_p(self._obj),
