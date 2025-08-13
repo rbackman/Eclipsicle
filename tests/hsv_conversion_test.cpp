@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "shared.h"
+#include "FastLED.h"
 
 TEST(ColorFromHSV, PrimaryColors)
 {
@@ -18,4 +19,21 @@ TEST(ColorFromHSV, PrimaryColors)
     EXPECT_GT(c.b, 240);
     EXPECT_LT(c.r, 5);
     EXPECT_LT(c.g, 5);
+}
+
+TEST(Rgb2HsvApprox, PrimaryColors)
+{
+    CHSV hsv = rgb2hsv_approximate(CRGB(255, 0, 0));
+    EXPECT_EQ(hsv.val, 255);
+    EXPECT_LT(hsv.hue, 5);
+
+    hsv = rgb2hsv_approximate(CRGB(0, 255, 0));
+    EXPECT_EQ(hsv.val, 255);
+    EXPECT_GT(hsv.hue, 80);
+    EXPECT_LT(hsv.hue, 90);
+
+    hsv = rgb2hsv_approximate(CRGB(0, 0, 255));
+    EXPECT_EQ(hsv.val, 255);
+    EXPECT_GT(hsv.hue, 165);
+    EXPECT_LT(hsv.hue, 175);
 }
