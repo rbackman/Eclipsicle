@@ -168,3 +168,17 @@ cd tools
 make
 ```
 
+### LED simulation library
+
+The UI can drive the animation engine directly via a small C++ library
+located in `tools/led_sim`.  A helper script builds this library along
+with the sample simulators:
+
+```bash
+python tools/build.py
+```
+
+On Windows the script also copies the required MinGW runtime DLLs next to
+the outputs so `strip_sim.py` can load `led_sim.dll` without adjusting
+`PATH`.
+

@@ -122,6 +122,11 @@ std::string StripState::getStripStateCompact()
     return out;
 }
 
+std::string StripState::getCompressedLEDs() const
+{
+    return rleCompresssCRGB(leds, numLEDS);
+}
+
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params)
 {
     switch (animType)
@@ -252,8 +257,10 @@ void StripState::update()
     {
         if (counter % simulateCount == 0)
         {
+#ifdef STRIP_STATE_LOG_RLE
             std::string compressed = rleCompresssCRGB(leds, numLEDS);
             LOG_PRINTF("\nsim:%d:%s\n", stripIndex, compressed.c_str());
+#endif
         }
     }
 }

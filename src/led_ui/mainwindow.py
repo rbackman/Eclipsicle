@@ -19,10 +19,13 @@ from led3dwidget import LED3DWidget
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, port):
+    def __init__(self, port=None, console=None):
         super().__init__()
         makeTess()
-        self.console = SerialConsole(port, baud=DEFAULT_BAUD)
+        if console is None:
+            self.console = SerialConsole(port, baud=DEFAULT_BAUD)
+        else:
+            self.console = console
 
         self.parameter_menu = ParameterMenuWidget(self.console)
 
@@ -56,11 +59,14 @@ class MainWindow(QMainWindow):
         self.splitter.setStretchFactor(1, 1)
         main_layout.addWidget(self.splitter, 1)
 
-        self.console.showCompact(True)
-        self.console.full_visible = False
-        main_layout.addWidget(self.console)
-        main_layout.addWidget(DeviceSelector(
-            lambda port: self.console.connect(port), port))
+        if hasattr(self.console, 'showCompact'):
+            self.console.showCompact(True)
+            self.console.full_visible = False
+        if isinstance(self.console, QWidget):
+            main_layout.addWidget(self.console)
+        if console is None:
+            main_layout.addWidget(
+                DeviceSelector(lambda p: self.console.connect(p), port))
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
         self._create_menu_bar()
@@ -119,14 +125,16 @@ class MainWindow(QMainWindow):
         options_menu = menu_bar.addMenu('Options')
         self.verbose_action = QAction('Verbose', self, checkable=True)
         self.verbose_action.setChecked(False)
-        self.verbose_action.triggered.connect(
-            lambda checked: self.console.verbose_checkbox.setChecked(checked))
+        if hasattr(self.console, 'verbose_checkbox'):
+            self.verbose_action.triggered.connect(
+                lambda checked: self.console.verbose_checkbox.setChecked(checked))
         options_menu.addAction(self.verbose_action)
 
         self.echo_action = QAction('Echo', self, checkable=True)
         self.echo_action.setChecked(False)
-        self.echo_action.triggered.connect(
-            lambda checked: self.console.echo_checkbox.setChecked(checked))
+        if hasattr(self.console, 'echo_checkbox'):
+            self.echo_action.triggered.connect(
+                lambda checked: self.console.echo_checkbox.setChecked(checked))
         options_menu.addAction(self.echo_action)
 
         # display current preset on the menu bar
@@ -137,10 +145,12 @@ class MainWindow(QMainWindow):
         self.parameter_menu.profile_changed.connect(self.preset_field.setText)
 
         # keep menu actions in sync with console widgets
-        self.console.verbose_checkbox.stateChanged.connect(
-            lambda state: self.verbose_action.setChecked(bool(state)))
-        self.console.echo_checkbox.stateChanged.connect(
-            lambda state: self.echo_action.setChecked(bool(state)))
+        if hasattr(self.console, 'verbose_checkbox'):
+            self.console.verbose_checkbox.stateChanged.connect(
+                lambda state: self.verbose_action.setChecked(bool(state)))
+        if hasattr(self.console, 'echo_checkbox'):
+            self.console.echo_checkbox.stateChanged.connect(
+                lambda state: self.echo_action.setChecked(bool(state)))
 
     def update_brightness(self, label, value):
         label.setText(f'Brightness: {value}')

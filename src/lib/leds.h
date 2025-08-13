@@ -12,7 +12,7 @@
 #endif
 
 #ifndef COLOR_ORDER
-#define COLOR_ORDER RGB
+#define COLOR_ORDER GRB // most strips are GRB; ensures hue 0 displays red
 #endif
 
 ByteRow base64Decode(uint8_t *input, int len);
