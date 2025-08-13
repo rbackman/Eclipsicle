@@ -257,8 +257,10 @@ void StripState::update()
     {
         if (counter % simulateCount == 0)
         {
+#ifdef STRIP_STATE_LOG_RLE
             std::string compressed = rleCompresssCRGB(leds, numLEDS);
             LOG_PRINTF("\nsim:%d:%s\n", stripIndex, compressed.c_str());
+#endif
         }
     }
 }

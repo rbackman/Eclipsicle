@@ -51,6 +51,17 @@ class FakeConsole:
         param = data.get("param")
         value = data.get("value")
         if param is not None and value is not None:
+            name = None
+            try:
+                pid = int(param)
+            except (TypeError, ValueError):
+                if isinstance(param, str):
+                    name = param
+            else:
+                name = self.param_id_map.get(pid)
+            if name:
+                self.sim.handle_cmd(f"{name}:{value}")
+                return
             self.sim.handle_cmd(f"{param}:{value}")
 
     def _tick(self):
