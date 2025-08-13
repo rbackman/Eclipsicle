@@ -9,9 +9,11 @@ __pycache__
 src\led_ui\data\configurations
 tests/falling_bricks_test
 tests/strip_state_test
+tests/hsv_conversion_test
 tests/*.o
 tests/*.log
 tools/simulate_bricks
 tools/simulate_strip
+tools/led_sim/led_sim.so
 dist/
 build/

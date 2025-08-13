@@ -8,9 +8,9 @@ TEST(StripState, SingleColorAnimationSetsPixels) {
     strip.addAnimation(ANIMATION_TYPE_SINGLE_COLOR, 0, 4, {{PARAM_HUE, 0}, {PARAM_BRIGHTNESS, 255}});
     strip.update();
     for(int i=0;i<5;++i) {
-        EXPECT_EQ(strip.leds[i].r, 255);
-        EXPECT_EQ(strip.leds[i].g, 0);
-        EXPECT_EQ(strip.leds[i].b, 0);
+        EXPECT_GT(strip.leds[i].r, 250);
+        EXPECT_LT(strip.leds[i].g, 5);
+        EXPECT_LT(strip.leds[i].b, 5);
     }
 }
 

@@ -1,5 +1,6 @@
 #include "shared.h"
 
+#include <algorithm>
 #include <cmath>
 
 bool _verbose = false;
@@ -52,45 +53,79 @@ bool isSlider(SensorID id)
   }
   return false;
 }
+namespace
+{
+  struct CHSV
+  {
+    uint8_t hue;
+    uint8_t sat;
+    uint8_t val;
+  };
+
+  inline uint8_t scale8(uint8_t i, uint8_t scale)
+  {
+    return (uint16_t(i) * uint16_t(scale)) >> 8;
+  }
+
+  void hsv2rgb_raw(const CHSV &hsv, led &rgb)
+  {
+    uint8_t value = hsv.val;
+    uint8_t saturation = hsv.sat;
+    uint8_t invsat = 255 - saturation;
+    uint8_t brightness_floor = (value * invsat) >> 8;
+    uint8_t color_amplitude = value - brightness_floor;
+    uint8_t section = hsv.hue / 64;
+    uint8_t offset = hsv.hue & 0x3F;
+    uint8_t rampup = offset;
+    uint8_t rampdown = (63 - offset);
+    uint8_t rampup_amp_adj = (rampup * color_amplitude) >> 6;
+    uint8_t rampdown_amp_adj = (rampdown * color_amplitude) >> 6;
+    uint8_t rampup_adj_with_floor = rampup_amp_adj + brightness_floor;
+    uint8_t rampdown_adj_with_floor = rampdown_amp_adj + brightness_floor;
+
+    if (section)
+    {
+      if (section == 1)
+      {
+        rgb.r = brightness_floor;
+        rgb.g = rampdown_adj_with_floor;
+        rgb.b = rampup_adj_with_floor;
+      }
+      else
+      {
+        rgb.r = rampup_adj_with_floor;
+        rgb.g = brightness_floor;
+        rgb.b = rampdown_adj_with_floor;
+      }
+    }
+    else
+    {
+      rgb.r = rampdown_adj_with_floor;
+      rgb.g = rampup_adj_with_floor;
+      rgb.b = brightness_floor;
+    }
+  }
+
+  void hsv2rgb_spectrum(const CHSV &hsv, led &rgb)
+  {
+    CHSV hsv2 = hsv;
+    hsv2.hue = scale8(hsv2.hue, 191);
+    hsv2rgb_raw(hsv2, rgb);
+  }
+}
+
 void colorFromHSV(led &color, float h, float s, float value)
 {
-  // Clamp or wrap hue to [0, 1)
   h = fmodf(h, 1.0f);
   if (h < 0)
     h += 1.0f;
 
-  float r, g, b;
-  int i = int(h * 6);
-  float f = h * 6 - i;
-  float p = value * (1 - s);
-  float q = value * (1 - f * s);
-  float t = value * (1 - (1 - f) * s);
+  CHSV hsv;
+  hsv.hue = uint8_t(h * 255.0f + 0.5f);
+  hsv.sat = uint8_t(std::max(0.0f, std::min(1.0f, s)) * 255.0f + 0.5f);
+  hsv.val = uint8_t(std::max(0.0f, std::min(1.0f, value)) * 255.0f + 0.5f);
 
-  switch (i % 6)
-  {
-  case 0:
-    r = value, g = t, b = p;
-    break;
-  case 1:
-    r = q, g = value, b = p;
-    break;
-  case 2:
-    r = p, g = value, b = t;
-    break;
-  case 3:
-    r = p, g = q, b = value;
-    break;
-  case 4:
-    r = t, g = p, b = value;
-    break;
-  case 5:
-    r = value, g = p, b = q;
-    break;
-  }
-
-  color.r = int(r * 255);
-  color.g = int(g * 255);
-  color.b = int(b * 255);
+  hsv2rgb_spectrum(hsv, color);
 }
 
 std::vector<std::string> getParameterNames()
