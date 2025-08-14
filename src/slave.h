@@ -30,6 +30,8 @@
 
 #include "lib/string_utils.h"
 
+#include "lib/i2c_manager.h"
+
 #include <vector>
 #include <string>
 
@@ -57,6 +59,8 @@ private:
 #ifdef MESH_NET
   MeshnetManager *meshManager;
 #endif
+
+  I2CManager i2cManager;
 
 public:
   SlaveBoard(SerialManager *serialManager);

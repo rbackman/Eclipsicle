@@ -39,14 +39,32 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
     meshManager = new MeshnetManager();
     meshManager->setImageHandler([this](const image_message &msg)
                                  { ledManager->setLEDImage(msg); });
+#ifdef USE_I2C_MASTER
+    meshManager->setTextHandler([this](const text_message &msg)
+                                { i2cManager.broadcastString(msg.text); });
+#else
     meshManager->setTextHandler([this](const text_message &msg)
                                 { handleTextMessage(msg.text); });
+#endif
     // meshManager->setSensorHandler([this](const sensor_message &msg)
     //                               { handleSensorMessage(msg); });
     meshManager->setParameterHandler([this](const parameter_message &msg)
                                      { handleParameterMessage(msg); });
     meshManager->init();
 
+#endif
+#ifdef USE_I2C_MASTER
+    i2cManager.beginMaster();
+    i2cManager.addSlave(0x10);
+    i2cManager.addSlave(0x11);
+    i2cManager.addSlave(0x12);
+#endif
+#ifdef USE_I2C_SLAVE
+#ifndef I2C_ADDRESS
+#define I2C_ADDRESS 0x10
+#endif
+    i2cManager.beginSlave(I2C_ADDRESS, [this](const std::string &msg)
+                          { handleString(String(msg.c_str())); });
 #endif
 #ifdef USE_SENSORS
     void setSensorManager(SensorManager * sensorManager)
@@ -143,6 +161,16 @@ void SlaveBoard::loop()
 
 #ifdef USE_PROFILER
     Profiler::getInstance().update();
+#endif
+
+#ifdef USE_I2C_MASTER
+    static uint32_t lastSync = 0;
+    uint32_t now = millis();
+    if (now - lastSync > 1000)
+    {
+        i2cManager.sendSync(now);
+        lastSync = now;
+    }
 #endif
 }
 
