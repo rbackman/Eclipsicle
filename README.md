@@ -25,6 +25,18 @@ board_build.partitions = no_ota.csv
 This uses PlatformIO's `no_ota` partition table which allocates about 1.9 MB for
 the firmware, often solving size errors from `checkprogsize`.
 
+## Master/Slave wiring
+
+An intermediate ESP32 master forwards wireless commands to LED-driving slaves over
+an I²C bus. On the Tesseract controller board the bus uses SDA pin 9 and SCL pin 18.
+Connect the master's SDA line to each slave's SDA and the SCL line likewise, and tie
+all grounds together. Add 4.7–10 kΩ pull-ups to 3.3 V if your boards do not already
+include them.
+
+Each slave must have a unique I²C address; the firmware reserves `0x10`–`0x12` for three
+LED branches. The master forwards MeshNet text messages to these addresses and periodically
+broadcasts sync ticks to keep animations aligned.
+
 ## Source overview
 
 * `src/` – firmware sources
