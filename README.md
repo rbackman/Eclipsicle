@@ -12,7 +12,7 @@ Install [PlatformIO](https://platformio.org/) and run for the desired environmen
 pio run -e master
 ```
 
-The `platformio.ini` file lists numerous environments such as `master`, `controller_slave`, `tesseratica_controller`, `lightsword`, `led_basic`, `rgbw_test`, and `master_with_audio` which enable features like audio playback, sensors, or display control. Each environment appears in its own `[env:<name>]` section.
+The `platformio.ini` file lists numerous environments such as `master`,   `tesseratica_controller`, `lightsword`,   `rgbw_test`, and `master_with_audio` which enable features like audio playback, sensors, or display control. Each environment appears in its own `[env:<name>]` section.
 
 If the firmware image exceeds the default 1.3 MB limit you can enlarge the
 application partition by disabling OTA support. Add the following line to the
@@ -24,6 +24,18 @@ board_build.partitions = no_ota.csv
 
 This uses PlatformIO's `no_ota` partition table which allocates about 1.9 MB for
 the firmware, often solving size errors from `checkprogsize`.
+
+## Master/Slave wiring
+
+An intermediate ESP32 master forwards wireless commands to LED-driving slaves over
+an I²C bus. On the Tesseract controller board the bus uses SDA pin 9 and SCL pin 18.
+Connect the master's SDA line to each slave's SDA and the SCL line likewise, and tie
+all grounds together. Add 4.7–10 kΩ pull-ups to 3.3 V if your boards do not already
+include them.
+
+Each slave must have a unique I²C address; the firmware reserves `0x10`–`0x12` for three
+LED branches. The master forwards MeshNet text messages to these addresses and periodically
+broadcasts sync ticks to keep animations aligned.
 
 ## Source overview
 
@@ -40,7 +52,7 @@ The UI environment setup is described in `src/led_ui/README.md`.
 The firmware contains a small BASIC interpreter that can drive LEDs from
 scripts sent over serial.  This feature is only compiled when the
 `LED_BASIC` flag is enabled in the build environment.  The provided
-`controller_slave` and `led_basic` environments in `platformio.ini`
+  and `led_basic` environments in `platformio.ini`
 include this flag.  If the firmware is built without it, commands
 prefixed with `basic:` are ignored and no pattern updates occur.
 

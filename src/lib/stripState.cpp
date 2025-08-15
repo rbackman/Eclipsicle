@@ -12,9 +12,9 @@
 #include "log.h"
 #include "string_utils.h"
 
-#ifdef LED_BASIC
+ 
 static constexpr size_t BASIC_CACHE_LIMIT = 3;
-#endif
+ 
 
 int val = 0;
 int minr = 0;
@@ -25,7 +25,7 @@ ANIMATION_TYPE getAnimationTypeFromName(const std::string &name)
 {
     for (const auto &pair : ANIMATION_TYPE_NAMES)
     {
-        if (equalsIgnoreCase(pair.second, name))
+        if (contains(name, pair.second))
         {
             return pair.first;
         }
@@ -70,7 +70,7 @@ void StripState::setAnimationFromName(std::string animationName)
     ANIMATION_TYPE animType = getAnimationTypeFromName(animationName);
     if (animType == ANIMATION_TYPE_NONE)
     {
-
+        LOG_PRINTF("Unknown animation type: %s\n", animationName.c_str());
         return;
     }
     setAnimation(animType);
@@ -153,13 +153,14 @@ std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_
         return std::unique_ptr<SphereAnimation>(new SphereAnimation(stripState, start, end, params));
     case ANIMATION_TYPE_PLANE:
         return std::unique_ptr<PlaneAnimation>(new PlaneAnimation(stripState, start, end, params));
-#ifdef LED_BASIC
+ 
     case ANIMATION_TYPE_BASIC_SCRIPT:
         return std::unique_ptr<BasicScriptAnimation>(
             new BasicScriptAnimation(stripState, start, end, stripState->getBasicScript(), params));
-#endif
+ 
     default:
-        throw std::invalid_argument("Unknown animation type");
+             return std::unique_ptr<ParticleAnimation>(new ParticleAnimation(stripState, true, start, end, params));
+  
     }
 }
 void StripState::addAnimation(ANIMATION_TYPE anim, int start, int end, std::map<ParameterID, float> params)
@@ -693,7 +694,7 @@ bool StripState::parseAnimationScript(std::string script)
     return true;
 }
 
-#ifdef LED_BASIC
+
 std::shared_ptr<BasicLEDController> StripState::getCachedBasicProgram(const std::string &script, int start, int end)
 {
     int length = (end < 0) ? numLEDS - start : end - start + 1;
@@ -721,21 +722,18 @@ std::shared_ptr<BasicLEDController> StripState::getCachedBasicProgram(const std:
     }
     return controller;
 }
-#endif
+ 
 
 bool StripState::parseBasicScript(std::string script)
 {
-#ifdef LED_BASIC
+ 
     replace(script, "|", "\n");
     basicScript = script;
     ledState = LED_STATE_SINGLE_ANIMATION;
     animations.clear();
     addAnimation(ANIMATION_TYPE_BASIC_SCRIPT, 0, numLEDS - 1);
     return true;
-#else
-    (void)script;
-    return false;
-#endif
+ 
 }
 void StripState::replaceAnimation(int index, ANIMATION_TYPE animType, std::map<ParameterID, float> params)
 {

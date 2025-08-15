@@ -27,6 +27,10 @@ inline bool endsWith(const std::string &str, const std::string &suffix)
 {
     return str.size() >= suffix.size() && str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
 }
+inline bool contains(const std::string &str, const std::string &substr)
+{
+    return str.find(substr) != std::string::npos;
+}
 inline void replace(std::string &str, const std::string &from, const std::string &to)
 {
     size_t start_pos = 0;
