@@ -1,14 +1,26 @@
 #include "i2c_manager.h"
-
+#include "shared.h"
+#include <Arduino.h>
 I2CManager *I2CManager::instance = nullptr;
 
+
+#ifndef SLAVE_SDA
+#define SLAVE_SDA 20
+#endif
+
+#ifndef SLAVE_SCL
+#define SLAVE_SCL 21
+#endif
+
 void I2CManager::beginMaster() {
-    Wire.begin();
+    Wire.begin(SLAVE_SDA, SLAVE_SCL);
     instance = this;
 }
 
 void I2CManager::beginSlave(uint8_t address, I2CMessageHandler handler) {
-    Wire.begin(address);
+    // start using custom pins and address
+    Wire.begin(SLAVE_SDA, SLAVE_SCL);
+    Wire.beginTransmission(address);
     _handler = handler;
     instance = this;
     Wire.onReceive(I2CManager::onReceiveStatic);
@@ -23,6 +35,10 @@ void I2CManager::sendString(uint8_t address, const std::string &message) {
 }
 
 void I2CManager::broadcastString(const std::string &message) {
+    if(isVerbose()) {
+        Serial.print("Broadcasting I2C message: ");
+        Serial.println(message.c_str());
+    }
     for (auto addr : _slaves) {
         sendString(addr, message);
     }

@@ -564,7 +564,7 @@ class ParameterMenuWidget(QWidget):
 
         pathname = "/".join(treePath)
 
-        self.console.send_cmd(f"menu:{pathname}")
+        # self.console.send_cmd(f"menu:{pathname}")
         if name in self.cache:
             # if we have a page for this name, show it
             print(f"Showing cached page for {name}")

@@ -1,7 +1,7 @@
-#ifdef CONTROLLER_PINS
+#ifdef TESS_BOARD
 #define SDA_PIN 9
 #define SCL_PIN 18
-
+#define I2C_ADDRESS 0x12
 #define DOUT_PIN 8
 #define MCP_CS 12
 #define AUDIO_BCLK_PIN 37
@@ -34,5 +34,9 @@
 #define ACCEL_SDA_PIN 20
 #define ACCEL_SCL_PIN 21
 #define ACCEL_INT_PIN 36
+
+#define SLAVE_SDA ACCEL_SDA_PIN
+#define SLAVE_SCL ACCEL_SCL_PIN
+ 
 
 #endif

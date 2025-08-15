@@ -5,9 +5,9 @@
 #include "parameterManager.h"
 #include <string>
 #include <memory>
-#ifdef LED_BASIC
+ 
 #include "ledBasic/BasicInterpreter.h"
-#endif
+ 
 
 class StripState;
 struct Particle
@@ -226,9 +226,9 @@ public:
 
 class BasicScriptAnimation : public StripAnimation
 {
-#ifdef LED_BASIC
+ 
     std::shared_ptr<BasicLEDController> controller;
-#endif
+ 
 
 public:
     void update();

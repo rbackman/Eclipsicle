@@ -1,4 +1,4 @@
-#ifdef LED_BASIC
+ 
 
 #include "BasicInterpreter.h"
 #include <cmath>
@@ -2039,4 +2039,4 @@ void VirtualStripManager::sortStripsByZOrder()
               });
 }
 
-#endif
+ 

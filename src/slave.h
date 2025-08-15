@@ -1,5 +1,5 @@
 #pragma once
-#ifdef SLAVE_BOARD
+#ifdef TESS_BOARD
 #include <Arduino.h>
 #ifdef USE_LEDS
 #include "lib/ledManager.h"

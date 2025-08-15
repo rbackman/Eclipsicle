@@ -615,7 +615,7 @@ void PlaneAnimation::update()
     }
 }
 
-#ifdef LED_BASIC
+ 
 BasicScriptAnimation::BasicScriptAnimation(StripState *state, int start, int end, const std::string &script,
                                            std::map<ParameterID, float> paramOverrides)
     : StripAnimation(state, start, end, ANIMATION_TYPE_BASIC_SCRIPT, {}, paramOverrides)
@@ -643,17 +643,5 @@ void BasicScriptAnimation::update()
     }
     controller->runLoop(millis());
 }
-#else
-BasicScriptAnimation::BasicScriptAnimation(StripState *state, int start, int end, const std::string &script,
-                                           std::map<ParameterID, float> paramOverrides)
-    : StripAnimation(state, start, end, ANIMATION_TYPE_BASIC_SCRIPT, {}, paramOverrides)
-{
-    (void)script;
-}
-
-void BasicScriptAnimation::update()
-{
-}
-#endif
-
+ 
 #endif

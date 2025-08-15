@@ -3,7 +3,7 @@
 This repository controls addressable LEDs with an ESP32-S3 board and a small PyQt UI.
 
 ## Layout
-- `platformio.ini` defines numerous build environments (e.g. `master`, `controller_slave`, `tesseratica_controller`, `lightsword`, `led_basic`, `rgbw_test`, `esp32s3_qemu`). Build with `pio run -e <env>`.
+- `platformio.ini` defines numerous build environments (e.g. `master`,   `tesseratica_controller`, `lightsword`, `led_basic`, `rgbw_test`, `esp32s3_qemu`). Build with `pio run -e <env>`.
 - Firmware sources live under `src/`. Reusable modules reside in `src/lib` while Python utilities and the UI live in `src/led_ui`.
 - Host-side unit tests are in `tests/`.
 - C++ simulators and helper tools are in `tools/`.

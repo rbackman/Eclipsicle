@@ -1,4 +1,4 @@
-#ifdef SLAVE_BOARD
+#ifdef TESS_BOARD
 #include "slave.h"
 #include "boardConfigs/ledNodes.h"
 #include "boardConfigs/ledNodes.h"
@@ -39,7 +39,7 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
     meshManager = new MeshnetManager();
     meshManager->setImageHandler([this](const image_message &msg)
                                  { ledManager->setLEDImage(msg); });
-#ifdef USE_I2C_MASTER
+#ifdef LED_MASTER
     meshManager->setTextHandler([this](const text_message &msg)
                                 { i2cManager.broadcastString(msg.text); });
 #else
@@ -53,13 +53,13 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
     meshManager->init();
 
 #endif
-#ifdef USE_I2C_MASTER
+#ifdef LED_MASTER
     i2cManager.beginMaster();
     i2cManager.addSlave(0x10);
     i2cManager.addSlave(0x11);
     i2cManager.addSlave(0x12);
 #endif
-#ifdef USE_I2C_SLAVE
+#ifdef LED_SLAVE
 #ifndef I2C_ADDRESS
 #define I2C_ADDRESS 0x10
 #endif
@@ -97,6 +97,7 @@ bool SlaveBoard::handleParameterMessage(parameter_message parameter)
     {
         printParameterMessage(parameter);
     }
+
 #ifdef USE_LEDS
     if (ledManager && ledManager->handleParameterMessage(parameter))
     {
@@ -163,7 +164,7 @@ void SlaveBoard::loop()
     Profiler::getInstance().update();
 #endif
 
-#ifdef USE_I2C_MASTER
+#ifdef LED_MASTER
     static uint32_t lastSync = 0;
     uint32_t now = millis();
     if (now - lastSync > 1000)
@@ -179,6 +180,9 @@ bool SlaveBoard::handleString(String command)
 
     if (command.startsWith("p:"))
     {
+#ifdef LED_MASTER
+        i2cManager.broadcastString(command.c_str());
+#endif
         // command is in form "p:PARAM_ID:VALUE"
         int colonIndex = command.indexOf(':');
         if (colonIndex == -1)
@@ -283,53 +287,54 @@ bool SlaveBoard::handleString(String command)
         Serial.println(String(info.c_str()) + ";");
         return true;
     }
-#ifdef USE_LEDS
-    else if (ledManager->handleString(command))
-    {
-        // command was handled by LED manager
-        return true;
-    }
-#endif
 
     else
     {
-        if (isVerbose())
+
+#ifdef LED_MASTER
+        i2cManager.broadcastString(command.c_str());
+#ifdef USE_LEDS
+        if (ledManager->handleString(command))
         {
-            Serial.println("Command not recognized: " + command);
+            return true;
         }
-    }
-
-#ifdef USE_DISPLAY
-    display.clearDisplay();
-    display.setCursor(0, 0);
-    if (showAccel)
-    {
-
-        display.print("Accel ");
-        display.print(a.acceleration.x, 1);
-        display.print(",");
-        display.print(a.acceleration.y, 1);
-        display.print(",");
-        display.print(a.acceleration.z, 1);
-        display.println("");
-
-        display.print("Gyro");
-        display.print(g.gyro.x, 1);
-        display.print(",");
-        display.print(g.gyro.y, 1);
-        display.print(",");
-        display.print(g.gyro.z, 1);
-        display.println("");
-    }
-    {
-        std::string state = ledManager->getStripState();
-        display.print(String(state.c_str()));
-    }
-
-    display.display();
 #endif
 
-    return false; // command was not handled
+#endif
+
+#ifdef USE_DISPLAY
+        display.clearDisplay();
+        display.setCursor(0, 0);
+        if (showAccel)
+        {
+
+            display.print("Accel ");
+            display.print(a.acceleration.x, 1);
+            display.print(",");
+            display.print(a.acceleration.y, 1);
+            display.print(",");
+            display.print(a.acceleration.z, 1);
+            display.println("");
+
+            display.print("Gyro");
+            display.print(g.gyro.x, 1);
+            display.print(",");
+            display.print(g.gyro.y, 1);
+            display.print(",");
+            display.print(g.gyro.z, 1);
+            display.println("");
+        }
+        {
+            std::string state = ledManager->getStripState();
+            display.print(String(state.c_str()));
+        }
+
+        display.display();
+#endif
+
+        return false; // command was not handled
+    }
+    return true; // command was handled
 }
 
 void SlaveBoard::handleJson(JsonDocument &doc)

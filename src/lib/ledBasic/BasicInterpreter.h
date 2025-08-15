@@ -1,4 +1,4 @@
-#ifdef LED_BASIC
+ 
 
 #ifndef BASIC_INTERPRETER_H
 #define BASIC_INTERPRETER_H
@@ -477,5 +477,4 @@ public:
 };
 
 #endif // BASIC_INTERPRETER_H
-
-#endif
+ 
