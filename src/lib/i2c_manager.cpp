@@ -44,6 +44,25 @@ void I2CManager::broadcastString(const std::string &message) {
     }
 }
 
+bool I2CManager::ping(uint8_t address) {
+    Wire.beginTransmission(address);
+    uint8_t error = Wire.endTransmission();
+    return error == 0;
+}
+
+void I2CManager::testSlaves() {
+    for (auto addr : _slaves) {
+        bool ok = ping(addr);
+        Serial.print("I2C slave 0x");
+        Serial.print(addr, HEX);
+        if (ok) {
+            Serial.println(" responded");
+        } else {
+            Serial.println(" not responding");
+        }
+    }
+}
+
 void I2CManager::sendSync(uint32_t timeMs) {
     std::string msg = "SYNC:" + std::to_string(timeMs);
     broadcastString(msg);

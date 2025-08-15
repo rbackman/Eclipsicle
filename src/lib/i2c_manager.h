@@ -14,6 +14,8 @@ class I2CManager {
     void addSlave(uint8_t address);
     void sendString(uint8_t address, const std::string &message);
     void broadcastString(const std::string &message);
+    bool ping(uint8_t address);
+    void testSlaves();
     void sendSync(uint32_t timeMs);
 
   private:
