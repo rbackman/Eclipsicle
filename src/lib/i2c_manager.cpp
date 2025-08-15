@@ -18,9 +18,9 @@ void I2CManager::beginMaster() {
 }
 
 void I2CManager::beginSlave(uint8_t address, I2CMessageHandler handler) {
-    // start using custom pins and address
-    Wire.begin(SLAVE_SDA, SLAVE_SCL);
-    Wire.beginTransmission(address);
+    // Initialize as a slave on the given address using the custom pins.
+    // `Wire.begin` needs the address parameter to enable slave mode on ESP32.
+    Wire.begin(address, SLAVE_SDA, SLAVE_SCL);
     _handler = handler;
     instance = this;
     Wire.onReceive(I2CManager::onReceiveStatic);
