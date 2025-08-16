@@ -12,6 +12,7 @@ private:
     std::vector<StripState *> stripStates;
     int lastUpdate = 0;
     int fps = 60;
+    int getLEDPin(int stripIndex) const;
 
 public:
     LEDManager();
@@ -20,12 +21,16 @@ public:
     {
 
         StripState *stripState = new StripState(state, numLEDS, stripIndex, nodes);
+        if (isVerbose())
+        {
+            Serial.printf("Adding LED strip with pin %d and %d LEDs  \n", getLEDPin(stripIndex), numLEDS);
+        }
         for (int j = 0; j < animations.size(); j++)
         {
             AnimationParams anim = animations[j];
             if (isVerbose())
             {
-                Serial.printf("Adding animation %d to strip %d\n", getAnimationName(anim.type), stripState->getStripIndex());
+                Serial.printf("Adding animation %s to strip %d\n", getAnimationName(anim.type), stripState->getStripIndex());
             }
             stripState->addAnimation(anim.type, anim.start, anim.end, anim.params);
         }

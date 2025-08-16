@@ -40,7 +40,7 @@ void setup()
   slaveBoard->getLEDManager()->initStrips();
 #endif
 
-  Serial.println("Controller Slave initialized ");
+  Serial.println("LED Master initialized ");
 }
 void loop()
 {

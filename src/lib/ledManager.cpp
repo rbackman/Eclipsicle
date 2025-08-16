@@ -9,6 +9,23 @@
 LEDManager::LEDManager() : ParameterManager("LEDManager", {PARAM_BRIGHTNESS, PARAM_CURRENT_STRIP, PARAM_SEQUENCE})
 {
 }
+int LEDManager::getLEDPin(int stripIndex) const
+{
+    switch (stripIndex)
+    {
+    case 0:
+        return LED_PIN_1;
+    case 1:
+        return LED_PIN_2;
+    case 2:
+        return LED_PIN_3;
+    case 3:
+        return LED_PIN_4;
+    default:
+        return -1; // Invalid strip index
+    }
+}
+
 void LEDManager::initStrips()
 {
 
