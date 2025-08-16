@@ -15,12 +15,14 @@ static HardwareSerial UART_PORT(1);
 
 void UARTManager::beginMaster() {
     UART_PORT.begin(115200, SERIAL_8N1, SLAVE_RX, SLAVE_TX);
+    UART_PORT.setTimeout(10);
     instance = this;
 }
 
 void UARTManager::beginSlave(uint8_t addr, UARTMessageHandler handler) {
     _address = addr;
     UART_PORT.begin(115200, SERIAL_8N1, SLAVE_RX, SLAVE_TX);
+    UART_PORT.setTimeout(10);
     _handler = handler;
     instance = this;
 }
@@ -70,13 +72,8 @@ void UARTManager::sendSync(uint32_t timeMs) {
 void UARTManager::update() {
     while (UART_PORT.available()) {
         uint8_t addr = UART_PORT.read();
-        std::string msg;
-        while (UART_PORT.available()) {
-            char c = UART_PORT.read();
-            if (c == '\n')
-                break;
-            msg.push_back(c);
-        }
+        String line = UART_PORT.readStringUntil('\n');
+        std::string msg(line.c_str());
         if (_handler && (addr == _address || addr == 0xFF)) {
             _handler(msg);
         }
