@@ -33,6 +33,7 @@
 #include "lib/parameterManager.h"
 #include "lib/menuManager.h"
 #include "lib/config.h"
+#include "lib/slideshow.h"
 
 #include "lib/string_utils.h"
 
@@ -68,6 +69,8 @@ private:
 #ifdef MESH_NET
     MeshnetManager *meshManager = nullptr;
 #endif
+
+    Slideshow *slideshow = nullptr;
 
 public:
     MasterBoard()

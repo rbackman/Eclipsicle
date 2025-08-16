@@ -233,12 +233,14 @@ class AnimationTabWidget(QWidget):
             if not line:
                 continue
             lower = line.lower()
-            if lower in ("animations:", "parameters:", "variables:"):
+            if lower in ("animations:", "parameters:", "variables:", "slideshow:"):
                 section = lower[:-1]
                 if section == "animations":
                     lines.append("a:")
                 elif section == "parameters":
                     lines.append("p:")
+                elif section == "slideshow":
+                    lines.append("s:")
                 else:
                     lines.append("v:")
                 continue
@@ -252,12 +254,27 @@ class AnimationTabWidget(QWidget):
                         pass
                 continue
             if section == "parameters":
-                if ':' in line:
-                    k, v = [p.strip() for p in line.split(':', 1)]
+                tokens = line.split()
+                if not tokens:
+                    continue
+                if ':' in tokens[0]:
+                    k, v = [p.strip() for p in tokens[0].split(':', 1)]
                     v = self._eval_value(v, variables)
                     pid = param_map.get(k.lower())
                     if pid is not None:
                         lines.append(f"{pid}:{v}")
+                        continue
+                else:
+                    k = tokens[0]
+                    pid = param_map.get(k.lower())
+                    if pid is not None:
+                        out = [str(pid)]
+                        for t in tokens[1:]:
+                            if ':' in t:
+                                key, val = t.split(':', 1)
+                                val = self._eval_value(val, variables)
+                                out.append(f"{key}:{val}")
+                        lines.append(' '.join(out))
                         continue
                 lines.append(line)
             elif section == "animations":
@@ -280,45 +297,91 @@ class AnimationTabWidget(QWidget):
                     else:
                         out.append(t)
                 lines.append(' '.join(out))
+            elif section == "slideshow":
+                parts = line.split()
+                if parts:
+                    name = parts[0]
+                    dur = parts[1] if len(parts) > 1 else "0"
+                    lines.append(f"{name}:{dur}")
             else:
                 lines.append(line)
         return '\n'.join(lines)
 
     def format_script(self):
-        """Format the current script and warn about unknown parameters."""
+        """Format the script and warn about unknown names or syntax errors."""
         text = self.editor.toPlainText()
         lines = text.splitlines()
         formatted = []
-        unknown = set()
-        known = self._load_param_names()
+        unknown_params = set()
+        unknown_anims = set()
+        bad_syntax = False
+        known_params = self._load_param_names()
+        anim_map = self._load_anim_map()
+        known_anims = {k.lower() for k in anim_map}
         section = None
         for raw in lines:
             line = raw.strip()
             if not line:
                 continue
             lower = line.lower()
-            if lower in ("animations:", "parameters:", "variables:"):
+            if lower in ("animations:", "parameters:", "variables:", "slideshow:"):
                 section = lower[:-1]
                 formatted.append(section.capitalize() + ":")
                 continue
             line = re.sub(r"\s*:\s*", ":", line)
             line = re.sub(r"\s+", " ", line)
-            if section in ("animations", "parameters"):
-                for match in re.finditer(r"(\w+):", line):
-                    name = match.group(1).lower()
-                    if name in ("start", "end"):
-                        continue
-                    if name not in known:
-                        unknown.add(name)
+            if section == "animations":
+                tokens = line.split()
+                if tokens:
+                    name = tokens[0].lower()
+                    if name not in known_anims:
+                        unknown_anims.add(tokens[0])
+                    extras = tokens[1:]
+                    for t in extras:
+                        if ":" not in t:
+                            bad_syntax = True
+                            continue
+                        key = t.split(":", 1)[0].lower()
+                        if key in ("start", "end", "cycle"):
+                            continue
+                        if key not in known_params:
+                            unknown_params.add(key)
+            elif section == "parameters":
+                tokens = line.split()
+                if tokens:
+                    first = tokens[0]
+                    extras = tokens[1:]
+                    if ":" in first:
+                        pkey = first.split(":", 1)[0].lower()
+                    else:
+                        pkey = first.lower()
+                    if pkey not in known_params:
+                        unknown_params.add(pkey)
+                    for t in extras:
+                        if ":" not in t:
+                            bad_syntax = True
+                            continue
+                        key = t.split(":", 1)[0].lower()
+                        if key in ("start", "end", "cycle"):
+                            continue
+                        if key not in known_params:
+                            unknown_params.add(key)
             indent = "    " if section else ""
             formatted.append(indent + line)
         self.editor.setPlainText("\n".join(formatted))
-        if unknown:
-            QMessageBox.warning(
-                self,
-                "Unknown Parameters",
-                "Unknown parameters found: " + ", ".join(sorted(unknown))
+        messages = []
+        if unknown_params:
+            messages.append(
+                "Unknown parameters: " + ", ".join(sorted(unknown_params))
             )
+        if unknown_anims:
+            messages.append(
+                "Unknown animations: " + ", ".join(sorted(unknown_anims))
+            )
+        if bad_syntax:
+            messages.append("Some tokens are missing ':' separators")
+        if messages:
+            QMessageBox.warning(self, "Format Issues", "\n".join(messages))
 
     def copy_script(self):
         """Duplicate the current script to a new file."""

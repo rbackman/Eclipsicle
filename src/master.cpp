@@ -66,6 +66,12 @@ void MasterBoard::init()
     // audioManager->playTone(1500, 100, 5);
 #endif
 
+    slideshow = new Slideshow(meshManager);
+    // example slides, real scripts loaded from UI
+    slideshow->addSlide("Rainbow", 5000);
+    slideshow->addSlide("Bricks", 5000);
+    slideshow->start();
+
     Serial.println("\n\nMaster initialized\n\n");
 };
 
@@ -139,6 +145,17 @@ bool MasterBoard::handleTextMessage(std::string command)
     {
         return true;
     }
+    if (startsWith(command, "slideshow:"))
+    {
+        std::string script = substring(command, 10);
+        replace(script, "|", "\n");
+        if (slideshow)
+        {
+            slideshow->loadScript(String(script.c_str()));
+            slideshow->start();
+        }
+        return true;
+    }
     return ParameterManager::handleTextMessage(command);
 }
 void MasterBoard::update()
@@ -154,6 +171,11 @@ void MasterBoard::update()
 #endif
     sensorManager->updateSensors();
     serialManager->updateSerial();
+
+    if (slideshow)
+    {
+        slideshow->update();
+    }
 
     if (sensorManager->messageAvailable())
     {
@@ -175,7 +197,7 @@ void MasterBoard::update()
 
         // Serial.print("Send Serial Message: " + message);
         if (handleTextMessage(message.c_str()) == false)
-            meshManager->sendStringToSlaves(message);
+            meshManager->sendStringToSlaves(std::string(message.c_str()));
     }
     if (serialManager->jsonAvailable())
     {
@@ -198,7 +220,7 @@ void MasterBoard::update()
         {
             Serial.printf(stringCmd.c_str());
         }
-        meshManager->sendStringToSlaves(stringCmd.c_str());
+        meshManager->sendStringToSlaves(stringCmd);
         if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
         {
             renderParameterMenu(true);

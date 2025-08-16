@@ -1,0 +1,5 @@
+ConfigFile:
+Parameters:
+    brightness cycle:4000 start:0 end:255
+Animations:
+    SingleColor hue:160

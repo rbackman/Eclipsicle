@@ -20,6 +20,7 @@ public:
     String(const char* s) : std::string(s) {}
     String(int v) : std::string(std::to_string(v)) {}
     String(float v) : std::string(std::to_string(v)) {}
+    String(double v) : std::string(std::to_string(v)) {}
     String substring(size_t pos, size_t len=npos) const { return String(std::string::substr(pos,len)); }
     int indexOf(char c, size_t pos=0) const { auto p=this->find(c,pos); return p==npos?-1:(int)p; }
     int indexOf(const String &s, size_t pos=0) const { auto p=this->find(s,pos); return p==npos?-1:(int)p; }
@@ -52,6 +53,15 @@ struct SerialClass {
 static SerialClass Serial;
 inline long random(long min, long max) { return min + std::rand() % (max - min); }
 inline void delay(unsigned long ms) { std::this_thread::sleep_for(std::chrono::milliseconds(ms)); }
+inline unsigned long millis() {
+    static auto start = std::chrono::steady_clock::now();
+    auto now = std::chrono::steady_clock::now();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+}
+template<typename T>
+inline T constrain(T val, T minVal, T maxVal) {
+    return std::min(std::max(val, minVal), maxVal);
+}
 
 // minimal FastLED noise stubs
 inline uint8_t inoise8(uint16_t x) { return (uint8_t)(std::rand() % 256); }

@@ -25,7 +25,7 @@ public:
     void sendSensorCommandToSlaves(sensor_message msg);
     void sendImageToSlaves(image_message image);
     void sendParametersToSlaves(ParameterID paramID, int value);
-    void sendStringToSlaves(String msg);
+    void sendStringToSlaves(std::string msg);
     void init();
 
     void setImageHandler(ImageHandler handler) { _imageHandler = handler; }

@@ -188,6 +188,7 @@ void StripState::addAnimation(ANIMATION_TYPE anim, int start, int end, std::map<
 void StripState::update()
 {
     counter++;
+    updateTimedParameters();
     clearPixels();
     if (beatSize > 0.1)
     {
@@ -502,17 +503,55 @@ bool StripState::parseAnimationScript(std::string script)
         }
         if (inParams)
         {
-            int colon = indexOf(line, ':');
-            if (colon == -1)
+            auto tokens = splitString(line, ' ');
+            if (tokens.size() == 0)
                 continue;
-            std::string key = substring(line, 0, colon);
-            std::string val = substring(line, colon + 1);
-            trim(key);
-            trim(val);
-            if (variables.find(val) != variables.end())
+            int colon = indexOf(tokens[0], ':');
+            if (colon != -1)
             {
-                val = std::to_string(variables[val]);
+                std::string key = substring(tokens[0], 0, colon);
+                std::string val = substring(tokens[0], colon + 1);
+                trim(key);
+                trim(val);
+                if (variables.find(val) != variables.end())
+                {
+                    val = std::to_string(variables[val]);
+                }
+                ParameterID pid = PARAM_UNKNOWN;
+                bool numeric = true;
+                for (int i = 0; i < key.length(); ++i)
+                {
+                    if (!std::isdigit(static_cast<unsigned char>(key[i])))
+                    {
+                        numeric = false;
+                        break;
+                    }
+                }
+                if (numeric)
+                {
+                    pid = (ParameterID)toInt(key);
+                }
+                else
+                {
+                    toUpperCase(key);
+                    std::string full = "PARAM_" + key;
+                    pid = getParameterID(full.c_str());
+                }
+                if (pid != PARAM_UNKNOWN)
+                {
+                    paramOverrides[pid] = toFloat(val);
+                    if (isVerbose())
+                    {
+                        LOG_PRINTF("Parameter override: %d = %s\n", pid, val.c_str());
+                    }
+                }
+                else
+                {
+                    LOG_PRINTF("Unknown parameter in script: %s\n", key.c_str());
+                }
+                continue;
             }
+            std::string key = tokens[0];
             ParameterID pid = PARAM_UNKNOWN;
             bool numeric = true;
             for (int i = 0; i < key.length(); ++i)
@@ -533,15 +572,43 @@ bool StripState::parseAnimationScript(std::string script)
                 std::string full = "PARAM_" + key;
                 pid = getParameterID(full.c_str());
             }
-            if (pid != PARAM_UNKNOWN)
+            float start = 0, end = 0;
+            uint32_t cycle = 0;
+            for (int i = 1; i < tokens.size(); ++i)
             {
-                paramOverrides[pid] = toFloat(val);
-                if (isVerbose())
+                int c = indexOf(tokens[i], ':');
+                if (c == -1)
+                    continue;
+                std::string k = substring(tokens[i], 0, c);
+                std::string v = substring(tokens[i], c + 1);
+                trim(k);
+                trim(v);
+                if (variables.find(v) != variables.end())
                 {
-                    LOG_PRINTF("Parameter override: %d = %s\n", pid, val.c_str());
+                    v = std::to_string(variables[v]);
+                }
+                if (equalsIgnoreCase(k, "start"))
+                {
+                    start = toFloat(v);
+                }
+                else if (equalsIgnoreCase(k, "end"))
+                {
+                    end = toFloat(v);
+                }
+                else if (equalsIgnoreCase(k, "cycle"))
+                {
+                    cycle = toInt(v);
                 }
             }
-            else
+            if (pid != PARAM_UNKNOWN && cycle > 0)
+            {
+                setTimedParameter(pid, start, end, cycle);
+                if (isVerbose())
+                {
+                    LOG_PRINTF("Timed parameter: %d start:%f end:%f cycle:%u\n", pid, start, end, cycle);
+                }
+            }
+            else if (pid == PARAM_UNKNOWN)
             {
                 LOG_PRINTF("Unknown parameter in script: %s\n", key.c_str());
             }
@@ -684,6 +751,7 @@ bool StripState::parseAnimationScript(std::string script)
         }
     }
 
+    setParameters(paramOverrides);
     ledState = LED_STATE_MULTI_ANIMATION;
     animations.clear();
 
