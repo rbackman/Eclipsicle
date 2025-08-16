@@ -57,8 +57,8 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 #endif
 #ifdef LED_MASTER
     uartManager.beginMaster();
-    uartManager.addSlave(0x10, 46, 47, 1);
-    uartManager.addSlave(0x11, 8, 9, 2);
+    uartManager.addSlave(0x10, 46, 47, 2);
+    uartManager.addSlave(0x11, 8, 9, 1);
     // uartManager.addSlave(0x12, 37, 38, 0);
     uartManager.testSlaves();
 #endif
