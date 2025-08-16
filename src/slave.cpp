@@ -37,8 +37,10 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 #endif
 #ifdef MESH_NET
     meshManager = new MeshnetManager();
+#ifdef USE_LEDS
     meshManager->setImageHandler([this](const image_message &msg)
                                  { ledManager->setLEDImage(msg); });
+#endif
 #ifdef LED_MASTER
     meshManager->setTextHandler([this](const text_message &msg)
                                 { uartManager.broadcastString(msg.text); });
@@ -76,6 +78,7 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 
     configManager.begin();
     configManager.loadParameters(this);
+#ifdef USE_LEDS
     configManager.loadParameters(ledManager);
     for (auto strip : ledManager->getStrips())
     {
@@ -85,6 +88,7 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
             configManager.loadParameters(anim.get());
         }
     }
+#endif
     if (isVerbose())
     {
         sanityCheckParameters();
@@ -226,6 +230,7 @@ bool SlaveBoard::handleString(String command)
 
         return true;
     }
+#ifdef USE_LEDS
     else if (command.startsWith("menu:"))
     {
         // command is in form "menu:MENU_NAME"
@@ -263,22 +268,16 @@ bool SlaveBoard::handleString(String command)
         Serial.println("Defaults loaded");
         return true;
     }
-    else if (command == "resetDefaults")
-    {
-        configManager.clear();
-        Serial.println("Defaults cleared");
-        return true;
-    }
-   #ifdef USE_LEDS
+
     else if (command == "getStripState")
     {
-        
+
         std::string state = ledManager->getStripsStateJson(true);
         Serial.println(String(state.c_str()) + ";");
-      
+
         return true;
     }
-      
+
     else if (command == "getStripStateCompact")
     {
         std::string state = ledManager->getStripStateCompact(true);
@@ -294,6 +293,12 @@ bool SlaveBoard::handleString(String command)
         return true;
     }
 #endif
+    else if (command == "resetDefaults")
+    {
+        configManager.clear();
+        Serial.println("Defaults cleared");
+        return true;
+    }
     else
     {
 
