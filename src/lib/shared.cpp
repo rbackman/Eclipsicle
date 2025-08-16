@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
-bool _verbose = false;
+bool _verbose = true;
 
 std::string getName()
 {

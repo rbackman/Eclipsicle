@@ -37,11 +37,13 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 #endif
 #ifdef MESH_NET
     meshManager = new MeshnetManager();
+#ifdef USE_LEDS
     meshManager->setImageHandler([this](const image_message &msg)
                                  { ledManager->setLEDImage(msg); });
+#endif
 #ifdef LED_MASTER
     meshManager->setTextHandler([this](const text_message &msg)
-                                { i2cManager.broadcastString(msg.text); });
+                                { uartManager.broadcastString(msg.text); });
 #else
     meshManager->setTextHandler([this](const text_message &msg)
                                 { handleTextMessage(msg.text); });
@@ -54,18 +56,18 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 
 #endif
 #ifdef LED_MASTER
-    i2cManager.beginMaster();
-    i2cManager.addSlave(0x10);
-    i2cManager.addSlave(0x11);
-    i2cManager.addSlave(0x12);
-    i2cManager.testSlaves();
+    uartManager.beginMaster();
+    uartManager.addSlave(0x10, 46, 47, 2);
+    uartManager.addSlave(0x11, 8, 9, 1);
+    uartManager.addSlave(0x12, 37, 38, 0);
+    uartManager.testSlaves();
 #endif
 #ifdef LED_SLAVE
-#ifndef I2C_ADDRESS
-#define I2C_ADDRESS 0x10
+#ifndef UART_ADDRESS
+#define UART_ADDRESS 0x10
 #endif
-    i2cManager.beginSlave(I2C_ADDRESS, [this](const std::string &msg)
-                          { handleString(String(msg.c_str())); });
+    uartManager.beginSlave(UART_ADDRESS, [this](const std::string &msg)
+                           { handleString(String(msg.c_str())); });
 #endif
 #ifdef USE_SENSORS
     void setSensorManager(SensorManager * sensorManager)
@@ -76,6 +78,7 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 
     configManager.begin();
     configManager.loadParameters(this);
+#ifdef USE_LEDS
     configManager.loadParameters(ledManager);
     for (auto strip : ledManager->getStrips())
     {
@@ -85,6 +88,7 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
             configManager.loadParameters(anim.get());
         }
     }
+#endif
     if (isVerbose())
     {
         sanityCheckParameters();
@@ -123,6 +127,7 @@ bool SlaveBoard::handleParameterMessage(parameter_message parameter)
 void SlaveBoard::loop()
 {
     serialManager->updateSerial();
+    uartManager.update();
     if (serialManager->stringAvailable())
     {
         auto command = serialManager->readString();
@@ -170,7 +175,7 @@ void SlaveBoard::loop()
     uint32_t now = millis();
     if (now - lastSync > 1000)
     {
-        i2cManager.sendSync(now);
+        uartManager.sendSync(now);
         lastSync = now;
     }
 #endif
@@ -182,7 +187,7 @@ bool SlaveBoard::handleString(String command)
     if (command.startsWith("p:"))
     {
 #ifdef LED_MASTER
-        i2cManager.broadcastString(command.c_str());
+        uartManager.broadcastString(command.c_str());
 #endif
         // command is in form "p:PARAM_ID:VALUE"
         int colonIndex = command.indexOf(':');
@@ -225,6 +230,7 @@ bool SlaveBoard::handleString(String command)
 
         return true;
     }
+#ifdef USE_LEDS
     else if (command.startsWith("menu:"))
     {
         // command is in form "menu:MENU_NAME"
@@ -262,18 +268,16 @@ bool SlaveBoard::handleString(String command)
         Serial.println("Defaults loaded");
         return true;
     }
-    else if (command == "resetDefaults")
-    {
-        configManager.clear();
-        Serial.println("Defaults cleared");
-        return true;
-    }
+
     else if (command == "getStripState")
     {
+
         std::string state = ledManager->getStripsStateJson(true);
         Serial.println(String(state.c_str()) + ";");
+
         return true;
     }
+
     else if (command == "getStripStateCompact")
     {
         std::string state = ledManager->getStripStateCompact(true);
@@ -288,12 +292,18 @@ bool SlaveBoard::handleString(String command)
         Serial.println(String(info.c_str()) + ";");
         return true;
     }
-
+#endif
+    else if (command == "resetDefaults")
+    {
+        configManager.clear();
+        Serial.println("Defaults cleared");
+        return true;
+    }
     else
     {
 
 #ifdef LED_MASTER
-        i2cManager.broadcastString(command.c_str());
+        uartManager.broadcastString(command.c_str());
 #ifdef USE_LEDS
         if (ledManager->handleString(command))
         {

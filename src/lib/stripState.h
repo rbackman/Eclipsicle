@@ -11,9 +11,7 @@
 #include <string>
 #include <list>
 
- 
 #include "ledBasic/BasicInterpreter.h"
- 
 
 // Forward declaration for internal helper
 std::unique_ptr<StripAnimation> makeAnimation(StripState *stripState, ANIMATION_TYPE animType, int start, int end, std::map<ParameterID, float> params);
@@ -36,7 +34,6 @@ private:
     // last received LED Basic script
     std::string basicScript;
 
- 
     struct CachedBasicProgram
     {
         std::string script;
@@ -45,7 +42,6 @@ private:
         std::shared_ptr<BasicLEDController> controller;
     };
     std::list<CachedBasicProgram> basicProgramCache;
- 
 
     // nodes with LED indices and 3D positions
     std::vector<Node3D> nodes;
@@ -70,6 +66,7 @@ public:
     {
         this->simulateCount = simulateCount;
     }
+
     void setAnimation(ANIMATION_TYPE animType, int start = -1, int end = -1, std::map<ParameterID, float> params = {})
     {
         ledState = LED_STATE_SINGLE_ANIMATION;
@@ -113,9 +110,9 @@ public:
     bool handleTextMessage(std::string command);
     bool parseAnimationScript(std::string script);
     bool parseBasicScript(std::string script);
- 
+
     std::shared_ptr<BasicLEDController> getCachedBasicProgram(const std::string &script, int start, int end);
- 
+
     const std::string &getBasicScript() const { return basicScript; }
 
     void clearPixels();

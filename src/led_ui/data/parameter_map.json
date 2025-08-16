@@ -64,7 +64,7 @@
   "PARAM_HUE": {
     "id": 0,
     "type": "int",
-    "value": 205,
+    "value": 85,
     "name": "Hue",
     "min": 0,
     "max": 360
@@ -72,7 +72,7 @@
   "PARAM_HUE_END": {
     "id": 1,
     "type": "int",
-    "value": 217,
+    "value": 85,
     "name": "HueEnd",
     "min": 0,
     "max": 360
