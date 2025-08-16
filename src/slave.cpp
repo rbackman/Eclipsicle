@@ -41,7 +41,7 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
                                  { ledManager->setLEDImage(msg); });
 #ifdef LED_MASTER
     meshManager->setTextHandler([this](const text_message &msg)
-                                { i2cManager.broadcastString(msg.text); });
+                                { uartManager.broadcastString(msg.text); });
 #else
     meshManager->setTextHandler([this](const text_message &msg)
                                 { handleTextMessage(msg.text); });
@@ -54,18 +54,21 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
 
 #endif
 #ifdef LED_MASTER
-    i2cManager.beginMaster();
-    i2cManager.addSlave(0x10);
-    i2cManager.addSlave(0x11);
-    i2cManager.addSlave(0x12);
-    i2cManager.testSlaves();
+    uartManager.beginMaster();
+    // Use a dedicated UART link for each slave; avoid pin 48 which drives the
+    // onboard LED.
+    uartManager.addSlave(0x10, 46, 45, 1);
+    uartManager.addSlave(0x11, 8, 9, 2);
+    // UART0 is reserved for the USB serial console so a third slave cannot be
+    // attached here without additional hardware.
+    uartManager.testSlaves();
 #endif
 #ifdef LED_SLAVE
-#ifndef I2C_ADDRESS
-#define I2C_ADDRESS 0x10
+#ifndef UART_ADDRESS
+#define UART_ADDRESS 0x10
 #endif
-    i2cManager.beginSlave(I2C_ADDRESS, [this](const std::string &msg)
-                          { handleString(String(msg.c_str())); });
+    uartManager.beginSlave(UART_ADDRESS, [this](const std::string &msg)
+                           { handleString(String(msg.c_str())); });
 #endif
 #ifdef USE_SENSORS
     void setSensorManager(SensorManager * sensorManager)
@@ -123,6 +126,7 @@ bool SlaveBoard::handleParameterMessage(parameter_message parameter)
 void SlaveBoard::loop()
 {
     serialManager->updateSerial();
+    uartManager.update();
     if (serialManager->stringAvailable())
     {
         auto command = serialManager->readString();
@@ -170,7 +174,7 @@ void SlaveBoard::loop()
     uint32_t now = millis();
     if (now - lastSync > 1000)
     {
-        i2cManager.sendSync(now);
+        uartManager.sendSync(now);
         lastSync = now;
     }
 #endif
@@ -182,7 +186,7 @@ bool SlaveBoard::handleString(String command)
     if (command.startsWith("p:"))
     {
 #ifdef LED_MASTER
-        i2cManager.broadcastString(command.c_str());
+        uartManager.broadcastString(command.c_str());
 #endif
         // command is in form "p:PARAM_ID:VALUE"
         int colonIndex = command.indexOf(':');
@@ -293,7 +297,7 @@ bool SlaveBoard::handleString(String command)
     {
 
 #ifdef LED_MASTER
-        i2cManager.broadcastString(command.c_str());
+        uartManager.broadcastString(command.c_str());
 #ifdef USE_LEDS
         if (ledManager->handleString(command))
         {
