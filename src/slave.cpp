@@ -304,13 +304,12 @@ bool SlaveBoard::handleString(String command)
 
 #ifdef LED_MASTER
         uartManager.broadcastString(command.c_str());
+#endif
 #ifdef USE_LEDS
         if (ledManager->handleString(command))
         {
             return true;
         }
-#endif
-
 #endif
 
 #ifdef USE_DISPLAY

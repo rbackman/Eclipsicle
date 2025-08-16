@@ -1,7 +1,7 @@
 #ifdef TESS_BOARD
 #define SDA_PIN 9
 #define SCL_PIN 18
-#define UART_ADDRESS 0x10
+#define UART_ADDRESS 0x12
 #define DOUT_PIN 8
 #define MCP_CS 12
 #define AUDIO_BCLK_PIN 37
@@ -37,6 +37,5 @@
 
 #define SLAVE_RX AUDIO_BCLK_PIN
 #define SLAVE_TX AUDIO_LRC_PIN
- 
 
 #endif
