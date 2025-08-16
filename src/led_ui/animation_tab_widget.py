@@ -233,12 +233,14 @@ class AnimationTabWidget(QWidget):
             if not line:
                 continue
             lower = line.lower()
-            if lower in ("animations:", "parameters:", "variables:"):
+            if lower in ("animations:", "parameters:", "variables:", "slideshow:"):
                 section = lower[:-1]
                 if section == "animations":
                     lines.append("a:")
                 elif section == "parameters":
                     lines.append("p:")
+                elif section == "slideshow":
+                    lines.append("s:")
                 else:
                     lines.append("v:")
                 continue
@@ -252,12 +254,27 @@ class AnimationTabWidget(QWidget):
                         pass
                 continue
             if section == "parameters":
-                if ':' in line:
-                    k, v = [p.strip() for p in line.split(':', 1)]
+                tokens = line.split()
+                if not tokens:
+                    continue
+                if ':' in tokens[0]:
+                    k, v = [p.strip() for p in tokens[0].split(':', 1)]
                     v = self._eval_value(v, variables)
                     pid = param_map.get(k.lower())
                     if pid is not None:
                         lines.append(f"{pid}:{v}")
+                        continue
+                else:
+                    k = tokens[0]
+                    pid = param_map.get(k.lower())
+                    if pid is not None:
+                        out = [str(pid)]
+                        for t in tokens[1:]:
+                            if ':' in t:
+                                key, val = t.split(':', 1)
+                                val = self._eval_value(val, variables)
+                                out.append(f"{key}:{val}")
+                        lines.append(' '.join(out))
                         continue
                 lines.append(line)
             elif section == "animations":
@@ -280,6 +297,12 @@ class AnimationTabWidget(QWidget):
                     else:
                         out.append(t)
                 lines.append(' '.join(out))
+            elif section == "slideshow":
+                parts = line.split()
+                if parts:
+                    name = parts[0]
+                    dur = parts[1] if len(parts) > 1 else "0"
+                    lines.append(f"{name}:{dur}")
             else:
                 lines.append(line)
         return '\n'.join(lines)
@@ -297,7 +320,7 @@ class AnimationTabWidget(QWidget):
             if not line:
                 continue
             lower = line.lower()
-            if lower in ("animations:", "parameters:", "variables:"):
+            if lower in ("animations:", "parameters:", "variables:", "slideshow:"):
                 section = lower[:-1]
                 formatted.append(section.capitalize() + ":")
                 continue

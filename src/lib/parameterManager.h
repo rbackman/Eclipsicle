@@ -136,11 +136,23 @@ public:
         return PARAM_UNKNOWN;
     }
 
+    void setTimedParameter(ParameterID id, float start, float end, uint32_t cycle);
+    void updateTimedParameters();
+
 private:
     bool paramChanged = true;
     std::vector<BoolParameter> boolParams = {};
     std::vector<IntParameter> intParams = {};
     std::vector<FloatParameter> floatParams = {};
     std::string name;
+    struct TimedParameter
+    {
+        ParameterID id;
+        float start;
+        float end;
+        uint32_t cycle;
+        uint32_t startTime;
+    };
+    std::vector<TimedParameter> timedParams;
     // std::vector<ParameterChangeListener> listeners = {};
 };

@@ -106,6 +106,42 @@ ParameterManager::ParameterManager(std::string name, std::vector<ParameterID> fi
     // }
 }
 
+void ParameterManager::setTimedParameter(ParameterID id, float start, float end, uint32_t cycle)
+{
+    TimedParameter tp{ id, start, end, cycle, (uint32_t)millis() };
+    timedParams.push_back(tp);
+    if (isFloatParameter(id))
+    {
+        setFloat(id, start);
+    }
+    else if (isIntParameter(id))
+    {
+        setInt(id, (int)start);
+    }
+}
+
+void ParameterManager::updateTimedParameters()
+{
+    uint32_t now = millis();
+    for (auto &tp : timedParams)
+    {
+        if (tp.cycle == 0)
+            continue;
+        float span = tp.end - tp.start;
+        float phase = (now - tp.startTime) % tp.cycle;
+        phase /= (float)tp.cycle;
+        float value = tp.start + span * phase;
+        if (isFloatParameter(tp.id))
+        {
+            setFloat(tp.id, value);
+        }
+        else if (isIntParameter(tp.id))
+        {
+            setInt(tp.id, (int)value);
+        }
+    }
+}
+
 IntParameter ParameterManager::getIntParameter(ParameterID id)
 {
     for (int i = 0; i < intParams.size(); i++)
