@@ -76,6 +76,10 @@ Animation scripts (`*.led`) begin with a `ConfigFile:` line naming the base para
 
 Within the UI, open an animation file and use the **Send** button to transmit it to the device. Newlines are encoded as `|` characters when sent via the `script:` command.
 
+Scripts may also include a `Slideshow:` section listing other `.led` files and their durations in milliseconds. Parameters support timed variation by adding `cycle`, `start`, and `end` tokens. Example scripts demonstrating slideshows and timed parameters live in the `examples/` directory.
+
+The animation editor now provides a **Format** button to normalize spacing and warn about unknown parameter or animation names, helping catch syntax errors before sending.
+
 ### Simulating with QEMU
 
 PlatformIO can run the firmware under QEMU for automated testing.  An example

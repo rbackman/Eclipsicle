@@ -1,0 +1,5 @@
+ConfigFile:
+Parameters:
+    brightness:200
+Animations:
+    SingleColor hue:0

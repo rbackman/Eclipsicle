@@ -1,0 +1,4 @@
+ConfigFile:
+Slideshow:
+    slide_red.led 3000
+    slide_green.led 3000
