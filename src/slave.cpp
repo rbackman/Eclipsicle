@@ -269,12 +269,16 @@ bool SlaveBoard::handleString(String command)
         Serial.println("Defaults cleared");
         return true;
     }
+   #ifdef USE_LEDS
     else if (command == "getStripState")
     {
+        
         std::string state = ledManager->getStripsStateJson(true);
         Serial.println(String(state.c_str()) + ";");
+      
         return true;
     }
+      
     else if (command == "getStripStateCompact")
     {
         std::string state = ledManager->getStripStateCompact(true);
@@ -289,7 +293,7 @@ bool SlaveBoard::handleString(String command)
         Serial.println(String(info.c_str()) + ";");
         return true;
     }
-
+#endif
     else
     {
 
