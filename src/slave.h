@@ -30,7 +30,7 @@
 
 #include "lib/string_utils.h"
 
-#include "lib/i2c_manager.h"
+#include "lib/uart_manager.h"
 
 #include <vector>
 #include <string>
@@ -60,7 +60,7 @@ private:
   MeshnetManager *meshManager;
 #endif
 
-  I2CManager i2cManager;
+  UARTManager uartManager;
 
 public:
   SlaveBoard(SerialManager *serialManager);
