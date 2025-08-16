@@ -32,11 +32,13 @@ void setup()
       {10, 54.5, -54.5, 50},
 
   };
+#ifdef USE_LEDS
   slaveBoard->getLEDManager()->addStrip(3, 32, LED_STATE_MULTI_ANIMATION,
                                         {params},
                                         nodes);
 
   slaveBoard->getLEDManager()->initStrips();
+#endif
 
   Serial.println("Controller Slave initialized ");
 }
