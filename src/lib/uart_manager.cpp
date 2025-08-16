@@ -11,29 +11,34 @@ UARTManager *UARTManager::instance = nullptr;
 #define SLAVE_TX 38
 #endif
 
-static HardwareSerial UART_PORT(1);
-
-void UARTManager::beginMaster() {
-    UART_PORT.begin(115200, SERIAL_8N1, SLAVE_RX, SLAVE_TX);
-    UART_PORT.setTimeout(10);
-    instance = this;
-}
+void UARTManager::beginMaster() { instance = this; }
 
 void UARTManager::beginSlave(uint8_t addr, UARTMessageHandler handler) {
     _address = addr;
-    UART_PORT.begin(115200, SERIAL_8N1, SLAVE_RX, SLAVE_TX);
-    UART_PORT.setTimeout(10);
+    _serial = new HardwareSerial(1);
+    _serial->begin(115200, SERIAL_8N1, SLAVE_RX, SLAVE_TX);
+    _serial->setTimeout(10);
     _handler = handler;
     instance = this;
 }
 
-void UARTManager::addSlave(uint8_t address) { _slaves.push_back(address); }
+void UARTManager::addSlave(uint8_t address, int8_t rxPin, int8_t txPin,
+                           uint8_t uartNum) {
+    HardwareSerial *port = new HardwareSerial(uartNum);
+    port->begin(115200, SERIAL_8N1, rxPin, txPin);
+    port->setTimeout(10);
+    _slaves.push_back({address, port});
+}
 
 void UARTManager::sendString(uint8_t address, const std::string &message) {
-    UART_PORT.write(address);
-    UART_PORT.write(reinterpret_cast<const uint8_t *>(message.c_str()),
-                    message.length());
-    UART_PORT.write('\n');
+    for (auto &s : _slaves) {
+        if (s.address == address) {
+            s.serial->write(reinterpret_cast<const uint8_t *>(message.c_str()),
+                            message.length());
+            s.serial->write('\n');
+            break;
+        }
+    }
 }
 
 void UARTManager::broadcastString(const std::string &message, bool print) {
@@ -41,8 +46,10 @@ void UARTManager::broadcastString(const std::string &message, bool print) {
         Serial.print("Broadcasting UART message: ");
         Serial.println(message.c_str());
     }
-    for (auto addr : _slaves) {
-        sendString(addr, message);
+    for (auto &s : _slaves) {
+        s.serial->write(reinterpret_cast<const uint8_t *>(message.c_str()),
+                        message.length());
+        s.serial->write('\n');
     }
 }
 
@@ -52,10 +59,10 @@ bool UARTManager::ping(uint8_t address) {
 }
 
 void UARTManager::testSlaves() {
-    for (auto addr : _slaves) {
-        bool ok = ping(addr);
+    for (auto &s : _slaves) {
+        bool ok = ping(s.address);
         Serial.print("UART slave 0x");
-        Serial.print(addr, HEX);
+        Serial.print(s.address, HEX);
         if (ok) {
             Serial.println(" responded");
         } else {
@@ -70,12 +77,23 @@ void UARTManager::sendSync(uint32_t timeMs) {
 }
 
 void UARTManager::update() {
-    while (UART_PORT.available()) {
-        uint8_t addr = UART_PORT.read();
-        String line = UART_PORT.readStringUntil('\n');
-        std::string msg(line.c_str());
-        if (_handler && (addr == _address || addr == 0xFF)) {
-            _handler(msg);
+    if (_serial) {
+        while (_serial->available()) {
+            String line = _serial->readStringUntil('\n');
+            std::string msg(line.c_str());
+            if (_handler) {
+                _handler(msg);
+            }
+        }
+    }
+
+    for (auto &s : _slaves) {
+        while (s.serial->available()) {
+            String line = s.serial->readStringUntil('\n');
+            std::string msg(line.c_str());
+            if (_handler) {
+                _handler(msg);
+            }
         }
     }
 }
