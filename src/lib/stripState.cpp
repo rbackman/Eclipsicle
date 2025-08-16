@@ -25,7 +25,7 @@ ANIMATION_TYPE getAnimationTypeFromName(const std::string &name)
 {
     for (const auto &pair : ANIMATION_TYPE_NAMES)
     {
-        if (contains(name, pair.second))
+        if (containsIgnoreCase(name, pair.second))
         {
             return pair.first;
         }
@@ -802,9 +802,10 @@ bool StripState::handleTextMessage(std::string command)
         auto animName = animparts[1];
         trim(animName);
 
-        if (animName == "POINT_CONTROL")
+        if (containsIgnoreCase(animName, "point")  )
         {
             ledState = LED_STATE_POINT_CONTROL;
+            setInt(PARAM_CURRENT_LED, 0);
             if (isVerbose())
             {
                 LOG_PRINTLN("Set LED state to POINT_CONTROL");
@@ -814,7 +815,7 @@ bool StripState::handleTextMessage(std::string command)
         ANIMATION_TYPE animType = getAnimationTypeFromName(animName);
         if (animType == ANIMATION_TYPE_NONE)
         {
-            LOG_PRINTF("Unknown animation type %s\n", animName.c_str());
+          
             return false;
         }
 

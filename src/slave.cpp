@@ -58,6 +58,7 @@ SlaveBoard::SlaveBoard(SerialManager *serialManager)
     i2cManager.addSlave(0x10);
     i2cManager.addSlave(0x11);
     i2cManager.addSlave(0x12);
+    i2cManager.testSlaves();
 #endif
 #ifdef LED_SLAVE
 #ifndef I2C_ADDRESS

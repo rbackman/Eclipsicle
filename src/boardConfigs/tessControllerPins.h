@@ -1,7 +1,7 @@
 #ifdef TESS_BOARD
 #define SDA_PIN 9
 #define SCL_PIN 18
-#define I2C_ADDRESS 0x12
+#define I2C_ADDRESS 0x10
 #define DOUT_PIN 8
 #define MCP_CS 12
 #define AUDIO_BCLK_PIN 37

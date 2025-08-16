@@ -17,10 +17,10 @@ void I2CManager::beginMaster() {
     instance = this;
 }
 
-void I2CManager::beginSlave(uint8_t address, I2CMessageHandler handler) {
-    // start using custom pins and address
-    Wire.begin(SLAVE_SDA, SLAVE_SCL);
-    Wire.beginTransmission(address);
+void I2CManager::beginSlave(uint8_t addr, I2CMessageHandler handler) {
+    // Initialize as a slave on the given address using the custom pins.
+    // `Wire.begin` needs the address parameter to enable slave mode on ESP32.
+    Wire.begin(addr, SLAVE_SDA, SLAVE_SCL);
     _handler = handler;
     instance = this;
     Wire.onReceive(I2CManager::onReceiveStatic);
@@ -34,19 +34,40 @@ void I2CManager::sendString(uint8_t address, const std::string &message) {
     Wire.endTransmission();
 }
 
-void I2CManager::broadcastString(const std::string &message) {
+void I2CManager::broadcastString(const std::string &message,bool print) {
     if(isVerbose()) {
-        Serial.print("Broadcasting I2C message: ");
-        Serial.println(message.c_str());
+        if(print){
+            Serial.print("Broadcasting I2C message: ");
+            Serial.println(message.c_str());
+        }
     }
     for (auto addr : _slaves) {
         sendString(addr, message);
     }
 }
 
+bool I2CManager::ping(uint8_t address) {
+    Wire.beginTransmission(address);
+    uint8_t error = Wire.endTransmission();
+    return error == 0;
+}
+
+void I2CManager::testSlaves() {
+    for (auto addr : _slaves) {
+        bool ok = ping(addr);
+        Serial.print("I2C slave 0x");
+        Serial.print(addr, HEX);
+        if (ok) {
+            Serial.println(" responded");
+        } else {
+            Serial.println(" not responding");
+        }
+    }
+}
+
 void I2CManager::sendSync(uint32_t timeMs) {
     std::string msg = "SYNC:" + std::to_string(timeMs);
-    broadcastString(msg);
+    broadcastString(msg,false);
 }
 
 void I2CManager::onReceiveStatic(int numBytes) {
