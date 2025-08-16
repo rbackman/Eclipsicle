@@ -17,7 +17,7 @@ void UARTManager::beginSlave(uint8_t addr, UARTMessageHandler handler) {
     _address = addr;
     _serial = new HardwareSerial(1);
     _serial->begin(115200, SERIAL_8N1, SLAVE_RX, SLAVE_TX);
-    _serial->setTimeout(10);
+    _serial->setTimeout(0);
     _handler = handler;
     instance = this;
 }
@@ -26,8 +26,8 @@ void UARTManager::addSlave(uint8_t address, int8_t rxPin, int8_t txPin,
                            uint8_t uartNum) {
     HardwareSerial *port = new HardwareSerial(uartNum);
     port->begin(115200, SERIAL_8N1, rxPin, txPin);
-    port->setTimeout(10);
-    _slaves.push_back({address, port});
+    port->setTimeout(0);
+    _slaves.push_back({address, port, ""});
 }
 
 void UARTManager::sendString(uint8_t address, const std::string &message) {
@@ -79,20 +79,28 @@ void UARTManager::sendSync(uint32_t timeMs) {
 void UARTManager::update() {
     if (_serial) {
         while (_serial->available()) {
-            String line = _serial->readStringUntil('\n');
-            std::string msg(line.c_str());
-            if (_handler) {
-                _handler(msg);
+            char c = _serial->read();
+            if (c == '\n') {
+                if (_handler && !_rxBuffer.empty()) {
+                    _handler(_rxBuffer);
+                }
+                _rxBuffer.clear();
+            } else if (c != '\r') {
+                _rxBuffer += c;
             }
         }
     }
 
     for (auto &s : _slaves) {
         while (s.serial->available()) {
-            String line = s.serial->readStringUntil('\n');
-            std::string msg(line.c_str());
-            if (_handler) {
-                _handler(msg);
+            char c = s.serial->read();
+            if (c == '\n') {
+                if (_handler && !s.buffer.empty()) {
+                    _handler(s.buffer);
+                }
+                s.buffer.clear();
+            } else if (c != '\r') {
+                s.buffer += c;
             }
         }
     }

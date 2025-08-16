@@ -24,12 +24,14 @@ class UARTManager {
     struct SlaveConnection {
         uint8_t address;
         HardwareSerial *serial;
+        std::string buffer;
     };
 
     static UARTManager *instance;
     UARTMessageHandler _handler;
     std::vector<SlaveConnection> _slaves;
     HardwareSerial *_serial = nullptr; // used in slave mode
+    std::string _rxBuffer;
     uint8_t _address = 0;
 };
 
