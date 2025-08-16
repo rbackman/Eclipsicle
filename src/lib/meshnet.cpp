@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include "shared.h"
 #include <vector>
+#include <string>
 #include "meshnet.h"
 
 void printMacAddress(const uint8_t *macAddress)
@@ -91,7 +92,7 @@ std::string MeshnetManager::getMacAddress()
 
     return std::string(reinterpret_cast<char *>(mac), 6);
 }
-void MeshnetManager::sendStringToSlaves(String command)
+void MeshnetManager::sendStringToSlaves(std::string command)
 {
     text_message msg;
     // Populate msg with your data

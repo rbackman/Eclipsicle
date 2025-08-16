@@ -1,4 +1,5 @@
 #include "slideshow.h"
+#include <string>
 
 Slideshow::Slideshow(MeshnetManager *mesh) : mesh(mesh) {}
 
@@ -37,7 +38,7 @@ void Slideshow::start() {
     running = true;
     current = 0;
     startTime = millis();
-    mesh->sendStringToSlaves(String("script:") + slides[current].script);
+    mesh->sendStringToSlaves(std::string("script:") + slides[current].script.c_str());
 }
 
 void Slideshow::update() {
@@ -47,6 +48,6 @@ void Slideshow::update() {
     if (now - startTime >= slides[current].duration) {
         current = (current + 1) % slides.size();
         startTime = now;
-        mesh->sendStringToSlaves(String("script:") + slides[current].script);
+        mesh->sendStringToSlaves(std::string("script:") + slides[current].script.c_str());
     }
 }

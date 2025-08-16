@@ -197,7 +197,7 @@ void MasterBoard::update()
 
         // Serial.print("Send Serial Message: " + message);
         if (handleTextMessage(message.c_str()) == false)
-            meshManager->sendStringToSlaves(message);
+            meshManager->sendStringToSlaves(std::string(message.c_str()));
     }
     if (serialManager->jsonAvailable())
     {
@@ -220,7 +220,7 @@ void MasterBoard::update()
         {
             Serial.printf(stringCmd.c_str());
         }
-        meshManager->sendStringToSlaves(stringCmd.c_str());
+        meshManager->sendStringToSlaves(stringCmd);
         if (menuManager->getMenuMode() == MENU_MODE_EDIT_MODE)
         {
             renderParameterMenu(true);
